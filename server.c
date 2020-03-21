@@ -114,22 +114,24 @@ int main(int argc, char** argv)
             /* address_len = */ NULL
         );
 
-        if (message.line_idx >= SCREEN_ROWS)
-        {
-            fprintf(stderr, "Line index too big (%d)\n", message.line_idx);
-            continue;
-        }
-
-        memcpy(
-            screen_buffer + (SCREEN_COLS + SCREEN_COL_PAD) * message.line_idx,
-            message.buffer,
-            2 * SCREEN_COLS
-        );
-
-        if (message.line_idx + 1 == SCREEN_ROWS)
+        if (message.line_idx == SCREEN_ROWS)
         {
             printf("Flushing buffer\n");
             write_frame(fb, screen_buffer, sizeof(screen_buffer));
+        }
+        else if (message.line_idx < SCREEN_ROWS)
+        {
+            memcpy(
+                screen_buffer
+                    + (SCREEN_COLS + SCREEN_COL_PAD) * message.line_idx,
+                message.buffer,
+                2 * SCREEN_COLS
+            );
+        }
+        else
+        {
+            fprintf(stderr, "Invalid line index (%d)\n", message.line_idx);
+            continue;
         }
     }
 

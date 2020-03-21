@@ -52,6 +52,13 @@ void send_line(int sck, struct sockaddr_in addr, const line_update* message)
     }
 }
 
+void send_flush(int sck, struct sockaddr_in addr)
+{
+    line_update message;
+    message.line_idx = SCREEN_ROWS;
+    send_line(sck, addr, &message);
+}
+
 int main(int argc, char** argv)
 {
     int sck = create_client_socket();
@@ -94,6 +101,7 @@ int main(int argc, char** argv)
         }
     }
 
+    send_flush(sck, server_addr);
     close(img);
     close(sck);
     return EXIT_SUCCESS;

@@ -19,10 +19,11 @@
  */
 rfbBool create_framebuf(rfbClient* client)
 {
-    uint8_t* data = malloc(client->width * client->height * RM_SCREEN_DEPTH);
-
-    // Make sure the server complied with our pixel depth request
-    assert(client->format.bitsPerPixel == RM_SCREEN_DEPTH * 8);
+    uint8_t* data = malloc(
+        client->width
+        * client->height
+        * client->format.bitsPerPixel / 8
+    );
 
     if (!data)
     {
@@ -32,6 +33,7 @@ rfbBool create_framebuf(rfbClient* client)
 
     free(client->frameBuffer);
     client->frameBuffer = data;
+    fprintf(stderr, "allocated framebuf\n");
     return TRUE;
 }
 
@@ -62,6 +64,8 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
         h = RM_SCREEN_ROWS - y;
     }
 
+    const size_t framebuf_client_depth = client->format.bitsPerPixel / 8;
+
     // Seek to the first pixel in the device framebuffer
     int framebuf_fp = *(int*) rfbClientGetClientData(client, FRAMEBUF_FP_TAG);
     off_t new_position = lseek(
@@ -78,18 +82,40 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 
     // Seek to the first pixel in the client framebuffer
     uint8_t* framebuf_client = client->frameBuffer
-        + (y * client->width + x) * RM_SCREEN_DEPTH;
+        + (y * client->width + x) * framebuf_client_depth;
 
-    for (int line = 0; line < h; ++line)
+    uint16_t* linebuf = malloc(w * sizeof(*linebuf));
+
+    if (!linebuf)
     {
-        size_t line_size = w * RM_SCREEN_DEPTH;
+        perror("update_framebuf");
+        exit(EXIT_FAILURE);
+    }
 
-        while (line_size)
+    for (int row = 0; row < h; ++row)
+    {
+        // Convert RGB triplet to grayscale
+        for (int col = 0; col < w; ++col)
+        {
+            linebuf[col] = (
+                21 * framebuf_client[0]
+                + 72 * framebuf_client[1]
+                + 7 * framebuf_client[2]
+            ) * 257 / 100;
+
+            framebuf_client += framebuf_client_depth;
+        }
+
+        // Write line buffer to device
+        size_t linebuf_size = w * sizeof(*linebuf);
+        uint16_t* linebuf_ptr = linebuf;
+
+        while (linebuf_size)
         {
             ssize_t bytes_written = write(
                 framebuf_fp,
-                framebuf_client,
-                w * RM_SCREEN_DEPTH
+                linebuf_ptr,
+                linebuf_size
             );
 
             if (bytes_written == -1)
@@ -98,10 +124,11 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
                 exit(EXIT_FAILURE);
             }
 
-            line_size -= bytes_written;
-            framebuf_client += bytes_written;
+            linebuf_size -= bytes_written;
+            linebuf_ptr += bytes_written;
         }
 
+        // Seek to the next line
         new_position = lseek(
             framebuf_fp,
             (RM_SCREEN_COLS + RM_SCREEN_COL_PAD - w) * RM_SCREEN_DEPTH,
@@ -114,8 +141,10 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
             exit(EXIT_FAILURE);
         }
 
-        framebuf_client += (client->width - w) * RM_SCREEN_DEPTH;
+        framebuf_client += (client->width - w) * framebuf_client_depth;
     }
+
+    free(linebuf);
 
     // TODO: Only refresh updated zone
     trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
@@ -124,9 +153,9 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 int main(int argc, char** argv)
 {
     rfbClient* client = rfbGetClient(
-        /* bitsPerSample = */ 16,
-        /* samplesPerPixel = */ 1,
-        /* bytesPerPixel = */ 2
+        /* bitsPerSample = */ 8,
+        /* samplesPerPixel = */ 3,
+        /* bytesPerPixel = */ 4
     );
 
     client->MallocFrameBuffer = create_framebuf;
@@ -151,7 +180,7 @@ int main(int argc, char** argv)
     // RFB protocol message loop
     while (TRUE)
     {
-        int result = WaitForMessage(client, /* timeout μs = */ 1000000);
+        int result = WaitForMessage(client, /* timeout μs = */ 100000);
 
         if (result < 0)
         {
@@ -167,6 +196,8 @@ int main(int argc, char** argv)
                 break;
             }
         }
+
+        usleep(/* μsec = */ 100000);
     }
 
     rfbClientCleanup(client);

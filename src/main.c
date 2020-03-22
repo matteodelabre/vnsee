@@ -1,4 +1,5 @@
 #include "defs.h"
+#include "refresh.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -6,22 +7,22 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 
 #define FRAMEBUF_FP_TAG 0
 
+/**
+ * Initialize the client framebuffer, a buffer in which screen updates from
+ * the server are stored.
+ *
+ * @return True if the new buffer was successfully allocated.
+ */
 rfbBool create_framebuf(rfbClient* client)
 {
-    uint8_t* data = malloc(
-        client->width
-        * client->height
-        * client->format.bitsPerPixel
-    );
+    uint8_t* data = malloc(client->width * client->height * RM_SCREEN_DEPTH);
 
-    assert(client->width == SCREEN_COLS + SCREEN_COL_PAD);
-    assert(client->height == SCREEN_ROWS);
-    assert(client->format.bitsPerPixel == 16);
+    // Make sure the server complied with our pixel depth request
+    assert(client->format.bitsPerPixel == RM_SCREEN_DEPTH * 8);
 
     if (!data)
     {
@@ -34,36 +35,90 @@ rfbBool create_framebuf(rfbClient* client)
     return TRUE;
 }
 
+/**
+ * Flush an update from the client framebuffer to the device framebuffer.
+ *
+ * @param x Left bound of the updated rectangle (in pixels).
+ * @param y Top bound of the updated rectangle (in pixels).
+ * @param w Width of the updated rectangle (in pixels).
+ * @param h Height of the updated rectangle (in pixels).
+ */
 void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 {
-    int shift = (y * (SCREEN_COLS + SCREEN_COL_PAD) + x) * 2;
+    // Ignore off-screen updates
+    if (x > RM_SCREEN_COLS || y > RM_SCREEN_ROWS)
+    {
+        return;
+    }
 
-    // Write received framebuffer to client framebuffer
+    // Clip overflowing updates
+    if (x + w > RM_SCREEN_COLS)
+    {
+        w = RM_SCREEN_COLS - x;
+    }
+
+    if (y + h > RM_SCREEN_ROWS)
+    {
+        h = RM_SCREEN_ROWS - y;
+    }
+
+    // Seek to the first pixel in the device framebuffer
     int framebuf_fp = *(int*) rfbClientGetClientData(client, FRAMEBUF_FP_TAG);
-    lseek(framebuf_fp, shift, SEEK_SET);
+    off_t new_position = lseek(
+        framebuf_fp,
+        (y * (RM_SCREEN_COLS + RM_SCREEN_COL_PAD) + x) * RM_SCREEN_DEPTH,
+        SEEK_SET
+    );
 
-    uint8_t* framebuf_client = client->frameBuffer + shift;
+    if (new_position == -1)
+    {
+        perror("update_framebuf");
+        exit(EXIT_FAILURE);
+    }
+
+    // Seek to the first pixel in the client framebuffer
+    uint8_t* framebuf_client = client->frameBuffer
+        + (y * client->width + x) * RM_SCREEN_DEPTH;
 
     for (int line = 0; line < h; ++line)
     {
-        write(framebuf_fp, framebuf_client, w * 2);
-        lseek(framebuf_fp, (SCREEN_COLS + SCREEN_COL_PAD - w) * 2, SEEK_CUR);
-        framebuf_client += (SCREEN_COLS + SCREEN_COL_PAD) * 2;
+        size_t line_size = w * RM_SCREEN_DEPTH;
+
+        while (line_size)
+        {
+            ssize_t bytes_written = write(
+                framebuf_fp,
+                framebuf_client,
+                w * RM_SCREEN_DEPTH
+            );
+
+            if (bytes_written == -1)
+            {
+                perror("update_framebuf");
+                exit(EXIT_FAILURE);
+            }
+
+            line_size -= bytes_written;
+            framebuf_client += bytes_written;
+        }
+
+        new_position = lseek(
+            framebuf_fp,
+            (RM_SCREEN_COLS + RM_SCREEN_COL_PAD - w) * RM_SCREEN_DEPTH,
+            SEEK_CUR
+        );
+
+        if (new_position == -1)
+        {
+            perror("update_framebuf");
+            exit(EXIT_FAILURE);
+        }
+
+        framebuf_client += (client->width - w) * RM_SCREEN_DEPTH;
     }
 
     // TODO: Only refresh updated zone
-    // Ask for refresh
-    mxcfb_update_data data;
-    data.update_region.top = 0;
-    data.update_region.left = 0;
-    data.update_region.width = SCREEN_COLS;
-    data.update_region.height = SCREEN_ROWS;
-    data.waveform_mode = 0x0002;
-    data.temp = 0;
-    data.update_mode = 0;
-    data.update_marker = 0x002a;
-    data.flags = 0;
-    ioctl(framebuf_fp, SEND_UPDATE, &data);
+    trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
 }
 
 int main(int argc, char** argv)

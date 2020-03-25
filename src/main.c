@@ -3,18 +3,62 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <rfb/rfbclient.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <time.h>
 
-#define FRAMEBUF_FP_TAG 0
+#define FRAMEBUF_FP_TAG ((void*) 0)
+#define UPDATE_DATA_TAG ((void*) 1)
+
+/**
+ * Maximum time (in microseconds) between two updates to join them in
+ * the same batch.
+ */
+#define BATCH_WINDOW_US 500000
+
+/**
+ * Get the current monotonic time in microseconds.
+ */
+uint64_t get_time_us()
+{
+    struct timespec cur_time_st;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
+    return cur_time_st.tv_sec * 1000000 + cur_time_st.tv_nsec / 1000;
+}
+
+/**
+ * Information about pending updates.
+ */
+struct update_data
+{
+    /** Left bound of the updated rectangle (in pixels). */
+    int x;
+
+    /** Top bound of the updated rectangle (in pixels). */
+    int y;
+
+    /** Width of the updated rectangle (in pixels) */
+    int w;
+
+    /** Height of the updated rectangle (in pixels). */
+    int h;
+
+    /** Time of the latest update. */
+    uint64_t update_time;
+
+    /** Whether an update is pending. */
+    short needs_flush;
+};
 
 /**
  * Initialize the client framebuffer, a buffer in which screen updates from
  * the server are stored.
  *
+ * @param client Handle to the VNC client.
  * @return True if the new buffer was successfully allocated.
  */
 rfbBool create_framebuf(rfbClient* client)
@@ -33,13 +77,13 @@ rfbBool create_framebuf(rfbClient* client)
 
     free(client->frameBuffer);
     client->frameBuffer = data;
-    fprintf(stderr, "allocated framebuf\n");
     return TRUE;
 }
 
 /**
- * Flush an update from the client framebuffer to the device framebuffer.
+ * Register an update from the server in the client framebuffer.
  *
+ * @param client Handle to the VNC client.
  * @param x Left bound of the updated rectangle (in pixels).
  * @param y Top bound of the updated rectangle (in pixels).
  * @param w Width of the updated rectangle (in pixels).
@@ -63,6 +107,69 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     {
         h = RM_SCREEN_ROWS - y;
     }
+
+    // Register the region as pending update, potentially extending
+    // an existing one
+    struct update_data* update = rfbClientGetClientData(
+        client, UPDATE_DATA_TAG);
+
+    if (update->needs_flush)
+    {
+        int left_x = x < update->x ? x : update->x;
+        int top_y = y < update->y ? y : update->y;
+
+        int right_x_1 = x + w;
+        int right_x_2 = update->x + update->w;
+        int right_x = right_x_1 > right_x_2 ? right_x_1 : right_x_2;
+
+        int bottom_y_1 = y + h;
+        int bottom_y_2 = update->y + update->h;
+        int bottom_y = bottom_y_1 > bottom_y_2 ? bottom_y_1 : bottom_y_2;
+
+        update->x = left_x;
+        update->y = top_y;
+        update->w = right_x - left_x;
+        update->h = bottom_y - top_y;
+    }
+    else
+    {
+        update->x = x;
+        update->y = y;
+        update->w = w;
+        update->h = h;
+        update->needs_flush = 1;
+    }
+
+    update->update_time = get_time_us();
+}
+
+/**
+ * Flush pending updates from the client framebuffer to the device framebuffer.
+ *
+ * @param client Handle to the VNC client.
+ * @param update Information about pending updates.
+ */
+void flush_framebuf(rfbClient* client, struct update_data* update)
+{
+    if (!update->needs_flush)
+    {
+        return;
+    }
+
+    // Batch sequences of updates together
+    uint64_t cur_time = get_time_us();
+
+    if (update->update_time + BATCH_WINDOW_US >= cur_time)
+    {
+        return;
+    }
+
+    update->needs_flush = 0;
+
+    int x = update->x;
+    int y = update->y;
+    int w = update->w;
+    int h = update->h;
 
     const size_t framebuf_client_depth = client->format.bitsPerPixel / 8;
 
@@ -145,9 +252,7 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     }
 
     free(linebuf);
-
-    // TODO: Only refresh updated zone
-    trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
+    trigger_refresh(framebuf_fp, x, y, w, h);
 }
 
 int main(int argc, char** argv)
@@ -166,7 +271,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // Open system framebuffer
+    // Open the system framebuffer
     int framebuf_fp = open("/dev/fb0", O_WRONLY);
 
     if (framebuf_fp == -1)
@@ -175,7 +280,10 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    struct update_data update = {0};
+
     rfbClientSetClientData(client, FRAMEBUF_FP_TAG, &framebuf_fp);
+    rfbClientSetClientData(client, UPDATE_DATA_TAG, &update);
 
     // RFB protocol message loop
     while (TRUE)
@@ -192,12 +300,11 @@ int main(int argc, char** argv)
         {
             if (!HandleRFBServerMessage(client))
             {
-                fprintf(stderr, "Unable to handle message\n");
                 break;
             }
         }
 
-        usleep(/* μsec = */ 100000);
+        flush_framebuf(client, &update);
     }
 
     rfbClientCleanup(client);

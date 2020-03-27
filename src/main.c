@@ -12,21 +12,21 @@
 #include <time.h>
 
 /**
- * Tag used for storing/retrieving the device framebuffer’s
- * file descriptor in the client object.
+ * Tag used for storing in/retrieving from the client object
+ * the device framebuffer’s file descriptor.
  */
 #define FRAMEBUF_FP_TAG ((void*) 0)
 
 /**
- * Tag used for storing/retrieving update information in the client object.
+ * Tag used for storing in/retrieving from the client object
+ * the flag indicating whether a screen refresh is needed.
  */
-#define UPDATE_DATA_TAG ((void*) 1)
+#define NEEDS_REFRESH_TAG ((void*) 1)
 
 /**
- * Maximum time in microseconds to wait between two updates are flushed
- * to the device framebuffer.
+ * Maximum time in microseconds to wait between two screen refreshes.
  */
-#define FLUSH_RATE 500000
+#define REFRESH_RATE 500000
 
 /**
  * Get the current monotonic time in microseconds.
@@ -39,48 +39,27 @@ uint64_t get_time_us()
 }
 
 /**
- * Print the current monotonic time up to the microsecond.
+ * Print the prefix for logging an event.
  *
- * @param header Header string to print.
+ * @param type Type of event.
  */
-void print_time(const char* header)
+void print_log(const char* type)
 {
     struct timespec cur_time_st;
     clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
 
     fprintf(
         stderr,
-        "\n[%s @ %ld.%ld]\n",
-        header,
+        "%ld.%06ld [%s] ",
         cur_time_st.tv_sec,
-        cur_time_st.tv_nsec / 1000
+        cur_time_st.tv_nsec / 1000,
+        type
     );
 }
 
 /**
- * Information about pending updates.
- */
-struct update_data
-{
-    /** Left bound of the updated rectangle (in pixels). */
-    int x;
-
-    /** Top bound of the updated rectangle (in pixels). */
-    int y;
-
-    /** Width of the updated rectangle (in pixels) */
-    int w;
-
-    /** Height of the updated rectangle (in pixels). */
-    int h;
-
-    /** Whether an update is stored. */
-    short has_update;
-};
-
-/**
  * Initialize the client framebuffer, a buffer in which screen data from
- * the server is stored before being flushed to the device framebuffer.
+ * the server is stored before being copied to the device framebuffer.
  *
  * @param client Handle to the VNC client.
  * @return True if the new buffer was successfully allocated.
@@ -131,66 +110,11 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
         h = RM_SCREEN_ROWS - y;
     }
 
-    // Register the region as pending update, potentially extending
-    // an existing one
-    struct update_data* update = rfbClientGetClientData(
-        client, UPDATE_DATA_TAG);
+    print_log("Update");
+    fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
 
-    print_time("Update");
-    fprintf(stderr, "%d x %d + %d x %d\n", w, h, x, y);
-
-    if (update->has_update)
-    {
-        int left_x = x < update->x ? x : update->x;
-        int top_y = y < update->y ? y : update->y;
-
-        int right_x_1 = x + w;
-        int right_x_2 = update->x + update->w;
-        int right_x = right_x_1 > right_x_2 ? right_x_1 : right_x_2;
-
-        int bottom_y_1 = y + h;
-        int bottom_y_2 = update->y + update->h;
-        int bottom_y = bottom_y_1 > bottom_y_2 ? bottom_y_1 : bottom_y_2;
-
-        update->x = left_x;
-        update->y = top_y;
-        update->w = right_x - left_x;
-        update->h = bottom_y - top_y;
-    }
-    else
-    {
-        update->x = x;
-        update->y = y;
-        update->w = w;
-        update->h = h;
-        update->has_update = 1;
-    }
-}
-
-/**
- * Flush pending updates from the client framebuffer to the device framebuffer.
- *
- * @param client Handle to the VNC client.
- * @param update Information about pending updates.
- */
-void flush_framebuf(rfbClient* client, struct update_data* update)
-{
-    if (!update->has_update)
-    {
-        return;
-    }
-
-    update->has_update = 0;
-
-    int x = update->x;
-    int y = update->y;
-    int w = update->w;
-    int h = update->h;
-
-    print_time("Flush ");
-    fprintf(stderr, "%d x %d + %d x %d\n", w, h, x, y);
-
-    // Seek to the first pixel in the device framebuffer
+    // Copy the changed region from the client to the device framebuffer
+    // (note that this does not cause a screen refresh)
     int framebuf_fp = *(int*) rfbClientGetClientData(client, FRAMEBUF_FP_TAG);
     off_t new_position = lseek(
         framebuf_fp,
@@ -200,7 +124,7 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
 
     if (new_position == -1)
     {
-        perror("flush_framebuf:initial lseek");
+        perror("update_framebuf:initial lseek");
         exit(EXIT_FAILURE);
     }
 
@@ -223,7 +147,7 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
 
             if (bytes_written == -1)
             {
-                perror("flush_framebuf:write");
+                perror("update_framebuf:write");
                 exit(EXIT_FAILURE);
             }
 
@@ -240,14 +164,16 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
 
         if (new_position == -1)
         {
-            perror("flush_framebuf:line lseek");
+            perror("update_framebuf:line lseek");
             exit(EXIT_FAILURE);
         }
 
         framebuf_client += (client->width - w) * RM_SCREEN_DEPTH;
     }
 
-    trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
+    // Mark that screen as needing a refresh
+    short* needs_refresh = rfbClientGetClientData(client, NEEDS_REFRESH_TAG);
+    *needs_refresh = 1;
 }
 
 int main(int argc, char** argv)
@@ -283,14 +209,14 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // Information about pending updates
-    struct update_data update = {0};
+    // Flag activated when the screen needs a refresh
+    short needs_refresh = 0;
 
-    // Last time the client framebuffer was flushed to the device framebuffer
-    uint64_t last_flush = 0;
+    // Last time the screen was refreshed
+    uint64_t last_refresh = 0;
 
     rfbClientSetClientData(client, FRAMEBUF_FP_TAG, &framebuf_fp);
-    rfbClientSetClientData(client, UPDATE_DATA_TAG, &update);
+    rfbClientSetClientData(client, NEEDS_REFRESH_TAG, &needs_refresh);
 
     // RFB protocol message loop
     while (TRUE)
@@ -311,13 +237,17 @@ int main(int argc, char** argv)
             }
         }
 
-        // Batch sequences of updates together
         uint64_t cur_time = get_time_us();
 
-        if (last_flush + FLUSH_RATE < cur_time)
+        if (needs_refresh && last_refresh + REFRESH_RATE < cur_time)
         {
-            flush_framebuf(client, &update);
-            last_flush = cur_time;
+            needs_refresh = 0;
+            last_refresh = cur_time;
+
+            print_log("Refresh");
+            fprintf(stderr, "\n");
+
+            trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
         }
     }
 

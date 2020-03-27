@@ -82,11 +82,10 @@ struct update_data
  */
 rfbBool create_framebuf(rfbClient* client)
 {
-    uint8_t* data = malloc(
-        client->width
-        * client->height
-        * client->format.bitsPerPixel / 8
-    );
+    // Make sure the server streams the right color format
+    assert(client->format.bitsPerPixel == 8 * RM_SCREEN_DEPTH);
+
+    uint8_t* data = malloc(client->width * client->height * RM_SCREEN_DEPTH);
 
     if (!data)
     {
@@ -207,7 +206,6 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
     int w = update->w;
     int h = update->h;
 
-    const size_t framebuf_client_depth = client->format.bitsPerPixel / 8;
     print_time("Flush ");
     fprintf(stderr, "%d x %d + %d x %d\n", w, h, x, y);
 
@@ -221,56 +219,35 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
 
     if (new_position == -1)
     {
-        perror("update_framebuf");
+        perror("flush_framebuf:initial lseek");
         exit(EXIT_FAILURE);
     }
 
     // Seek to the first pixel in the client framebuffer
     uint8_t* framebuf_client = client->frameBuffer
-        + (y * client->width + x) * framebuf_client_depth;
-
-    uint16_t* linebuf = malloc(w * sizeof(*linebuf));
-
-    if (!linebuf)
-    {
-        perror("update_framebuf");
-        exit(EXIT_FAILURE);
-    }
+        + (y * client->width + x) * RM_SCREEN_DEPTH;
 
     for (int row = 0; row < h; ++row)
     {
-        // Convert RGB triplet to grayscale
-        for (int col = 0; col < w; ++col)
-        {
-            linebuf[col] = (
-                21 * framebuf_client[0]
-                + 72 * framebuf_client[1]
-                + 7 * framebuf_client[2]
-            ) * 257 / 100;
-
-            framebuf_client += framebuf_client_depth;
-        }
-
         // Write line buffer to device
-        size_t linebuf_size = w * sizeof(*linebuf);
-        uint16_t* linebuf_ptr = linebuf;
+        size_t length = w * RM_SCREEN_DEPTH;
 
-        while (linebuf_size)
+        while (length)
         {
             ssize_t bytes_written = write(
                 framebuf_fp,
-                linebuf_ptr,
-                linebuf_size
+                framebuf_client,
+                length
             );
 
             if (bytes_written == -1)
             {
-                perror("update_framebuf");
+                perror("flush_framebuf:write");
                 exit(EXIT_FAILURE);
             }
 
-            linebuf_size -= bytes_written;
-            linebuf_ptr += bytes_written;
+            length -= bytes_written;
+            framebuf_client += bytes_written;
         }
 
         // Seek to the next line
@@ -282,24 +259,31 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
 
         if (new_position == -1)
         {
-            perror("update_framebuf");
+            perror("flush_framebuf:line lseek");
             exit(EXIT_FAILURE);
         }
 
-        framebuf_client += (client->width - w) * framebuf_client_depth;
+        framebuf_client += (client->width - w) * RM_SCREEN_DEPTH;
     }
 
-    free(linebuf);
-    trigger_refresh(framebuf_fp, x, y, w, h);
+    trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
 }
 
 int main(int argc, char** argv)
 {
     rfbClient* client = rfbGetClient(
-        /* bitsPerSample = */ 8,
+        /* bitsPerSample = */ 5,
         /* samplesPerPixel = */ 3,
-        /* bytesPerPixel = */ 4
+        /* bytesPerPixel = */ 2
     );
+
+    // Setup for RGB565 color mode
+    client->format.redShift=11;
+    client->format.redMax=31;
+    client->format.greenShift=5;
+    client->format.greenMax=63;
+    client->format.blueShift=0;
+    client->format.blueMax=31;
 
     client->MallocFrameBuffer = create_framebuf;
     client->GotFrameBufferUpdate = update_framebuf;

@@ -14,5 +14,5 @@ x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -
 Start client:
 
 ```
-ssh "root@10.11.99.1" "./revnc $(ip address show up to 10.11.99.0/29 | awk -F'[ /]+' '/inet/{print $3}') -encodings raw"
+ssh "root@10.11.99.1" "./revnc $(ip address show up to 10.11.99.0/29 | awk -F'[ /]+' '/inet/{print $3}')"
 ```

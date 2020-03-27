@@ -31,6 +31,25 @@ uint64_t get_time_us()
 }
 
 /**
+ * Print the current monotonic time up to the microsecond.
+ *
+ * @param header Header string to print.
+ */
+void print_time(const char* header)
+{
+    struct timespec cur_time_st;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
+
+    fprintf(
+        stderr,
+        "\n[%s @ %ld.%ld]\n",
+        header,
+        cur_time_st.tv_sec,
+        cur_time_st.tv_nsec / 1000
+    );
+}
+
+/**
  * Information about pending updates.
  */
 struct update_data
@@ -113,8 +132,17 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     struct update_data* update = rfbClientGetClientData(
         client, UPDATE_DATA_TAG);
 
+    print_time("Update");
+    fprintf(stderr, "%d x %d + %d x %d\n", w, h, x, y);
+
     if (update->needs_flush)
     {
+        fprintf(
+            stderr,
+            "%d x %d + %d x %d -> ",
+            update->w, update->h, update->x, update->y
+        );
+
         int left_x = x < update->x ? x : update->x;
         int top_y = y < update->y ? y : update->y;
 
@@ -133,12 +161,20 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     }
     else
     {
+        fprintf(stderr, "0 x 0 + 0 x 0 -> ");
+
         update->x = x;
         update->y = y;
         update->w = w;
         update->h = h;
         update->needs_flush = 1;
     }
+
+    fprintf(
+        stderr,
+        "%d x %d + %d x %d\n",
+        update->w, update->h, update->x, update->y
+    );
 
     update->update_time = get_time_us();
 }
@@ -172,6 +208,8 @@ void flush_framebuf(rfbClient* client, struct update_data* update)
     int h = update->h;
 
     const size_t framebuf_client_depth = client->format.bitsPerPixel / 8;
+    print_time("Flush ");
+    fprintf(stderr, "%d x %d + %d x %d\n", w, h, x, y);
 
     // Seek to the first pixel in the device framebuffer
     int framebuf_fp = *(int*) rfbClientGetClientData(client, FRAMEBUF_FP_TAG);

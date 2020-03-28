@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-project(revnc C)
+project(rmvnc C)
 
 # Find libvncclient
 find_package(PkgConfig REQUIRED)
@@ -13,10 +13,10 @@ if(TRACE)
     add_definitions(-DTRACE)
 endif(TRACE)
 
-add_executable(revnc
+add_executable(rmvnc
     src/main.c
     src/screen.c
     src/util.c
 )
 
-target_link_libraries(revnc PUBLIC PkgConfig::VNCCLIENT)
+target_link_libraries(rmvnc PUBLIC PkgConfig::VNCCLIENT)

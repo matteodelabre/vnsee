@@ -1,18 +1,47 @@
-#ifndef REFRESH_H
-#define REFRESH_H
+#ifndef SCREEN_H
+#define SCREEN_H
 
-/** Width of the reMarkable screen. */
-#define RM_SCREEN_COLS 1404
+#include <linux/fb.h>
+#include <rfb/rfbclient.h>
+#include <stdint.h>
 
-/** Number of padding pixels at the end of each line. */
-#define RM_SCREEN_COL_PAD 4
+/**
+ * Information and resources for using the device screen.
+ */
+typedef struct rm_screen
+{
+    /** File descriptor for the device framebuffer. */
+    int framebuf_fd;
 
-/** Height of the reMarkable screen. */
-#define RM_SCREEN_ROWS 1872
+    /** Variable screen information from the device framebuffer. */
+    struct fb_var_screeninfo framebuf_varinfo;
 
-/** Depth of each screen pixel in bytes. */
-#define RM_SCREEN_DEPTH 2
+    /** Fixed screen information from the device framebuffer. */
+    struct fb_fix_screeninfo framebuf_fixinfo;
 
-void trigger_refresh(int fb);
+    /** Pointer to the memory-mapped framebuffer. */
+    uint8_t* framebuf_ptr;
 
-#endif // REFRESH_H
+    /** Length of the memory-mapped framebuffer. */
+    size_t framebuf_len;
+
+    /** Next value to be used as an update marker. */
+    uint32_t next_update_marker;
+} rm_screen;
+
+/**
+ * Initialize the screen structure.
+ */
+rm_screen rm_screen_init();
+
+/**
+ * Trigger a screen update.
+ */
+void rm_screen_update(rm_screen* screen);
+
+/**
+ * Free resources held by the screen structure.
+ */
+void rm_screen_free(rm_screen* screen);
+
+#endif // SCREEN_H

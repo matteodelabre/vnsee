@@ -110,4 +110,4 @@ Run build.
 make
 ```
 
-You now have a `rmvncclient` executable ready to be executed on your reMarkable.
+You now have a `rmvncclient` executable ready to be executed on your reMarkable!

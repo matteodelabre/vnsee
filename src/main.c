@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <time.h>
 
@@ -15,7 +16,7 @@
  * Tag used for storing in/retrieving from the client object
  * the device framebuffer’s file descriptor.
  */
-#define FRAMEBUF_FP_TAG ((void*) 0)
+#define FRAMEBUF_FD_TAG ((void*) 0)
 
 /**
  * Tag used for storing in/retrieving from the client object
@@ -58,32 +59,50 @@ void print_log(const char* type)
 }
 
 /**
- * Initialize the client framebuffer, a buffer in which screen data from
- * the server is stored before being copied to the device framebuffer.
+ * Map the device framebuffer to memory and make it available for
+ * the VNC client to write in.
  *
  * @param client Handle to the VNC client.
- * @return True if the new buffer was successfully allocated.
+ * @return True if the framebuffer is successfully mapped to memory.
  */
 rfbBool create_framebuf(rfbClient* client)
 {
     // Make sure the server streams the right color format
     assert(client->format.bitsPerPixel == 8 * RM_SCREEN_DEPTH);
+    assert(client->width == RM_SCREEN_COLS + RM_SCREEN_COL_PAD);
+    assert(client->height == RM_SCREEN_ROWS);
 
-    uint8_t* data = malloc(client->width * client->height * RM_SCREEN_DEPTH);
-
-    if (!data)
+    if (client->frameBuffer)
     {
-        perror("create_framebuf");
+        // Already allocated
+        return TRUE;
+    }
+
+    int framebuf_fd = *(int*) rfbClientGetClientData(
+        client, FRAMEBUF_FD_TAG);
+
+    uint8_t* data = mmap(
+        /* addr = */ NULL,
+        /* len = */ (RM_SCREEN_COLS + RM_SCREEN_COL_PAD)
+        * RM_SCREEN_ROWS * RM_SCREEN_DEPTH,
+        /* prot = */ PROT_READ | PROT_WRITE,
+        /* flags = */ MAP_SHARED,
+        /* fd = */ framebuf_fd,
+        /* off = */ 0
+    );
+
+    if (data == MAP_FAILED)
+    {
+        perror("create_framebuf:mmap");
         return FALSE;
     }
 
-    free(client->frameBuffer);
     client->frameBuffer = data;
     return TRUE;
 }
 
 /**
- * Register an update from the server in the client framebuffer.
+ * Register an update from the server.
  *
  * @param client Handle to the VNC client.
  * @param x Left bound of the updated rectangle (in pixels).
@@ -93,83 +112,8 @@ rfbBool create_framebuf(rfbClient* client)
  */
 void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 {
-    // Ignore off-screen updates
-    if (x < 0 || y < 0 || x > RM_SCREEN_COLS || y > RM_SCREEN_ROWS)
-    {
-        return;
-    }
-
-    // Clip overflowing updates
-    if (x + w > RM_SCREEN_COLS)
-    {
-        w = RM_SCREEN_COLS - x;
-    }
-
-    if (y + h > RM_SCREEN_ROWS)
-    {
-        h = RM_SCREEN_ROWS - y;
-    }
-
     print_log("Update");
     fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
-
-    // Copy the changed region from the client to the device framebuffer
-    // (note that this does not cause a screen refresh)
-    int framebuf_fp = *(int*) rfbClientGetClientData(client, FRAMEBUF_FP_TAG);
-    off_t new_position = lseek(
-        framebuf_fp,
-        (y * (RM_SCREEN_COLS + RM_SCREEN_COL_PAD) + x) * RM_SCREEN_DEPTH,
-        SEEK_SET
-    );
-
-    if (new_position == -1)
-    {
-        perror("update_framebuf:initial lseek");
-        exit(EXIT_FAILURE);
-    }
-
-    // Seek to the first pixel in the client framebuffer
-    uint8_t* framebuf_client = client->frameBuffer
-        + (y * client->width + x) * RM_SCREEN_DEPTH;
-
-    for (int row = 0; row < h; ++row)
-    {
-        // Write line buffer to device
-        size_t length = w * RM_SCREEN_DEPTH;
-
-        while (length)
-        {
-            ssize_t bytes_written = write(
-                framebuf_fp,
-                framebuf_client,
-                length
-            );
-
-            if (bytes_written == -1)
-            {
-                perror("update_framebuf:write");
-                exit(EXIT_FAILURE);
-            }
-
-            length -= bytes_written;
-            framebuf_client += bytes_written;
-        }
-
-        // Seek to the next line
-        new_position = lseek(
-            framebuf_fp,
-            (RM_SCREEN_COLS + RM_SCREEN_COL_PAD - w) * RM_SCREEN_DEPTH,
-            SEEK_CUR
-        );
-
-        if (new_position == -1)
-        {
-            perror("update_framebuf:line lseek");
-            exit(EXIT_FAILURE);
-        }
-
-        framebuf_client += (client->width - w) * RM_SCREEN_DEPTH;
-    }
 
     // Mark that screen as needing a refresh
     short* needs_refresh = rfbClientGetClientData(client, NEEDS_REFRESH_TAG);
@@ -178,6 +122,22 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 
 int main(int argc, char** argv)
 {
+    // Open the system framebuffer
+    int framebuf_fd = open("/dev/fb0", O_RDWR);
+
+    if (framebuf_fd == -1)
+    {
+        perror("open:/dev/fb0");
+        return EXIT_FAILURE;
+    }
+
+    // Flag activated when the screen needs a refresh
+    short needs_refresh = 0;
+
+    // Last time the screen was refreshed
+    uint64_t last_refresh = 0;
+
+    // Setup the VNC connection
     rfbClient* client = rfbGetClient(
         /* bitsPerSample = */ 5,
         /* samplesPerPixel = */ 3,
@@ -195,28 +155,14 @@ int main(int argc, char** argv)
     client->MallocFrameBuffer = create_framebuf;
     client->GotFrameBufferUpdate = update_framebuf;
 
+    rfbClientSetClientData(client, FRAMEBUF_FD_TAG, &framebuf_fd);
+    rfbClientSetClientData(client, NEEDS_REFRESH_TAG, &needs_refresh);
+
+    // Connect to the VNC server
     if (!rfbInitClient(client, &argc, argv))
     {
         return EXIT_FAILURE;
     }
-
-    // Open the system framebuffer
-    int framebuf_fp = open("/dev/fb0", O_WRONLY);
-
-    if (framebuf_fp == -1)
-    {
-        perror("open /dev/fb0");
-        return EXIT_FAILURE;
-    }
-
-    // Flag activated when the screen needs a refresh
-    short needs_refresh = 0;
-
-    // Last time the screen was refreshed
-    uint64_t last_refresh = 0;
-
-    rfbClientSetClientData(client, FRAMEBUF_FP_TAG, &framebuf_fp);
-    rfbClientSetClientData(client, NEEDS_REFRESH_TAG, &needs_refresh);
 
     // RFB protocol message loop
     while (TRUE)
@@ -247,11 +193,11 @@ int main(int argc, char** argv)
             print_log("Refresh");
             fprintf(stderr, "\n");
 
-            trigger_refresh(framebuf_fp, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
+            trigger_refresh(framebuf_fd, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
         }
     }
 
     rfbClientCleanup(client);
-    close(framebuf_fp);
+    close(framebuf_fd);
     return EXIT_SUCCESS;
 }

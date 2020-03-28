@@ -65,9 +65,9 @@ void rm_screen_update(rm_screen* screen)
     update.update_region.left = 0;
     update.update_region.width = screen->framebuf_varinfo.xres;
     update.update_region.height = screen->framebuf_varinfo.yres;
-    update.waveform_mode = 0x0002;
+    update.waveform_mode = MXCFB_WAVEFORM_MODE_GC16;
     update.temp = 0;
-    update.update_mode = 0;
+    update.update_mode = MXCFB_UPDATE_MODE_PARTIAL;
     update.update_marker = screen->next_update_marker;
     update.flags = 0;
 

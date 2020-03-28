@@ -9,8 +9,8 @@ TODO
 Clone the repository and change directory into it.
 
 ```sh
-git clone git@forge.delab.re:matteo/rmvnc.git
-cd rmvnc
+git clone git@forge.delab.re:matteo/rmvncclient.git
+cd rmvncclient
 ```
 
 Create a directory in which build artifacts will be generated.
@@ -22,7 +22,7 @@ cd build
 
 ## Build libvncserver
 
-In this section, we will build `libvncserver`, which is a required dependency of `rmvnc`, for the reMarkable.
+In this section, we will build `libvncserver`, which is a required dependency of `rmvncclient`, for the reMarkable.
 Firstly, clone the repository and change directory into it.
 
 ```sh
@@ -61,7 +61,7 @@ The output should not contain any error and should end with those lines:
 ```
 -- Configuring done
 -- Generating done
--- Build files have been written to: (...)/rmvnc/build/libvncserver/build/Release
+-- Build files have been written to: (...)/rmvncclient/build/libvncserver/build/Release
 ```
 
 Run build.
@@ -76,6 +76,6 @@ Install the libraries into your system. They will be installed into the reMarkab
 sudo make install
 ```
 
-## Build rmvnc
+## Build rmvncclient
 
 TODO

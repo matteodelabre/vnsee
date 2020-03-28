@@ -6,7 +6,9 @@ uint64_t get_time_us()
 {
     struct timespec cur_time_st;
     clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
-    return cur_time_st.tv_sec * 1000000 + cur_time_st.tv_nsec / 1000;
+
+    return (uint64_t) cur_time_st.tv_sec * 1000000
+         + (uint64_t) cur_time_st.tv_nsec / 1000;
 }
 
 void print_log(const char* type)

@@ -2,24 +2,24 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-uint64_t get_time_us()
+mono_time get_mono_time()
 {
     struct timespec cur_time_st;
     clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
 
-    return (uint64_t) cur_time_st.tv_sec * 1000000
-         + (uint64_t) cur_time_st.tv_nsec / 1000;
+    return (mono_time) cur_time_st.tv_sec * 1000000
+         + (mono_time) cur_time_st.tv_nsec / 1000;
 }
 
 void print_log(const char* type)
 {
-    uint64_t time_us = get_time_us();
+    mono_time cur_time = get_mono_time();
 
     fprintf(
         stderr,
         "%" PRIu64 ".%06" PRIu64 " [%s] ",
-        time_us / 1000000,
-        time_us % 1000000,
+        cur_time / 1000000,
+        cur_time % 1000000,
         type
     );
 }

@@ -99,7 +99,7 @@ struct mxcfb_update_data
  * Grayscale clearing mode.
  *
  * For high quality images.
- * Will flash the screen when using MXCFB_UPDATE_MODE_FULL.
+ * Will flash the screen when used with MXCFB_UPDATE_MODE_FULL.
  *
  * Update time: 450 ms.
  * Ghosting: Very low.

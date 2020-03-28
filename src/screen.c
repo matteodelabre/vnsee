@@ -55,21 +55,52 @@ rm_screen rm_screen_init()
     return screen;
 }
 
-void rm_screen_update(rm_screen* screen)
+void rm_screen_update(rm_screen* screen, int x, int y, int w, int h)
 {
-    print_log("Refresh start");
-    fprintf(stderr, "Marker = %" PRIu32 "\n", screen->next_update_marker);
+    // Clip update region to screen bounds
+    if (x < 0)
+    {
+        w += x;
+        x = 0;
+    }
+
+    if (y < 0)
+    {
+        h += y;
+        y = 0;
+    }
+
+    if (x + w > screen->framebuf_varinfo.xres)
+    {
+        w = screen->framebuf_varinfo.xres - x;
+    }
+
+    if (y + h > screen->framebuf_varinfo.yres)
+    {
+        h = screen->framebuf_varinfo.yres - y;
+    }
+
+    // Ignore out of bounds or null updates
+    if (x > screen->framebuf_varinfo.xres
+        || y > screen->framebuf_varinfo.yres
+        || w == 0 || h == 0)
+    {
+        return;
+    }
+
+    print_log("Screen Update");
+    fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
 
     struct mxcfb_update_data update;
-    update.update_region.top = 0;
-    update.update_region.left = 0;
-    update.update_region.width = screen->framebuf_varinfo.xres;
-    update.update_region.height = screen->framebuf_varinfo.yres;
+    update.update_region.left = x;
+    update.update_region.top = y;
+    update.update_region.width = w;
+    update.update_region.height = h;
     update.waveform_mode = MXCFB_WAVEFORM_MODE_GC16;
-    update.temp = 0;
+    update.temp = 0x18;
     update.update_mode = MXCFB_UPDATE_MODE_PARTIAL;
-    update.update_marker = screen->next_update_marker;
     update.flags = 0;
+    update.update_marker = screen->next_update_marker;
 
     if (ioctl(screen->framebuf_fd, MXCFB_SEND_UPDATE, &update) == -1)
     {
@@ -86,9 +117,6 @@ void rm_screen_update(rm_screen* screen)
         perror("rm_screen_update - ioctl wait for update complete");
         exit(EXIT_FAILURE);
     }
-
-    print_log("Refresh end");
-    fprintf(stderr, "Marker = %" PRIu32 "\n", screen->next_update_marker);
 
     if (screen->next_update_marker == 255)
     {

@@ -10,9 +10,42 @@
 
 /**
  * Tag used for storing in/retrieving from the client object
- * the flag indicating whether a screen refresh is needed.
+ * the structure in which updates are accumulated.
  */
-#define NEEDS_REFRESH_TAG ((void*) 0)
+#define UPDATE_INFO_TAG ((void*) 0)
+
+/**
+ * Time to wait after the last update from VNC before updating the screen
+ * (in microseconds).
+ *
+ * VNC servers tend to send a lot of small updates in a short period of time.
+ * This delay allows grouping those small updates into a larger screen update.
+ */
+#define UPDATE_DELAY 100000 /* 100 ms */
+
+/**
+ * Accumulate updates received from the VNC server.
+ */
+typedef struct vnc_update_info
+{
+    /** Left bound of the overall updated rectangle (in pixels). */
+    int x;
+
+    /** Top bound of the overall updated rectangle (in pixels). */
+    int y;
+
+    /** Width of the overall updated rectangle (in pixels). */
+    int w;
+
+    /** Height of the overall updated rectangle (in pixels). */
+    int h;
+
+    /** Whether at least one update has been registered. */
+    short has_update;
+
+    /** Last time an update was registered (in microseconds). */
+    mono_time last_update_time;
+} vnc_update_info;
 
 rfbBool create_framebuf(rfbClient* client)
 {
@@ -31,22 +64,55 @@ rfbBool create_framebuf(rfbClient* client)
  */
 void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 {
-    print_log("Update");
+    // Register the region as pending update, potentially extending
+    // an existing one
+    vnc_update_info* update = rfbClientGetClientData(client, UPDATE_INFO_TAG);
+
+    print_log("VNC Update");
     fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
 
-    short* needs_refresh = rfbClientGetClientData(client, NEEDS_REFRESH_TAG);
-    *needs_refresh = 1;
+    if (update->has_update)
+    {
+        int left_x = x < update->x ? x : update->x;
+        int top_y = y < update->y ? y : update->y;
+
+        int right_x_1 = x + w;
+        int right_x_2 = update->x + update->w;
+        int right_x = right_x_1 > right_x_2 ? right_x_1 : right_x_2;
+
+        int bottom_y_1 = y + h;
+        int bottom_y_2 = update->y + update->h;
+        int bottom_y = bottom_y_1 > bottom_y_2 ? bottom_y_1 : bottom_y_2;
+
+        update->x = left_x;
+        update->y = top_y;
+        update->w = right_x - left_x;
+        update->h = bottom_y - top_y;
+    }
+    else
+    {
+        update->x = x;
+        update->y = y;
+        update->w = w;
+        update->h = h;
+        update->has_update = 1;
+    }
+
+    update->last_update_time = get_mono_time();
 }
 
 int main(int argc, char** argv)
 {
-    rm_screen screen = rm_screen_init();
-
-    // Flag activated when the screen needs a refresh
-    short needs_refresh = 0;
-
     // Setup the VNC connection
     rfbClient* client = rfbGetClient(0, 0, 0);
+
+    // Accumulator for updates received from the server
+    vnc_update_info update_info;
+    rfbClientSetClientData(client, UPDATE_INFO_TAG, &update_info);
+
+    // Open and map the device framebuffer to memory
+    rm_screen screen = rm_screen_init();
+    client->frameBuffer = screen.framebuf_ptr;
 
     // Use the same format as expected by the device framebuffer
     client->format.bitsPerPixel = screen.framebuf_varinfo.bits_per_pixel;
@@ -57,27 +123,23 @@ int main(int argc, char** argv)
     client->format.blueShift = screen.framebuf_varinfo.blue.offset;
     client->format.blueMax = (1 << screen.framebuf_varinfo.blue.length) - 1;
 
-    client->frameBuffer = screen.framebuf_ptr;
-
     client->MallocFrameBuffer = create_framebuf;
     client->GotFrameBufferUpdate = update_framebuf;
 
-    rfbClientSetClientData(client, NEEDS_REFRESH_TAG, &needs_refresh);
-
-    // Connect to the VNC server
+    // Connect to the server
     if (!rfbInitClient(client, &argc, argv))
     {
         return EXIT_FAILURE;
     }
 
-    // Make sure the VNC server gives us a compatible format
+    // Make sure the server gives us a compatible format
     assert(client->width == screen.framebuf_varinfo.xres_virtual);
     assert(client->height <= screen.framebuf_varinfo.yres_virtual);
 
     // RFB protocol message loop
     while (TRUE)
     {
-        int result = WaitForMessage(client, /* timeout μs = */ 100000);
+        int result = WaitForMessage(client, /* timeout = */ UPDATE_DELAY);
 
         if (result < 0)
         {
@@ -93,10 +155,17 @@ int main(int argc, char** argv)
             }
         }
 
-        if (needs_refresh)
+        if (update_info.has_update
+            && update_info.last_update_time + UPDATE_DELAY < get_mono_time())
         {
-            needs_refresh = 0;
-            rm_screen_update(&screen);
+            update_info.has_update = 0;
+            rm_screen_update(
+                &screen,
+                update_info.x,
+                update_info.y,
+                update_info.w,
+                update_info.h
+            );
         }
     }
 

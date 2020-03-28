@@ -4,10 +4,12 @@
 #include <stdint.h>
 #include <time.h>
 
+typedef uint64_t mono_time;
+
 /**
  * Get the current monotonic time in microseconds.
  */
-uint64_t get_time_us();
+mono_time get_mono_time();
 
 /**
  * Print the prefix for logging an event.

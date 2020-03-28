@@ -35,9 +35,14 @@ typedef struct rm_screen
 rm_screen rm_screen_init();
 
 /**
- * Trigger a screen update.
+ * Update the given region of the screen.
+ *
+ * @param x Left bound of the region to update (in pixels).
+ * @param y Top bound of the region to update (in pixels).
+ * @param w Width of the region to update (in pixels).
+ * @param h Height of the region to update (in pixels).
  */
-void rm_screen_update(rm_screen* screen);
+void rm_screen_update(rm_screen* screen, int x, int y, int w, int h);
 
 /**
  * Free resources held by the screen structure.

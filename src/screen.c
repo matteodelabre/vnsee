@@ -17,7 +17,7 @@ rm_screen rm_screen_init()
 
     if (screen.framebuf_fd == -1)
     {
-        perror("open device framebuffer");
+        perror("rm_screen_init - open device framebuffer");
         exit(EXIT_FAILURE);
     }
 
@@ -27,7 +27,7 @@ rm_screen rm_screen_init()
             &screen.framebuf_varinfo
         ) == -1)
     {
-        perror("ioctl framebuffer vscreeninfo");
+        perror("rm_screen_init - ioctl framebuffer vscreeninfo");
         exit(EXIT_FAILURE);
     }
 
@@ -37,7 +37,7 @@ rm_screen rm_screen_init()
             &screen.framebuf_fixinfo
         ) == -1)
     {
-        perror("ioctl framebuffer fscreeninfo");
+        perror("rm_screen_init - ioctl framebuffer fscreeninfo");
         exit(EXIT_FAILURE);
     }
 
@@ -70,14 +70,22 @@ void rm_screen_update(rm_screen* screen)
     update.update_mode = 0;
     update.update_marker = screen->next_update_marker;
     update.flags = 0;
-    ioctl(screen->framebuf_fd, MXCFB_SEND_UPDATE, &update);
 
-    // TODO: Check for ioctl failure
+    if (ioctl(screen->framebuf_fd, MXCFB_SEND_UPDATE, &update) == -1)
+    {
+        perror("rm_screen_update - ioctl send update");
+        exit(EXIT_FAILURE);
+    }
 
     struct mxcfb_update_marker_data wait;
     wait.update_marker = screen->next_update_marker;
     wait.collision_test = 0;
-    ioctl(screen->framebuf_fd, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &wait);
+
+    if (ioctl(screen->framebuf_fd, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &wait) == -1)
+    {
+        perror("rm_screen_update - ioctl wait for update complete");
+        exit(EXIT_FAILURE);
+    }
 
     print_log("Refresh end");
     fprintf(stderr, "Marker = %" PRIu32 "\n", screen->next_update_marker);

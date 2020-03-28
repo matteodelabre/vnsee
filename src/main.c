@@ -160,10 +160,7 @@ int main(int argc, char** argv)
             needs_refresh = 0;
             last_refresh = cur_time;
 
-            print_log("Refresh");
-            fprintf(stderr, "\n");
-
-            trigger_refresh(framebuf_fd, 0, 0, RM_SCREEN_COLS, RM_SCREEN_ROWS);
+            trigger_refresh(framebuf_fd);
         }
     }
 

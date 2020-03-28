@@ -13,6 +13,6 @@
 /** Depth of each screen pixel in bytes. */
 #define RM_SCREEN_DEPTH 2
 
-void trigger_refresh(int fb, int x, int y, int w, int h);
+void trigger_refresh(int fb);
 
 #endif // REFRESH_H

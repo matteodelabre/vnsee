@@ -1,5 +1,5 @@
 #include "defs.h"
-#include "refresh.h"
+#include "screen.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/ioctl.h>

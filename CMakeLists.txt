@@ -9,7 +9,7 @@ set_property(TARGET PkgConfig::VNCCLIENT PROPERTY
 
 add_executable(revnc
     src/main.c
-    src/refresh.c
+    src/screen.c
 )
 
 target_link_libraries(revnc PUBLIC PkgConfig::VNCCLIENT)

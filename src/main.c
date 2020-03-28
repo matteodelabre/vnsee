@@ -1,5 +1,5 @@
 #include "defs.h"
-#include "refresh.h"
+#include "screen.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>

@@ -88,8 +88,10 @@ void rm_screen_update(rm_screen* screen, int x, int y, int w, int h)
         return;
     }
 
+#ifdef TRACE
     print_log("Screen Update");
     fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
+#endif // TRACE
 
     struct mxcfb_update_data update;
     update.update_region.left = x;

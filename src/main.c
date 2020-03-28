@@ -68,8 +68,10 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     // an existing one
     vnc_update_info* update = rfbClientGetClientData(client, UPDATE_INFO_TAG);
 
+#ifdef TRACE
     print_log("VNC Update");
     fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
+#endif // TRACE
 
     if (update->has_update)
     {

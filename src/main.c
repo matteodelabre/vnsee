@@ -1,4 +1,3 @@
-#include "defs.h"
 #include "screen.h"
 #include <assert.h>
 #include <errno.h>

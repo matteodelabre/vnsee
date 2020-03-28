@@ -1,4 +1,3 @@
-#include "defs.h"
 #include "screen.h"
 #include <stdint.h>
 #include <stdio.h>

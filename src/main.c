@@ -1,4 +1,5 @@
 #include "screen.h"
+#include "util.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -9,7 +10,6 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <time.h>
 
 /**
  * Tag used for storing in/retrieving from the client object
@@ -27,35 +27,6 @@
  * Maximum time in microseconds to wait between two screen refreshes.
  */
 #define REFRESH_RATE 500000
-
-/**
- * Get the current monotonic time in microseconds.
- */
-uint64_t get_time_us()
-{
-    struct timespec cur_time_st;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
-    return cur_time_st.tv_sec * 1000000 + cur_time_st.tv_nsec / 1000;
-}
-
-/**
- * Print the prefix for logging an event.
- *
- * @param type Type of event.
- */
-void print_log(const char* type)
-{
-    struct timespec cur_time_st;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &cur_time_st);
-
-    fprintf(
-        stderr,
-        "%ld.%06ld [%s] ",
-        cur_time_st.tv_sec,
-        cur_time_st.tv_nsec / 1000,
-        type
-    );
-}
 
 /**
  * Map the device framebuffer to memory and make it available for
@@ -83,7 +54,7 @@ rfbBool create_framebuf(rfbClient* client)
     uint8_t* data = mmap(
         /* addr = */ NULL,
         /* len = */ (RM_SCREEN_COLS + RM_SCREEN_COL_PAD)
-        * RM_SCREEN_ROWS * RM_SCREEN_DEPTH,
+                    * RM_SCREEN_ROWS * RM_SCREEN_DEPTH,
         /* prot = */ PROT_READ | PROT_WRITE,
         /* flags = */ MAP_SHARED,
         /* fd = */ framebuf_fd,

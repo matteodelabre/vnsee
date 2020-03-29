@@ -135,8 +135,20 @@ int main(int argc, char** argv)
     }
 
     // Make sure the server gives us a compatible format
-    assert(client->width == screen.framebuf_varinfo.xres_virtual);
-    assert(client->height <= screen.framebuf_varinfo.yres_virtual);
+    if (client->width != screen.framebuf_varinfo.xres_virtual
+        || client->height > screen.framebuf_varinfo.yres_virtual)
+    {
+        fprintf(
+            stderr,
+            "\nError: Server uses an unsupported resolution (%dx%d). This\n"
+            "client can only cope with a screen width of exactly %d and a\n"
+            "screen height no larger than %d.\n",
+            client->width, client->height,
+            screen.framebuf_varinfo.xres_virtual,
+            screen.framebuf_varinfo.yres_virtual
+        );
+        return EXIT_FAILURE;
+    }
 
     // RFB protocol message loop
     while (TRUE)

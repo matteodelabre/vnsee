@@ -26,6 +26,7 @@ set_property(TARGET PkgConfig::VNCCLIENT PROPERTY
     INTERFACE_LINK_LIBRARIES "${VNCCLIENT_STATIC_LIBRARIES}")
 
 add_executable(rmvncclient
+    src/client.cpp
     src/main.cpp
     src/screen.cpp
 )

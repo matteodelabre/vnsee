@@ -1,18 +1,20 @@
-#include "screen.h"
-#include "util.h"
-#include <assert.h>
-#include <errno.h>
-#include <inttypes.h>
+#include "screen.hpp"
+#include "log.hpp"
+#include <cerrno>
+#include <cstdlib>
+#include <chrono>
+#include <iostream>
 #include <rfb/rfbclient.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
+// IWYU pragma: no_include <rfb/rfbproto.h>
+#include <system_error>
+
+namespace chrono = std::chrono;
 
 /**
  * Tag used for storing in/retrieving from the client object
  * the structure in which updates are accumulated.
  */
-#define UPDATE_INFO_TAG ((void*) 0)
+constexpr auto update_info_tag = 1;
 
 /**
  * Time to wait after the last update from VNC before updating the screen
@@ -21,12 +23,12 @@
  * VNC servers tend to send a lot of small updates in a short period of time.
  * This delay allows grouping those small updates into a larger screen update.
  */
-#define UPDATE_DELAY 100000 /* 100 ms */
+constexpr chrono::milliseconds update_delay{100};
 
 /**
  * Accumulate updates received from the VNC server.
  */
-typedef struct vnc_update_info
+struct vnc_update_info
 {
     /** Left bound of the overall updated rectangle (in pixels). */
     int x;
@@ -44,10 +46,10 @@ typedef struct vnc_update_info
     short has_update;
 
     /** Last time an update was registered (in microseconds). */
-    mono_time last_update_time;
-} vnc_update_info;
+    chrono::steady_clock::time_point last_update_time;
+};
 
-rfbBool create_framebuf(rfbClient* client)
+rfbBool create_framebuf(rfbClient*)
 {
     // No-op: Write directly to the memory-mapped framebuffer
     return TRUE;
@@ -66,12 +68,11 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 {
     // Register the region as pending update, potentially extending
     // an existing one
-    vnc_update_info* update = rfbClientGetClientData(client, UPDATE_INFO_TAG);
+    vnc_update_info* update = reinterpret_cast<vnc_update_info*>(
+        rfbClientGetClientData(client, reinterpret_cast<void*>(
+            update_info_tag)));
 
-#ifdef TRACE
-    print_log("VNC Update");
-    fprintf(stderr, "%dx%d+%d+%d\n", w, h, x, y);
-#endif // TRACE
+    log::print("VNC Update") << w << 'x' << h << '+' << x << '+' << y << '\n';
 
     if (update->has_update)
     {
@@ -100,7 +101,7 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
         update->has_update = 1;
     }
 
-    update->last_update_time = get_mono_time();
+    update->last_update_time = chrono::steady_clock::now();
 }
 
 int main(int argc, char** argv)
@@ -110,20 +111,21 @@ int main(int argc, char** argv)
 
     // Accumulator for updates received from the server
     vnc_update_info update_info;
-    rfbClientSetClientData(client, UPDATE_INFO_TAG, &update_info);
+    rfbClientSetClientData(client, reinterpret_cast<void*>(update_info_tag),
+        &update_info);
 
     // Open and map the device framebuffer to memory
-    rm_screen screen = rm_screen_init();
-    client->frameBuffer = screen.framebuf_ptr;
+    rm::screen screen;
+    client->frameBuffer = screen.get_data();
 
     // Use the same format as expected by the device framebuffer
-    client->format.bitsPerPixel = screen.framebuf_varinfo.bits_per_pixel;
-    client->format.redShift = screen.framebuf_varinfo.red.offset;
-    client->format.redMax = (1 << screen.framebuf_varinfo.red.length) - 1;
-    client->format.greenShift = screen.framebuf_varinfo.green.offset;
-    client->format.greenMax = (1 << screen.framebuf_varinfo.green.length) - 1;
-    client->format.blueShift = screen.framebuf_varinfo.blue.offset;
-    client->format.blueMax = (1 << screen.framebuf_varinfo.blue.length) - 1;
+    client->format.bitsPerPixel = screen.get_bits_per_pixel();
+    client->format.redShift = screen.get_red_offset();
+    client->format.redMax = screen.get_red_max();
+    client->format.greenShift = screen.get_green_offset();
+    client->format.greenMax = screen.get_green_max();
+    client->format.blueShift = screen.get_blue_offset();
+    client->format.blueMax = screen.get_blue_max();
 
     client->MallocFrameBuffer = create_framebuf;
     client->GotFrameBufferUpdate = update_framebuf;
@@ -135,30 +137,36 @@ int main(int argc, char** argv)
     }
 
     // Make sure the server gives us a compatible format
-    if (client->width != screen.framebuf_varinfo.xres_virtual
-        || client->height > screen.framebuf_varinfo.yres_virtual)
+    if (client->width < 0 || client->height < 0
+        || static_cast<unsigned int>(client->width)
+            != screen.get_xres_memory()
+        || static_cast<unsigned int>(client->height)
+            > screen.get_yres_memory())
     {
-        fprintf(
-            stderr,
-            "\nError: Server uses an unsupported resolution (%dx%d). This\n"
-            "client can only cope with a screen width of exactly %d and a\n"
-            "screen height no larger than %d.\n",
-            client->width, client->height,
-            screen.framebuf_varinfo.xres_virtual,
-            screen.framebuf_varinfo.yres_virtual
-        );
+        std::cerr << "\nError: Server uses an unsupported resolution ("
+            << client->width << 'x' << client->height << "). This client can "
+            "only cope with a screen width of exactly "
+            << screen.get_xres_memory() << " pixels and a screen height no "
+            "larger than " << screen.get_yres_memory() << " pixels.\n";
         return EXIT_FAILURE;
     }
 
     // RFB protocol message loop
     while (TRUE)
     {
-        int result = WaitForMessage(client, /* timeout = */ UPDATE_DELAY);
+        int result = WaitForMessage(
+            client,
+            /* timeout = */
+            chrono::duration_cast<chrono::microseconds>(update_delay).count()
+        );
 
         if (result < 0)
         {
-            perror("main - WaitForMessage");
-            break;
+            throw std::system_error(
+                errno,
+                std::generic_category(),
+                "(main) Wait for message"
+            );
         }
 
         if (result > 0)
@@ -169,21 +177,17 @@ int main(int argc, char** argv)
             }
         }
 
-        if (update_info.has_update
-            && update_info.last_update_time + UPDATE_DELAY < get_mono_time())
+        if (update_info.has_update && update_info.last_update_time
+                + update_delay < chrono::steady_clock::now())
         {
             update_info.has_update = 0;
-            rm_screen_update(
-                &screen,
-                update_info.x,
-                update_info.y,
-                update_info.w,
-                update_info.h
+            screen.update(
+                update_info.x, update_info.y,
+                update_info.w, update_info.h
             );
         }
     }
 
     rfbClientCleanup(client);
-    rm_screen_free(&screen);
     return EXIT_SUCCESS;
 }

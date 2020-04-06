@@ -1,22 +1,33 @@
 cmake_minimum_required(VERSION 3.4)
-project(rmvncclient C)
+project(rmvncclient)
 
-# Find libvncclient
+option(CHECK_INCLUDES "Run include-what-you-use to check #includes" OFF)
+option(TRACE "Print tracing messages on standard output" OFF)
+
+if(CHECK_INCLUDES)
+    find_program(IWYU_PATH include-what-you-use)
+
+    if(NOT IWYU_PATH)
+        message(FATAL_ERROR "Could not find include-what-you-use")
+    endif()
+
+    set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH})
+endif()
+
+if(TRACE)
+    message(STATUS "Trace mode enabled")
+    add_definitions(-DTRACE)
+endif()
+
+# Find dependencies
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(VNCCLIENT REQUIRED IMPORTED_TARGET libvncclient)
 set_property(TARGET PkgConfig::VNCCLIENT PROPERTY
     INTERFACE_LINK_LIBRARIES "${VNCCLIENT_STATIC_LIBRARIES}")
 
-option(TRACE "Print screen updates to stderr" OFF)
-
-if(TRACE)
-    add_definitions(-DTRACE)
-endif(TRACE)
-
 add_executable(rmvncclient
-    src/main.c
-    src/screen.c
-    src/util.c
+    src/main.cpp
+    src/screen.cpp
 )
 
 target_link_libraries(rmvncclient PUBLIC PkgConfig::VNCCLIENT)

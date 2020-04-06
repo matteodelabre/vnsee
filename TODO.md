@@ -1,5 +1,4 @@
 * Software
-    - Detect VNC server IP through the $SSH_CLIENT environment variable
     - Forward touch input through VNC
 * Documentation
     - Add demo

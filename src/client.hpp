@@ -1,10 +1,11 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "screen.hpp"
 #include <chrono>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <rfb/rfbproto.h>
+
+namespace rm { class screen; }
 
 /**
  * VNC client for the reMarkable tablet.

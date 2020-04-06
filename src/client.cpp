@@ -1,11 +1,17 @@
 #include "client.hpp"
 #include "log.hpp"
+#include "screen.hpp"
+#include <algorithm>
 #include <cerrno>
-#include <cstdlib>
 #include <chrono>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-#include <sstream>
+#include <stdexcept>
 #include <system_error>
+#include <rfb/rfbclient.h>
+// IWYU pragma: no_include <type_traits>
+// IWYU pragma: no_include <rfb/rfbproto.h>
 
 namespace chrono = std::chrono;
 
@@ -78,7 +84,7 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 }
 
 client::client(const char* ip, int port, rm::screen& rm_screen)
-: rm_screen(rm_screen), vnc_client(rfbGetClient(0, 0, 0))
+: vnc_client(rfbGetClient(0, 0, 0)), rm_screen(rm_screen)
 {
     rfbClientSetClientData(
         this->vnc_client,

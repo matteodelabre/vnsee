@@ -1,4 +1,5 @@
 #include "client.hpp"
+#include "input.hpp"
 #include "screen.hpp"
 #include <cstdlib>
 #include <cstring>
@@ -51,11 +52,15 @@ int main(int argc, const char* argv[])
     }
 
     rm::screen screen;
+    rm::input input;
 
     std::cerr << "Connecting to " << server_ip << ":" << server_port << "\n";
-    client client_instance{server_ip.data(), server_port, screen};
+
+    client client_instance{
+        server_ip.data(), server_port,
+        screen, input
+    };
 
     client_instance.start();
-
     return EXIT_SUCCESS;
 }

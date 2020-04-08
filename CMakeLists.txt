@@ -27,8 +27,11 @@ set_property(TARGET PkgConfig::VNCCLIENT PROPERTY
 
 add_executable(rmvncclient
     src/client.cpp
+    src/input.cpp
     src/main.cpp
     src/screen.cpp
 )
+
+set_property(TARGET rmvncclient PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(rmvncclient PUBLIC PkgConfig::VNCCLIENT)

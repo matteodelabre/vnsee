@@ -1,4 +1,5 @@
 #include "client.hpp"
+#include "input.hpp"
 #include "log.hpp"
 #include "screen.hpp"
 #include <algorithm>
@@ -83,8 +84,14 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     update_info->last_update_time = chrono::steady_clock::now();
 }
 
-client::client(const char* ip, int port, rm::screen& rm_screen)
-: vnc_client(rfbGetClient(0, 0, 0)), rm_screen(rm_screen)
+client::client(
+    const char* ip, int port,
+    rm::screen& rm_screen,
+    rm::input& rm_input
+)
+: vnc_client(rfbGetClient(0, 0, 0))
+, rm_screen(rm_screen)
+, rm_input(rm_input)
 {
     rfbClientSetClientData(
         this->vnc_client,
@@ -142,6 +149,7 @@ void client::start()
 {
     while (true)
     {
+        // Wait until events are available from the server
         int result = WaitForMessage(
             this->vnc_client,
             /* timeout = */
@@ -157,6 +165,7 @@ void client::start()
             );
         }
 
+        // Process events from the VNC server
         if (result > 0)
         {
             if (!HandleRFBServerMessage(this->vnc_client))
@@ -165,6 +174,50 @@ void client::start()
             }
         }
 
+        // Process events from the reMarkable input device
+        if (this->rm_input.fetch_events())
+        {
+            auto prev_state = this->rm_input.get_previous_slots_state();
+            auto cur_state = this->rm_input.get_slots_state();
+
+            // Map touch coordinates to screen coordinates
+            auto x_slot_to_screen = [this](int x)
+            {
+                return this->rm_screen.get_xres() - this->rm_screen.get_xres()
+                    * x / rm::input::slot_state::x_max;
+            };
+
+            auto y_slot_to_screen = [this](int y)
+            {
+                return this->rm_screen.get_yres() - this->rm_screen.get_yres()
+                    * y / rm::input::slot_state::y_max;
+            };
+
+            for (const auto& [id, cur_slot] : cur_state)
+            {
+                SendPointerEvent(
+                    this->vnc_client,
+                    x_slot_to_screen(cur_slot.x),
+                    y_slot_to_screen(cur_slot.y),
+                    0
+                );
+            }
+
+            for (const auto& [id, prev_slot] : prev_state)
+            {
+                if (!cur_state.count(id))
+                {
+                    SendPointerEvent(
+                        this->vnc_client,
+                        x_slot_to_screen(prev_slot.x),
+                        y_slot_to_screen(prev_slot.y),
+                        0
+                    );
+                }
+            }
+        }
+
+        // Refresh the reMarkable screen if needed
         if (this->update_info.has_update && this->update_info.last_update_time
                 + update_delay < chrono::steady_clock::now())
         {

@@ -15,9 +15,8 @@ namespace rm
 {
 
 screen::screen()
+: framebuf_fd(open("/dev/fb0", O_RDWR))
 {
-    this->framebuf_fd = open("/dev/fb0", O_RDWR);
-
     if (this->framebuf_fd == -1)
     {
         throw std::system_error(

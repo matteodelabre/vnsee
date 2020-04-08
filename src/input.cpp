@@ -29,6 +29,11 @@ input::~input()
     close(this->input_fd);
 }
 
+int input::get_device_fd()
+{
+    return this->input_fd;
+}
+
 bool input::fetch_events()
 {
     // See the Linux input protocol documentation

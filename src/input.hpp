@@ -15,6 +15,9 @@ public:
     input();
     ~input();
 
+    /** Access the file descriptor of the input device. */
+    int get_device_fd();
+
     /**
      * Check for new events.
      *

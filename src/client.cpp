@@ -10,6 +10,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
+#include <poll.h>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <type_traits>
 // IWYU pragma: no_include <rfb/rfbproto.h>
@@ -92,6 +93,7 @@ client::client(
 : vnc_client(rfbGetClient(0, 0, 0))
 , rm_screen(rm_screen)
 , rm_input(rm_input)
+, update_info{}
 {
     rfbClientSetClientData(
         this->vnc_client,
@@ -147,26 +149,26 @@ client::~client()
 
 void client::start()
 {
-    while (true)
+    pollfd polled_fds[2];
+
+    int poll_vnc = 0;
+    polled_fds[poll_vnc].fd = this->vnc_client->sock;
+    polled_fds[poll_vnc].events = POLLIN;
+
+    int poll_input = 1;
+    polled_fds[poll_input].fd = this->rm_input.get_device_fd();
+    polled_fds[poll_input].events = POLLIN;
+
+    // Wait for events from the VNC server or from device inputs
+    while (poll(
+                polled_fds,
+                /* nfds = */ 2,
+                /* timeout = */ chrono::duration_cast<chrono::milliseconds>
+                    (update_delay).count()
+            ) != -1)
     {
-        // Wait until events are available from the server
-        int result = WaitForMessage(
-            this->vnc_client,
-            /* timeout = */
-            chrono::duration_cast<chrono::microseconds>(update_delay).count()
-        );
-
-        if (result < 0)
-        {
-            throw std::system_error(
-                errno,
-                std::generic_category(),
-                "(main) Wait for message"
-            );
-        }
-
         // Process events from the VNC server
-        if (result > 0)
+        if (polled_fds[poll_vnc].revents & POLLIN)
         {
             if (!HandleRFBServerMessage(this->vnc_client))
             {
@@ -174,8 +176,20 @@ void client::start()
             }
         }
 
+        // Refresh the reMarkable screen if needed
+        if (this->update_info.has_update && this->update_info.last_update_time
+                + update_delay < chrono::steady_clock::now())
+        {
+            this->update_info.has_update = 0;
+            this->rm_screen.update(
+                this->update_info.x, this->update_info.y,
+                this->update_info.w, this->update_info.h
+            );
+        }
+
         // Process events from the reMarkable input device
-        if (this->rm_input.fetch_events())
+        if (polled_fds[poll_input].revents & POLLIN &&
+                this->rm_input.fetch_events())
         {
             auto prev_state = this->rm_input.get_previous_slots_state();
             auto cur_state = this->rm_input.get_slots_state();
@@ -216,16 +230,11 @@ void client::start()
                 }
             }
         }
-
-        // Refresh the reMarkable screen if needed
-        if (this->update_info.has_update && this->update_info.last_update_time
-                + update_delay < chrono::steady_clock::now())
-        {
-            this->update_info.has_update = 0;
-            this->rm_screen.update(
-                this->update_info.x, this->update_info.y,
-                this->update_info.w, this->update_info.h
-            );
-        }
     }
+
+    throw std::system_error(
+        errno,
+        std::generic_category(),
+        "(main) Wait for message"
+    );
 }

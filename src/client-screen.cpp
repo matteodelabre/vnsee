@@ -47,13 +47,13 @@ client::event_loop_status client::event_loop_screen()
     return {false, -1};
 }
 
-rfbBool client_create_framebuf(rfbClient*)
+rfbBool client::create_framebuf(rfbClient*)
 {
     // No-op: Data is written directly to the memory-mapped framebuffer
     return true;
 }
 
-void client_update_framebuf(rfbClient* client, int x, int y, int w, int h)
+void client::update_framebuf(rfbClient* client, int x, int y, int w, int h)
 {
     // Register the region as pending update, potentially extending
     // an existing one

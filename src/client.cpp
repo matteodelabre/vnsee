@@ -40,8 +40,8 @@ client::client(
     rmioc::screen& rm_screen,
     rmioc::input& rm_input
 )
-: update_info{}
-, vnc_client(rfbGetClient(0, 0, 0))
+: vnc_client(rfbGetClient(0, 0, 0))
+, update_info{}
 , rm_screen(rm_screen)
 , rm_input(rm_input)
 {
@@ -58,8 +58,8 @@ client::client(
     this->vnc_client->serverHost = strdup(ip);
     this->vnc_client->serverPort = port;
 
-    this->vnc_client->MallocFrameBuffer = client_create_framebuf;
-    this->vnc_client->GotFrameBufferUpdate = client_update_framebuf;
+    this->vnc_client->MallocFrameBuffer = client::create_framebuf;
+    this->vnc_client->GotFrameBufferUpdate = client::update_framebuf;
 
     // Configure connection with device framebuffer settings
     this->vnc_client->frameBuffer = this->rm_screen.get_data();

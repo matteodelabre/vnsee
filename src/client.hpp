@@ -40,34 +40,10 @@ public:
      */
     void event_loop();
 
-    /** Accumulator for updates received from the VNC server. */
-    struct update_info_struct
-    {
-        /** Left bound of the overall updated rectangle (in pixels). */
-        int x;
-
-        /** Top bound of the overall updated rectangle (in pixels). */
-        int y;
-
-        /** Width of the overall updated rectangle (in pixels). */
-        int w;
-
-        /** Height of the overall updated rectangle (in pixels). */
-        int h;
-
-        /** Whether at least one update has been registered. */
-        short has_update;
-
-        /** Last time an update was registered. */
-        std::chrono::steady_clock::time_point last_update_time;
-    };
-
     /** Tag used for accessing the update accumulator from the C callbacks. */
     static constexpr auto update_info_tag = 1;
 
 private:
-    update_info_struct update_info;
-
     /**
      * Informations returned by subroutines in the event loop.
      */
@@ -97,8 +73,51 @@ private:
     /** VNC connection. */
     rfbClient* vnc_client;
 
+    /** Accumulator for updates received from the VNC server. */
+    struct update_info_struct
+    {
+        /** Left bound of the overall updated rectangle (in pixels). */
+        int x;
+
+        /** Top bound of the overall updated rectangle (in pixels). */
+        int y;
+
+        /** Width of the overall updated rectangle (in pixels). */
+        int w;
+
+        /** Height of the overall updated rectangle (in pixels). */
+        int h;
+
+        /** Whether at least one update has been registered. */
+        short has_update;
+
+        /** Last time an update was registered. */
+        std::chrono::steady_clock::time_point last_update_time;
+    } update_info;
+
     /** reMarkable screen. */
     rmioc::screen& rm_screen;
+
+    /**
+     * Called by the VNC client library to initialize our local framebuffer.
+     *
+     * @param client Handle to the VNC client.
+     */
+    static rfbBool create_framebuf(rfbClient* client);
+
+    /**
+     * Called by the VNC client library to register an update from the server.
+     *
+     * @param client Handle to the VNC client.
+     * @param x Left bound of the updated rectangle (in pixels).
+     * @param y Top bound of the updated rectangle (in pixels).
+     * @param w Width of the updated rectangle (in pixels).
+     * @param h Height of the updated rectangle (in pixels).
+     */
+    static void update_framebuf(
+        rfbClient* client,
+        int x, int y, int w, int h
+    );
 
     /** reMarkable input device. */
     rmioc::input& rm_input;
@@ -172,19 +191,5 @@ private:
 
     std::map<int, touchpoint_state> touchpoints;
 }; // class client
-
-/** Called by the VNC client library to initialize our local framebuffer. */
-rfbBool client_create_framebuf(rfbClient*);
-
-/**
- * Called by the VNC client library to register an update from the server.
- *
- * @param client Handle to the VNC client.
- * @param x Left bound of the updated rectangle (in pixels).
- * @param y Top bound of the updated rectangle (in pixels).
- * @param w Width of the updated rectangle (in pixels).
- * @param h Height of the updated rectangle (in pixels).
- */
-void client_update_framebuf(rfbClient* client, int x, int y, int w, int h);
 
 #endif // CLIENT_HPP

@@ -34,6 +34,17 @@ constexpr auto update_info_tag = 1;
  */
 constexpr chrono::milliseconds update_delay{150};
 
+/**
+ * Minimal move in pixels to consider that a touchpoint has been dragged
+ * enough to initiate scrolling.
+ */
+constexpr int scroll_delta = 10;
+
+/**
+ * Scroll speed factor.
+ */
+constexpr double scroll_speed = 0.05;
+
 rfbBool create_framebuf(rfbClient*)
 {
     // No-op: Data is written directly to the memory-mapped framebuffer
@@ -256,47 +267,163 @@ client::event_loop_status client::event_loop_screen()
     return {false, -1};
 }
 
+namespace MouseButton
+{
+    int Left = 1;
+
+    int ScrollDown = 1 << 3;
+    int ScrollUp = 1 << 4;
+    int ScrollLeft = 1 << 5;
+    int ScrollRight = 1 << 6;
+}
+
+client::touchpoint_state::touchpoint_state(client& parent, int x, int y)
+: parent(parent)
+, x(x), y(y)
+, x_initial(x), y_initial(y)
+{}
+
+void client::touchpoint_state::update(int x, int y)
+{
+    this->x = x;
+    this->y = y;
+
+    // Initiate scrolling if the touchpoint has travelled enough
+    if (!this->scrolling())
+    {
+        if (std::abs(this->x - this->x_initial) >= scroll_delta)
+        {
+            this->x_scrolling = true;
+        }
+        else if (std::abs(this->y - this->y_initial) >= scroll_delta)
+        {
+            this->y_scrolling = true;
+        }
+    }
+
+    // Send discrete scroll events to reflect travelled distance
+    if (this->x_scrolling)
+    {
+        int x_units = (this->x - this->x_initial) * scroll_speed;
+
+        for (; x_units > this->x_sent_events; ++this->x_sent_events)
+        {
+            this->send_button_press(
+                this->x_sensor_to_screen(this->x_initial),
+                this->y_sensor_to_screen(this->y_initial),
+                MouseButton::ScrollRight
+            );
+        }
+
+        for (; x_units < this->x_sent_events; --this->x_sent_events)
+        {
+            this->send_button_press(
+                this->x_sensor_to_screen(this->x_initial),
+                this->y_sensor_to_screen(this->y_initial),
+                MouseButton::ScrollLeft
+            );
+        }
+    }
+
+    if (this->y_scrolling)
+    {
+        int y_units = (this->y - this->y_initial) * scroll_speed;
+
+        for (; y_units > this->y_sent_events; ++this->y_sent_events)
+        {
+            this->send_button_press(
+                this->x_sensor_to_screen(this->x_initial),
+                this->y_sensor_to_screen(this->y_initial),
+                MouseButton::ScrollUp
+            );
+        }
+
+        for (; y_units < this->y_sent_events; --this->y_sent_events)
+        {
+            this->send_button_press(
+                this->x_sensor_to_screen(this->x_initial),
+                this->y_sensor_to_screen(this->y_initial),
+                MouseButton::ScrollDown
+            );
+        }
+    }
+}
+
+void client::touchpoint_state::terminate()
+{
+    // Perform tap action if the touchpoint was not used for scrolling
+    if (!this->scrolling())
+    {
+        this->send_button_press(
+            this->x_sensor_to_screen(this->x),
+            this->y_sensor_to_screen(this->y),
+            MouseButton::Left
+        );
+    }
+}
+
+bool client::touchpoint_state::scrolling() const
+{
+    return this->x_scrolling || this->y_scrolling;
+}
+
+int client::touchpoint_state::x_sensor_to_screen(int x_value) const
+{
+    return this->parent.rm_screen.get_xres()
+         - this->parent.rm_screen.get_xres()
+         * x_value / rmioc::input::slot_state::x_max;
+}
+
+int client::touchpoint_state::y_sensor_to_screen(int y_value) const
+{
+    return this->parent.rm_screen.get_yres()
+         - this->parent.rm_screen.get_yres()
+         * y_value / rmioc::input::slot_state::y_max;
+}
+
+void client::touchpoint_state::send_button_press(int x, int y, int btn) const
+{
+    SendPointerEvent(this->parent.vnc_client, x, y, btn);
+    SendPointerEvent(this->parent.vnc_client, x, y, 0);
+}
+
 client::event_loop_status client::event_loop_input()
 {
     if (this->rm_input.fetch_events())
     {
-        auto prev_state = this->rm_input.get_previous_slots_state();
-        auto cur_state = this->rm_input.get_slots_state();
+        auto slots_state = this->rm_input.get_slots_state();
 
-        // Map touch coordinates to screen coordinates
-        auto x_slot_to_screen = [this](int x)
+        // Initialize new touchpoints or update existing ones
+        for (const auto& [id, slot] : slots_state)
         {
-            return this->rm_screen.get_xres() - this->rm_screen.get_xres()
-                * x / rmioc::input::slot_state::x_max;
-        };
+            auto touchpoint_it = this->touchpoints.find(id);
 
-        auto y_slot_to_screen = [this](int y)
-        {
-            return this->rm_screen.get_yres() - this->rm_screen.get_yres()
-                * y / rmioc::input::slot_state::y_max;
-        };
-
-        for (const auto& [id, cur_slot] : cur_state)
-        {
-            SendPointerEvent(
-                this->vnc_client,
-                x_slot_to_screen(cur_slot.x),
-                y_slot_to_screen(cur_slot.y),
-                0
-            );
+            if (touchpoint_it == std::end(this->touchpoints))
+            {
+                this->touchpoints.insert({
+                    id, touchpoint_state{*this, slot.x, slot.y}
+                });
+            }
+            else
+            {
+                touchpoint_it->second.update(slot.x, slot.y);
+            }
         }
 
-        for (const auto& [id, prev_slot] : prev_state)
+        // Remove stale touchpoints
+        for (
+            auto touchpoint_it = std::begin(this->touchpoints);
+            touchpoint_it != std::end(this->touchpoints);
+        )
         {
-            if (!cur_state.count(id))
+            int id = touchpoint_it->first;
+
+            if (!slots_state.count(id))
             {
-                SendPointerEvent(
-                    this->vnc_client,
-                    x_slot_to_screen(prev_slot.x),
-                    y_slot_to_screen(prev_slot.y),
-                    0
-                );
+                touchpoint_it->second.terminate();
+                touchpoint_it = this->touchpoints.erase(touchpoint_it);
             }
+            else { ++touchpoint_it; }
         }
     }
 

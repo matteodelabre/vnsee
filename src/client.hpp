@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 
 #include <chrono>
+#include <map>
 #include <utility>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <rfb/rfbproto.h>
@@ -92,6 +93,75 @@ private:
 
     /** reMarkable input device. */
     rmioc::input& rm_input;
+
+    class touchpoint_state
+    {
+    public:
+        touchpoint_state(client& parent, int x, int y);
+
+        /** Register a move of the touch point on the sensor. */
+        void update(int x, int y);
+
+        /** Register the removal of a touch point. */
+        void terminate();
+
+        /** Whether this touchpoint is used for scrolling in any direction. */
+        bool scrolling() const;
+
+    private:
+        /** Reference to the parent client instance. */
+        client& parent;
+
+        int x;
+        int y;
+
+        /** Initial X position of the touchpoint in the sensor frame. */
+        int x_initial;
+
+        /** Initial Y position of the touchpoint in the sensor frame. */
+        int y_initial;
+
+        /** True if this touchpoint is used for scrolling horizontally. */
+        bool x_scrolling = false;
+
+        /** True if this touchpoint is used for scrolling vertically. */
+        bool y_scrolling = false;
+
+        /**
+         * Effective number of horizontal discrete scroll events that were
+         * already sent to the server to reflect the dragging of this
+         * touchpoint.
+         *
+         * Negative values are for leftward events, positive for rightward.
+         */
+        int x_sent_events = 0;
+
+        /**
+         * Effective number of vertical discrete scroll events that were
+         * already sent to the server to reflect the dragging of this
+         * touchpoint.
+         *
+         * Negative values are for upward scroll, positive for downward.
+         */
+        int y_sent_events = 0;
+
+        /** Convert an X position on the sensor to its on-screen position. */
+        int x_sensor_to_screen(int x_value) const;
+
+        /** Convert an Y position on the sensor to its on-screen position. */
+        int y_sensor_to_screen(int y_value) const;
+
+        /**
+         * Press and release the given button on the server.
+         *
+         * @param x Pointer X location on the screen.
+         * @param y Pointer Y location on the screen.
+         * @param button Button to press.
+         */
+        void send_button_press(int x, int y, int button) const;
+    };
+
+    std::map<int, touchpoint_state> touchpoints;
 
     update_info_struct update_info;
 }; // class client

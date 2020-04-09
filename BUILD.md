@@ -12,7 +12,7 @@ source /usr/local/oecore-x86_64/environment-setup-cortexa9hf-neon-oe-linux-gnuea
 Clone this repository with its dependencies and change directory into it.
 
 ```sh
-git clone --recursive git@forge.delab.re:matteo/rmvncclient.git
+git clone --recursive https://github.com/matteodelabre/rmvncclient
 cd rmvncclient
 ```
 

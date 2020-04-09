@@ -27,10 +27,6 @@ For this scenario, you will need to start a VNC server on your computer.
 
 ### Linux (X11 with xrandr)
 
-#### Using virtscreen
-
-#### Manually
-
 Create a new mode compatible with the tablet’s resolution and add this mode to the `VIRTUAL1` output.
 
 ```sh

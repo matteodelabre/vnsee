@@ -30,11 +30,7 @@ if(TRACE)
     add_definitions(-DTRACE)
 endif()
 
-# Find dependencies
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(VNCCLIENT REQUIRED IMPORTED_TARGET libvncclient)
-set_property(TARGET PkgConfig::VNCCLIENT PROPERTY
-    INTERFACE_LINK_LIBRARIES "${VNCCLIENT_STATIC_LIBRARIES}")
+add_subdirectory(libvncserver)
 
 add_executable(rmvncclient
     src/rmioc/input.cpp
@@ -46,5 +42,8 @@ add_executable(rmvncclient
 )
 
 set_property(TARGET rmvncclient PROPERTY CXX_STANDARD 17)
-
-target_link_libraries(rmvncclient PUBLIC PkgConfig::VNCCLIENT)
+target_link_libraries(rmvncclient PRIVATE vncclient)
+target_include_directories(rmvncclient PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/libvncserver
+    libvncserver
+)

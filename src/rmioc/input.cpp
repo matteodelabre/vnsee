@@ -47,11 +47,7 @@ bool input::fetch_events()
     {
         if (current_event.type == EV_SYN)
         {
-            if (!has_changes)
-            {
-                has_changes = true;
-                this->previous_slots_state = this->slots_state;
-            }
+            has_changes = true;
 
             for (const input_event& event : this->pending_events)
             {
@@ -117,11 +113,6 @@ bool input::fetch_events()
 const input::slots_state_t& input::get_slots_state() const
 {
     return this->slots_state;
-}
-
-const input::slots_state_t& input::get_previous_slots_state() const
-{
-    return this->previous_slots_state;
 }
 
 } // namespace rmioc

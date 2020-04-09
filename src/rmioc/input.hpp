@@ -52,7 +52,6 @@ public:
     using slots_state_t = std::map<int, slot_state>;
 
     const slots_state_t& get_slots_state() const;
-    const slots_state_t& get_previous_slots_state() const;
 
 private:
     /** File descriptor for the input device. */
@@ -63,9 +62,6 @@ private:
 
     /** List of active touch point slots indexed by their ID. */
     slots_state_t slots_state;
-
-    /** Previous state of active touch point slots. */
-    slots_state_t previous_slots_state;
 
     /** Currently active touch point slot. */
     int current_slot = 0;

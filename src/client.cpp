@@ -5,12 +5,13 @@
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
+#include <cstdarg>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
-#include <fcntl.h>
 #include <poll.h>
 #include <rfb/rfbclient.h>
 #include <unistd.h>
@@ -119,7 +120,7 @@ void client::event_loop()
     // Flag used for quitting the event loop
     bool quit = false;
 
-    auto handle_status = [this, &timeout, &quit](const event_loop_status& st)
+    auto handle_status = [&timeout, &quit](const event_loop_status& st)
     {
         if (st.quit)
         {

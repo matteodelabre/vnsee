@@ -3,7 +3,6 @@
 
 #include <chrono>
 #include <map>
-#include <utility>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <rfb/rfbproto.h>
 

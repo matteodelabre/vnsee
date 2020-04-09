@@ -3,8 +3,7 @@
 
 #include <map>
 #include <vector>
-
-struct input_event;
+#include <linux/input.h>
 
 namespace rmioc
 {

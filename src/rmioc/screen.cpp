@@ -3,7 +3,6 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
-#include <iostream>
 #include <system_error>
 #include <fcntl.h>
 #include <sys/mman.h>

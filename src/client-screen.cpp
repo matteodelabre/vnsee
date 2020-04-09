@@ -1,7 +1,12 @@
 #include "client.hpp"
 #include "log.hpp"
 #include "rmioc/screen.hpp"
+#include <algorithm>
 #include <chrono>
+#include <ostream>
+#include <rfb/rfbclient.h>
+// IWYU pragma: no_include <type_traits>
+// IWYU pragma: no_include <rfb/rfbproto.h>
 
 namespace chrono = std::chrono;
 

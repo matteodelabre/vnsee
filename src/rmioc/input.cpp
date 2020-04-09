@@ -1,6 +1,6 @@
 #include "input.hpp"
 #include <cerrno>
-#include <iostream>
+#include <system_error>
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/input-event-codes.h>

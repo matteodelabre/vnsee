@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <stdexcept> // IWYU pragma: keep
+// IWYU pragma: no_include <bits/exception.h>
 #include <string>
 
 int main(int argc, const char* argv[])

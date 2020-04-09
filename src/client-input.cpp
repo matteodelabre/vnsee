@@ -3,7 +3,13 @@
 #include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
 #include <bitset>
+#include <cstdlib>
+#include <iterator>
+#include <map>
+#include <ostream>
+#include <utility>
 #include <rfb/rfbclient.h>
+// IWYU pragma: no_include <type_traits>
 
 /**
  * Minimal move in pixels to consider that a touchpoint has been dragged

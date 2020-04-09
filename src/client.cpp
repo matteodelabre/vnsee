@@ -10,8 +10,10 @@
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
+#include <fcntl.h>
 #include <poll.h>
 #include <rfb/rfbclient.h>
+#include <unistd.h>
 // IWYU pragma: no_include <type_traits>
 // IWYU pragma: no_include <rfb/rfbproto.h>
 
@@ -159,14 +161,16 @@ void client::start()
     polled_fds[poll_input].fd = this->rm_input.get_device_fd();
     polled_fds[poll_input].events = POLLIN;
 
+    // Maximum time to wait before timeout in the next poll
+    int timeout = -1;
+
     // Wait for events from the VNC server or from device inputs
-    while (poll(
-                polled_fds,
-                /* nfds = */ 2,
-                /* timeout = */ chrono::duration_cast<chrono::milliseconds>
-                    (update_delay).count()
-            ) != -1)
+    while (poll(polled_fds,
+                /* nfds = */ sizeof(polled_fds) / sizeof(pollfd),
+                timeout) != -1)
     {
+        timeout = -1;
+
         // Process events from the VNC server
         if (polled_fds[poll_vnc].revents & POLLIN)
         {
@@ -177,14 +181,27 @@ void client::start()
         }
 
         // Refresh the reMarkable screen if needed
-        if (this->update_info.has_update && this->update_info.last_update_time
-                + update_delay < chrono::steady_clock::now())
+        if (this->update_info.has_update)
         {
-            this->update_info.has_update = 0;
-            this->rm_screen.update(
-                this->update_info.x, this->update_info.y,
-                this->update_info.w, this->update_info.h
-            );
+            int remaining_wait_time =
+                chrono::duration_cast<chrono::milliseconds>(
+                    this->update_info.last_update_time + update_delay
+                    - chrono::steady_clock::now()
+                ).count();
+
+            if (remaining_wait_time <= 0)
+            {
+                this->update_info.has_update = 0;
+                this->rm_screen.update(
+                    this->update_info.x, this->update_info.y,
+                    this->update_info.w, this->update_info.h
+                );
+            }
+            else
+            {
+                // Wait until the update is due
+                timeout = remaining_wait_time;
+            }
         }
 
         // Process events from the reMarkable input device
@@ -235,6 +252,6 @@ void client::start()
     throw std::system_error(
         errno,
         std::generic_category(),
-        "(main) Wait for message"
+        "(client::start) Wait for message"
     );
 }

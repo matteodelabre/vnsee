@@ -3,6 +3,7 @@
 #include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
 #include <algorithm>
+#include <bitset>
 #include <cerrno>
 #include <chrono>
 #include <cstdlib>
@@ -71,7 +72,7 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
                     reinterpret_cast<void*>(update_info_tag)
                 ));
 
-    log::print("VNC Update") << w << 'x' << h << '+' << x << '+' << y << '\n';
+    log::print("VNC update") << w << 'x' << h << '+' << x << '+' << y << '\n';
 
     if (update_info->has_update)
     {
@@ -98,6 +99,22 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
     update_info->last_update_time = chrono::steady_clock::now();
 }
 
+/** Custom log printer for the VNC client library.  */
+void vnc_client_log(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    ssize_t buffer_size = vsnprintf(NULL, 0, format, args);
+    char* buffer = new char[buffer_size + 1];
+    vsnprintf(buffer, buffer_size + 1, format, args);
+
+    log::print("VNC message") << buffer;
+
+    delete[] buffer;
+    va_end(args);
+}
+
 client::client(
     const char* ip, int port,
     rmioc::screen& rm_screen,
@@ -108,6 +125,8 @@ client::client(
 , rm_input(rm_input)
 , update_info{}
 {
+    rfbClientLog = vnc_client_log;
+
     rfbClientSetClientData(
         this->vnc_client,
         reinterpret_cast<void*>(update_info_tag),
@@ -220,7 +239,7 @@ void client::event_loop()
     throw std::system_error(
         errno,
         std::generic_category(),
-        "(client::start) Wait for message"
+        "(client::event_loop) Wait for message"
     );
 }
 
@@ -248,7 +267,7 @@ client::event_loop_status client::event_loop_screen()
         {
             this->update_info.has_update = 0;
 
-            log::print("Screen Update")
+            log::print("Screen update")
                 << this->update_info.w << 'x' << this->update_info.h << '+'
                 << this->update_info.x << '+' << this->update_info.y << '\n';
 
@@ -383,6 +402,10 @@ int client::touchpoint_state::y_sensor_to_screen(int y_value) const
 
 void client::touchpoint_state::send_button_press(int x, int y, int btn) const
 {
+    log::print("Button press")
+        << x << 'x' << y
+        << " (button mask: " << std::bitset<8>(btn) << ")\n";
+
     SendPointerEvent(this->parent.vnc_client, x, y, btn);
     SendPointerEvent(this->parent.vnc_client, x, y, 0);
 }

@@ -27,6 +27,10 @@ For this scenario, you will need to start a VNC server on your computer.
 
 ### Linux (X11 with xrandr)
 
+#### Using virtscreen
+
+#### Manually
+
 Create a new mode compatible with the tablet’s resolution and add this mode to the `VIRTUAL1` output.
 
 ```sh
@@ -50,10 +54,22 @@ x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -
 Finally, start rmvncclient using SSH.
 
 ```sh
-ssh root@10.11.99.1 ./rmvncclient
+ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient"
 ```
 
 **Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not configure your screen correctly. Please make sure the `VIRTUAL1` output is enabled.
+
+### Linux (Wayland)
+
+(Help wanted!)
+
+### Windows
+
+(Help wanted!)
+
+### macOS
+
+(Help wanted!)
 
 ## Related
 

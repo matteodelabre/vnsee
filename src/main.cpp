@@ -51,16 +51,29 @@ int main(int argc, const char* argv[])
         server_ip = argv[1];
     }
 
-    rmioc::screen screen;
-    rmioc::input input;
+    try
+    {
+        rmioc::screen screen;
+        rmioc::input input;
 
-    std::cerr << "Connecting to " << server_ip << ":" << server_port << "\n";
+        std::cerr << "Connecting to "
+            << server_ip << ":" << server_port << "...\n";
 
-    client client_instance{
-        server_ip.data(), server_port,
-        screen, input
-    };
+        client client_instance{
+            server_ip.data(), server_port,
+            screen, input
+        };
 
-    client_instance.event_loop();
+        std::cerr << "\e[1A\e[KConnected to "
+            << server_ip << ':' << server_port << "!\n";
+
+        client_instance.event_loop();
+    }
+    catch (const std::exception& err)
+    {
+        std::cerr << "Error: " << err.what() << '\n';
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS;
 }

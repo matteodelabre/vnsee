@@ -126,6 +126,7 @@ client::client(
 , update_info{}
 {
     rfbClientLog = vnc_client_log;
+    rfbClientErr = vnc_client_log;
 
     rfbClientSetClientData(
         this->vnc_client,
@@ -168,8 +169,7 @@ client::client(
             << this->vnc_client->width << 'x' << this->vnc_client->height
             << "). This client can only cope with a screen width of exactly "
             << this->rm_screen.get_xres_memory() << " pixels and a screen "
-            "height no larger than " << this->rm_screen.get_yres_memory()
-            << " pixels";
+            "height of " << this->rm_screen.get_yres() << " pixels";
         throw std::runtime_error{msg.str()};
     }
 }
@@ -219,8 +219,20 @@ void client::event_loop()
     };
 
     // Wait for events from the VNC server or from device inputs
-    while (!quit && poll(polled_fds, count_fds, timeout) != -1)
+    while (!quit)
     {
+        while (poll(polled_fds, count_fds, timeout) == -1)
+        {
+            if (errno != EAGAIN)
+            {
+                throw std::system_error(
+                    errno,
+                    std::generic_category(),
+                    "(client::event_loop) Wait for message"
+                );
+            }
+        }
+
         timeout = -1;
 
         if (polled_fds[poll_vnc].revents & POLLIN)
@@ -235,12 +247,6 @@ void client::event_loop()
             handle_status(this->event_loop_input());
         }
     }
-
-    throw std::system_error(
-        errno,
-        std::generic_category(),
-        "(client::event_loop) Wait for message"
-    );
 }
 
 client::event_loop_status client::event_loop_vnc()

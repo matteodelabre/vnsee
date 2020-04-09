@@ -61,6 +61,6 @@ int main(int argc, const char* argv[])
         screen, input
     };
 
-    client_instance.start();
+    client_instance.event_loop();
     return EXIT_SUCCESS;
 }

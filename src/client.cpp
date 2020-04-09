@@ -149,9 +149,11 @@ client::~client()
     rfbClientCleanup(this->vnc_client);
 }
 
-void client::start()
+void client::event_loop()
 {
+    // List of file descriptors to keep an eye on
     pollfd polled_fds[2];
+    auto count_fds = sizeof(polled_fds) / sizeof(pollfd);
 
     int poll_vnc = 0;
     polled_fds[poll_vnc].fd = this->vnc_client->sock;
@@ -164,88 +166,43 @@ void client::start()
     // Maximum time to wait before timeout in the next poll
     int timeout = -1;
 
+    // Flag used for quitting the event loop
+    bool quit = false;
+
+    auto handle_status = [this, &timeout, &quit](const event_loop_status& st)
+    {
+        if (st.quit)
+        {
+            quit = true;
+        }
+        else
+        {
+            if (timeout == -1)
+            {
+                timeout = st.timeout;
+            }
+            else if (st.timeout != -1)
+            {
+                timeout = std::min(timeout, st.timeout);
+            }
+        }
+    };
+
     // Wait for events from the VNC server or from device inputs
-    while (poll(polled_fds,
-                /* nfds = */ sizeof(polled_fds) / sizeof(pollfd),
-                timeout) != -1)
+    while (!quit && poll(polled_fds, count_fds, timeout) != -1)
     {
         timeout = -1;
 
-        // Process events from the VNC server
         if (polled_fds[poll_vnc].revents & POLLIN)
         {
-            if (!HandleRFBServerMessage(this->vnc_client))
-            {
-                break;
-            }
+            handle_status(this->event_loop_vnc());
         }
 
-        // Refresh the reMarkable screen if needed
-        if (this->update_info.has_update)
+        handle_status(this->event_loop_screen());
+
+        if (polled_fds[poll_input].revents & POLLIN)
         {
-            int remaining_wait_time =
-                chrono::duration_cast<chrono::milliseconds>(
-                    this->update_info.last_update_time + update_delay
-                    - chrono::steady_clock::now()
-                ).count();
-
-            if (remaining_wait_time <= 0)
-            {
-                this->update_info.has_update = 0;
-                this->rm_screen.update(
-                    this->update_info.x, this->update_info.y,
-                    this->update_info.w, this->update_info.h
-                );
-            }
-            else
-            {
-                // Wait until the update is due
-                timeout = remaining_wait_time;
-            }
-        }
-
-        // Process events from the reMarkable input device
-        if (polled_fds[poll_input].revents & POLLIN &&
-                this->rm_input.fetch_events())
-        {
-            auto prev_state = this->rm_input.get_previous_slots_state();
-            auto cur_state = this->rm_input.get_slots_state();
-
-            // Map touch coordinates to screen coordinates
-            auto x_slot_to_screen = [this](int x)
-            {
-                return this->rm_screen.get_xres() - this->rm_screen.get_xres()
-                    * x / rm::input::slot_state::x_max;
-            };
-
-            auto y_slot_to_screen = [this](int y)
-            {
-                return this->rm_screen.get_yres() - this->rm_screen.get_yres()
-                    * y / rm::input::slot_state::y_max;
-            };
-
-            for (const auto& [id, cur_slot] : cur_state)
-            {
-                SendPointerEvent(
-                    this->vnc_client,
-                    x_slot_to_screen(cur_slot.x),
-                    y_slot_to_screen(cur_slot.y),
-                    0
-                );
-            }
-
-            for (const auto& [id, prev_slot] : prev_state)
-            {
-                if (!cur_state.count(id))
-                {
-                    SendPointerEvent(
-                        this->vnc_client,
-                        x_slot_to_screen(prev_slot.x),
-                        y_slot_to_screen(prev_slot.y),
-                        0
-                    );
-                }
-            }
+            handle_status(this->event_loop_input());
         }
     }
 
@@ -254,4 +211,89 @@ void client::start()
         std::generic_category(),
         "(client::start) Wait for message"
     );
+}
+
+client::event_loop_status client::event_loop_vnc()
+{
+    if (!HandleRFBServerMessage(this->vnc_client))
+    {
+        return {true, -1};
+    }
+
+    return {false, -1};
+}
+
+client::event_loop_status client::event_loop_screen()
+{
+    if (this->update_info.has_update)
+    {
+        int remaining_wait_time =
+            chrono::duration_cast<chrono::milliseconds>(
+                this->update_info.last_update_time + update_delay
+                - chrono::steady_clock::now()
+            ).count();
+
+        if (remaining_wait_time <= 0)
+        {
+            this->update_info.has_update = 0;
+            this->rm_screen.update(
+                this->update_info.x, this->update_info.y,
+                this->update_info.w, this->update_info.h
+            );
+        }
+        else
+        {
+            // Wait until the next update is due
+            return {false, remaining_wait_time};
+        }
+    }
+
+    return {false, -1};
+}
+
+client::event_loop_status client::event_loop_input()
+{
+    if (this->rm_input.fetch_events())
+    {
+        auto prev_state = this->rm_input.get_previous_slots_state();
+        auto cur_state = this->rm_input.get_slots_state();
+
+        // Map touch coordinates to screen coordinates
+        auto x_slot_to_screen = [this](int x)
+        {
+            return this->rm_screen.get_xres() - this->rm_screen.get_xres()
+                * x / rm::input::slot_state::x_max;
+        };
+
+        auto y_slot_to_screen = [this](int y)
+        {
+            return this->rm_screen.get_yres() - this->rm_screen.get_yres()
+                * y / rm::input::slot_state::y_max;
+        };
+
+        for (const auto& [id, cur_slot] : cur_state)
+        {
+            SendPointerEvent(
+                this->vnc_client,
+                x_slot_to_screen(cur_slot.x),
+                y_slot_to_screen(cur_slot.y),
+                0
+            );
+        }
+
+        for (const auto& [id, prev_slot] : prev_state)
+        {
+            if (!cur_state.count(id))
+            {
+                SendPointerEvent(
+                    this->vnc_client,
+                    x_slot_to_screen(prev_slot.x),
+                    y_slot_to_screen(prev_slot.y),
+                    0
+                );
+            }
+        }
+    }
+
+    return {false, -1};
 }

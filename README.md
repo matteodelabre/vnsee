@@ -27,14 +27,15 @@ For this scenario, you will need to start a VNC server on your computer.
 
 ### Linux (X11 with Xrandr)
 
-Create a new mode compatible with the tablet’s resolution and enable the VIRTUAL1 output with this mode.
+Create a new mode compatible with the tablet’s resolution and add this mode to the `VIRTUAL1` output.
 
 ```sh
 xrandr --newmode 1408x1872 $(gtf 1408 1872 60 | tail -n2 | head -n1 | tr -s ' ' | cut -d' ' -f4-)
 xrandr --addmode VIRTUAL1 1408x1872
 ```
 
-Start the x11vnc server (you will need to install this package first if needed).
+Enable and arrange the VIRTUAL1 output through your usual dual screen configuration program, for example GNOME’s settings, arandr or xrandr directly.
+Then, start the x11vnc server (you will need to install this package first if needed).
 
 ```sh
 x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor
@@ -43,13 +44,13 @@ x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -
 > **Flip the screen upside down**
 > 
 > ```sh
-> x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor -rotate xy
+> x11vnc -rotate xy -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor
 > ```
 
 Finally, start rmvncclient using SSH.
 
 ```sh
-ssh "root@10.11.99.1" "./rmvncclient"
+ssh root@10.11.99.1 ./rmvncclient
 ```
 
 ## Related

@@ -25,7 +25,7 @@ This is an important limitation: if the server sends an incompatible resolution,
 A common scenario is using the tablet as an external screen for the computer it is attached to through USB (or via Wi-Fi).
 For this scenario, you will need to start a VNC server on your computer.
 
-### Linux (X11 with Xrandr)
+### Linux (X11 with xrandr)
 
 Create a new mode compatible with the tablet’s resolution and add this mode to the `VIRTUAL1` output.
 
@@ -34,15 +34,15 @@ xrandr --newmode 1408x1872 $(gtf 1408 1872 60 | tail -n2 | head -n1 | tr -s ' ' 
 xrandr --addmode VIRTUAL1 1408x1872
 ```
 
-Enable and arrange the VIRTUAL1 output through your usual dual screen configuration program, for example GNOME’s settings, arandr or xrandr directly.
+Enable and arrange the `VIRTUAL1` output through your usual dual screen configuration program, for example GNOME’s settings, arandr or xrandr directly.
 Then, start the x11vnc server (you will need to install this package first if needed).
 
 ```sh
 x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor
 ```
 
-> **Flip the screen upside down**
-> 
+> _Alternative: Flip the screen upside down_
+>
 > ```sh
 > x11vnc -rotate xy -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor
 > ```
@@ -52,6 +52,8 @@ Finally, start rmvncclient using SSH.
 ```sh
 ssh root@10.11.99.1 ./rmvncclient
 ```
+
+**Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not configure your screen correctly. Please make sure the `VIRTUAL1` output is enabled.
 
 ## Related
 

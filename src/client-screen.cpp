@@ -19,9 +19,9 @@ namespace chrono = std::chrono;
  */
 constexpr chrono::milliseconds update_delay{150};
 
-client::event_loop_status client::event_loop_screen()
+auto client::event_loop_screen() -> client::event_loop_status
 {
-    if (this->update_info.has_update)
+    if (this->update_info.has_update != 0)
     {
         int remaining_wait_time =
             chrono::duration_cast<chrono::milliseconds>(
@@ -52,26 +52,27 @@ client::event_loop_status client::event_loop_screen()
     return {false, -1};
 }
 
-rfbBool client::create_framebuf(rfbClient*)
+auto client::create_framebuf(rfbClient* /*unused*/) -> rfbBool
 {
     // No-op: Data is written directly to the memory-mapped framebuffer
-    return true;
+    return 1;
 }
 
 void client::update_framebuf(rfbClient* client, int x, int y, int w, int h)
 {
     // Register the region as pending update, potentially extending
     // an existing one
-    client::update_info_struct* update_info
-        = reinterpret_cast<client::update_info_struct*>(
-                rfbClientGetClientData(
-                    client,
-                    reinterpret_cast<void*>(client::update_info_tag)
-                ));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    auto* update_info = reinterpret_cast<client::update_info_struct*>(
+        rfbClientGetClientData(
+            client,
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            reinterpret_cast<void*>(client::update_info_tag)
+        ));
 
     log::print("VNC update") << w << 'x' << h << '+' << x << '+' << y << '\n';
 
-    if (update_info->has_update)
+    if (update_info->has_update != 0)
     {
         // Merge new rectangle with existing one
         int left_x = std::min(x, update_info->x);

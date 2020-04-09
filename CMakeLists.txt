@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.4)
 project(rmvncclient)
 
 option(CHECK_INCLUDES "Run include-what-you-use to check #includes" OFF)
+option(CHECK_TIDY "Run clang-tidy linter" OFF)
 option(TRACE "Print tracing messages on standard output" OFF)
 
 if(CHECK_INCLUDES)
@@ -12,6 +13,16 @@ if(CHECK_INCLUDES)
     endif()
 
     set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH})
+endif()
+
+if(CHECK_TIDY)
+    find_program(TIDY_PATH clang-tidy)
+
+    if(NOT TIDY_PATH)
+        message(FATAL_ERROR "Could not find clang-tidy")
+    endif()
+
+    set(CMAKE_CXX_CLANG_TIDY ${TIDY_PATH};-fix)
 endif()
 
 if(TRACE)

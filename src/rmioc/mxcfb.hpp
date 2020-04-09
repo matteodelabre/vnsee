@@ -119,6 +119,15 @@ enum class update_modes : std::uint32_t
 };
 
 /**
+ * TODO: Figure out what this is used for.
+ * Temps.
+ */
+enum class temps : std::uint32_t
+{
+    normal = 0x18,
+};
+
+/**
  * Screen update payload.
  */
 struct update_data
@@ -141,7 +150,7 @@ struct update_data
     std::uint32_t update_marker;
 
     /** TODO: Find out what this is used for. */
-    int temp;
+    temps temp;
 
     /** TODO: Find out what this is used for. */
     unsigned int flags;

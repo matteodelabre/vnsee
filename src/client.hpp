@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 
 #include <chrono>
+#include <cstdint>
 #include <map>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <rfb/rfbproto.h>
@@ -185,7 +186,7 @@ private:
          * @param y Pointer Y location on the screen.
          * @param button Button to press.
          */
-        void send_button_press(int x, int y, int button) const;
+        void send_button_press(int x, int y, std::uint8_t btn) const;
     };
 
     std::map<int, touchpoint_state> touchpoints;

@@ -1,6 +1,7 @@
 #include "client.hpp"
 #include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -8,10 +9,10 @@
 // IWYU pragma: no_include <bits/exception.h>
 #include <string>
 
-int main(int argc, const char* argv[])
+auto main(int argc, const char* argv[]) -> int
 {
     std::string server_ip;
-    int server_port = 5900;
+    constexpr int server_port = 5900;
 
     if (argc < 2)
     {
@@ -25,31 +26,26 @@ int main(int argc, const char* argv[])
             return EXIT_FAILURE;
         }
 
-        // The first component is the remote client IP, extract it
-        std::size_t ssh_conn_len = std::strlen(ssh_conn);
-        std::size_t remote_ip_end = 0;
-
-        while (remote_ip_end < ssh_conn_len && ssh_conn[remote_ip_end] != ' ')
-        {
-            ++remote_ip_end;
-        }
+        // Extract the remote client IP from the first field
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        const char* ssh_conn_end = ssh_conn + std::strlen(ssh_conn);
+        const char* remote_ip_end = std::find(ssh_conn, ssh_conn_end, ' ');
 
         // Remove IPv4-mapped IPv6 prefix
-        std::size_t remote_ip_start = 0;
+        const char* remote_ip_start = ssh_conn;
         auto ipv4_prefix = "::ffff:";
 
         if (std::strncmp(ipv4_prefix, ssh_conn, std::strlen(ipv4_prefix)) == 0)
         {
-            remote_ip_start = std::strlen(ipv4_prefix);
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            remote_ip_start += std::strlen(ipv4_prefix);
         }
 
-        server_ip = std::string(
-            ssh_conn + remote_ip_start,
-            ssh_conn + remote_ip_end
-        );
+        server_ip = std::string(remote_ip_start, remote_ip_end);
     }
     else
     {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         server_ip = argv[1];
     }
 

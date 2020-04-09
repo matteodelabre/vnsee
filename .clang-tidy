@@ -1,0 +1,20 @@
+# vim: set ft=yaml:
+---
+# See <https://clang.llvm.org/extra/clang-tidy/checks/list.html>
+# for a list of available checks
+Checks:
+>-
+    boost-*,
+    bugprone-*,
+    cert-*,
+    cppcoreguidelines-*,
+    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    hicpp-*,
+    -hicpp-vararg,
+    -hicpp-no-malloc,
+    misc-*,
+    modernize-*,
+    performance-*,
+    readability-*,
+WarningsAsErrors: '*'
+...

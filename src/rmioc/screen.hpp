@@ -68,16 +68,13 @@ private:
     int framebuf_fd;
 
     /** Variable screen information from the device framebuffer. */
-    fb_var_screeninfo framebuf_varinfo;
+    fb_var_screeninfo framebuf_varinfo{};
 
     /** Fixed screen information from the device framebuffer. */
-    fb_fix_screeninfo framebuf_fixinfo;
+    fb_fix_screeninfo framebuf_fixinfo{};
 
     /** Pointer to the memory-mapped framebuffer. */
-    uint8_t* framebuf_ptr;
-
-    /** Next value to be used as an update marker. */
-    uint32_t next_update_marker;
+    uint8_t* framebuf_ptr = nullptr;
 }; // class screen
 
 } // namespace rmioc

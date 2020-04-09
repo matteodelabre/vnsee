@@ -2,7 +2,6 @@
 #include "screen.hpp"
 #include <cerrno>
 #include <cstdint>
-#include <cstdio>
 #include <system_error>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -13,6 +12,7 @@ namespace rmioc
 {
 
 screen::screen()
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
 : framebuf_fd(open("/dev/fb0", O_RDWR))
 {
     if (this->framebuf_fd == -1)
@@ -24,6 +24,7 @@ screen::screen()
         );
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
     if (ioctl(
             this->framebuf_fd,
             FBIOGET_VSCREENINFO,
@@ -37,6 +38,7 @@ screen::screen()
         );
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
     if (ioctl(
             this->framebuf_fd,
             FBIOGET_FSCREENINFO,
@@ -50,22 +52,23 @@ screen::screen()
         );
     }
 
+    // ↓ Use of C library
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     this->framebuf_ptr = reinterpret_cast<uint8_t*>(mmap(
-        /* addr = */ NULL,
+        /* addr = */ nullptr,
         /* len = */ this->framebuf_fixinfo.smem_len,
+        // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
         /* prot = */ PROT_READ | PROT_WRITE,
         /* flags = */ MAP_SHARED,
         /* fd = */ this->framebuf_fd,
-        /* off = */ 0
+        /* __offset = */ 0
     ));
-
-    this->next_update_marker = 1;
 }
 
 screen::~screen()
 {
     munmap(this->framebuf_ptr, this->framebuf_fixinfo.smem_len);
-    this->framebuf_ptr = NULL;
+    this->framebuf_ptr = nullptr;
 
     close(this->framebuf_fd);
     this->framebuf_fd = -1;
@@ -86,35 +89,37 @@ void screen::update(int x, int y, int w, int h)
         y = 0;
     }
 
-    if (static_cast<std::uint32_t>(x + w) > this->get_xres())
+    int xres = static_cast<int>(this->get_xres());
+    int yres = static_cast<int>(this->get_yres());
+
+    if (x + w > xres)
     {
-        w = this->framebuf_varinfo.xres - x;
+        w = xres - x;
     }
 
-    if (static_cast<std::uint32_t>(y + h) > this->get_yres())
+    if (y + h > yres)
     {
-        h = this->framebuf_varinfo.yres - y;
+        h = yres - y;
     }
 
     // Ignore out of bounds or null updates
-    if (static_cast<std::uint32_t>(x) > this->get_xres()
-        || static_cast<std::uint32_t>(y) > this->get_yres()
-        || w == 0 || h == 0)
+    if (x > xres || y > yres || w == 0 || h == 0)
     {
         return;
     }
 
-    mxcfb::update_data update;
+    mxcfb::update_data update{};
     update.update_region.left = x;
     update.update_region.top = y;
     update.update_region.width = w;
     update.update_region.height = h;
     update.waveform_mode = mxcfb::waveform_modes::gc16;
-    update.temp = 0x18;
+    update.temp = mxcfb::temps::normal;
     update.update_mode = mxcfb::update_modes::partial;
     update.flags = 0;
-    update.update_marker = this->next_update_marker;
+    update.update_marker = 0;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
     if (ioctl(this->framebuf_fd, mxcfb::send_update, &update) == -1)
     {
         throw std::system_error(
@@ -123,90 +128,81 @@ void screen::update(int x, int y, int w, int h)
             "(rmioc::screen::update) Send update"
         );
     }
-
-    if (this->next_update_marker == 255)
-    {
-        this->next_update_marker = 1;
-    }
-    else
-    {
-        ++this->next_update_marker;
-    }
 }
 
-std::uint8_t* screen::get_data()
+auto screen::get_data() -> std::uint8_t*
 {
     return this->framebuf_ptr;
 }
 
-std::uint32_t screen::get_xres() const
+auto screen::get_xres() const -> std::uint32_t
 {
     return this->framebuf_varinfo.xres;
 }
 
-std::uint32_t screen::get_xres_memory() const
+auto screen::get_xres_memory() const -> std::uint32_t
 {
     return this->framebuf_varinfo.xres_virtual;
 }
 
-std::uint32_t screen::get_yres() const
+auto screen::get_yres() const -> std::uint32_t
 {
     return this->framebuf_varinfo.yres;
 }
 
-std::uint32_t screen::get_yres_memory() const
+auto screen::get_yres_memory() const -> std::uint32_t
 {
     return this->framebuf_varinfo.yres_virtual;
 }
 
-std::uint32_t screen::get_bits_per_pixel() const
+auto screen::get_bits_per_pixel() const -> std::uint32_t
 {
     return this->framebuf_varinfo.bits_per_pixel;
 }
 
-std::uint32_t screen::get_red_offset() const
+auto screen::get_red_offset() const -> std::uint32_t
 {
     return this->framebuf_varinfo.red.offset;
 }
 
-std::uint32_t screen::get_red_length() const
+auto screen::get_red_length() const -> std::uint32_t
 {
     return this->framebuf_varinfo.red.length;
 }
 
-std::uint32_t screen::get_red_max() const
+auto screen::get_red_max() const -> std::uint32_t
 {
-    return (1 << this->framebuf_varinfo.red.length) - 1;
+    return (1U << this->framebuf_varinfo.red.length) - 1;
 }
 
-std::uint32_t screen::get_green_offset() const
+auto screen::get_green_offset() const -> std::uint32_t
 {
     return this->framebuf_varinfo.green.offset;
 }
 
-std::uint32_t screen::get_green_length() const
+auto screen::get_green_length() const -> std::uint32_t
 {
     return this->framebuf_varinfo.green.length;
 }
 
-std::uint32_t screen::get_green_max() const
+auto screen::get_green_max() const -> std::uint32_t
 {
-    return (1 << this->framebuf_varinfo.green.length) - 1;
+    return (1U << this->framebuf_varinfo.green.length) - 1;
 }
 
-std::uint32_t screen::get_blue_offset() const
+auto screen::get_blue_offset() const -> std::uint32_t
 {
     return this->framebuf_varinfo.blue.offset;
 }
 
-std::uint32_t screen::get_blue_length() const
+auto screen::get_blue_length() const -> std::uint32_t
 {
     return this->framebuf_varinfo.blue.length;
 }
 
-std::uint32_t screen::get_blue_max() const
+auto screen::get_blue_max() const -> std::uint32_t
 {
-    return (1 << this->framebuf_varinfo.blue.length) - 1;
+    return (1U << this->framebuf_varinfo.blue.length) - 1;
 }
 
 } // namespace rmioc

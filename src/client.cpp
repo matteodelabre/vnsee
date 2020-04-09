@@ -3,8 +3,8 @@
 #include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
 #include <algorithm>
+#include <array>
 #include <cerrno>
-#include <chrono>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -12,27 +12,32 @@
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
+#include <vector>
 #include <poll.h>
 #include <rfb/rfbclient.h>
 #include <unistd.h>
 // IWYU pragma: no_include <type_traits>
 // IWYU pragma: no_include <rfb/rfbproto.h>
 
-namespace chrono = std::chrono;
-
 /** Custom log printer for the VNC client library.  */
+// NOLINTNEXTLINE(cert-dcl50-cpp): Need to use a vararg function for C compat
 void vnc_client_log(const char* format, ...)
 {
     va_list args;
+
+    // ↓ Use of C library
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-no-array-decay)
     va_start(args, format);
 
-    ssize_t buffer_size = vsnprintf(NULL, 0, format, args);
-    char* buffer = new char[buffer_size + 1];
-    vsnprintf(buffer, buffer_size + 1, format, args);
+    // NOLINTNEXTLINE(hicpp-no-array-decay): Use of C library
+    ssize_t buffer_size = vsnprintf(nullptr, 0, format, args);
+    std::vector<char> buffer(buffer_size + 1);
 
-    log::print("VNC message") << buffer;
+    // NOLINTNEXTLINE(hicpp-no-array-decay): Use of C library
+    vsnprintf(buffer.data(), buffer.size(), format, args);
+    log::print("VNC message") << buffer.data();
 
-    delete[] buffer;
+    // NOLINTNEXTLINE(hicpp-no-array-decay): Use of C library
     va_end(args);
 }
 
@@ -51,10 +56,14 @@ client::client(
 
     rfbClientSetClientData(
         this->vnc_client,
+        // ↓ Use of C library
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<void*>(client::update_info_tag),
         &this->update_info
     );
 
+    // ↓ Use of C library
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
     free(this->vnc_client->serverHost);
     this->vnc_client->serverHost = strdup(ip);
     this->vnc_client->serverPort = port;
@@ -72,7 +81,7 @@ client::client(
     this->vnc_client->format.blueShift = this->rm_screen.get_blue_offset();
     this->vnc_client->format.blueMax = this->rm_screen.get_blue_max();
 
-    if (!rfbInitClient(this->vnc_client, nullptr, nullptr))
+    if (rfbInitClient(this->vnc_client, nullptr, nullptr) == 0)
     {
         throw std::runtime_error{"Failed to initialize VNC connection"};
     }
@@ -103,14 +112,13 @@ client::~client()
 void client::event_loop()
 {
     // List of file descriptors to keep an eye on
-    pollfd polled_fds[2];
-    auto count_fds = sizeof(polled_fds) / sizeof(pollfd);
+    std::array<pollfd, 2> polled_fds{};
 
-    int poll_vnc = 0;
+    constexpr std::size_t poll_vnc = 0;
     polled_fds[poll_vnc].fd = this->vnc_client->sock;
     polled_fds[poll_vnc].events = POLLIN;
 
-    int poll_input = 1;
+    constexpr std::size_t poll_input = 1;
     polled_fds[poll_input].fd = this->rm_input.get_device_fd();
     polled_fds[poll_input].events = POLLIN;
 
@@ -142,7 +150,7 @@ void client::event_loop()
     // Wait for events from the VNC server or from device inputs
     while (!quit)
     {
-        while (poll(polled_fds, count_fds, timeout) == -1)
+        while (poll(polled_fds.data(), polled_fds.size(), timeout) == -1)
         {
             if (errno != EAGAIN)
             {
@@ -156,23 +164,25 @@ void client::event_loop()
 
         timeout = -1;
 
-        if (polled_fds[poll_vnc].revents & POLLIN)
+        // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
+        if ((polled_fds[poll_vnc].revents & POLLIN) != 0)
         {
             handle_status(this->event_loop_vnc());
         }
 
         handle_status(this->event_loop_screen());
 
-        if (polled_fds[poll_input].revents & POLLIN)
+        // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
+        if ((polled_fds[poll_input].revents & POLLIN) != 0)
         {
             handle_status(this->event_loop_input());
         }
     }
 }
 
-client::event_loop_status client::event_loop_vnc()
+auto client::event_loop_vnc() -> client::event_loop_status
 {
-    if (!HandleRFBServerMessage(this->vnc_client))
+    if (HandleRFBServerMessage(this->vnc_client) == 0)
     {
         return {true, -1};
     }

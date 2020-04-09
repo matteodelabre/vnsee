@@ -10,6 +10,7 @@ namespace rmioc
 {
 
 input::input()
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-signed-bitwise)
 : input_fd(open("/dev/input/event1", O_RDONLY | O_NONBLOCK))
 {
     if (this->input_fd == -1)
@@ -20,8 +21,6 @@ input::input()
             "(rmioc::input) Open input device"
         );
     }
-
-    this->pending_events.reserve(8);
 }
 
 input::~input()
@@ -29,19 +28,19 @@ input::~input()
     close(this->input_fd);
 }
 
-int input::get_device_fd()
+auto input::get_device_fd() -> int
 {
     return this->input_fd;
 }
 
-bool input::fetch_events()
+auto input::fetch_events() -> bool
 {
     // See the Linux input protocol documentation
     // https://www.kernel.org/doc/Documentation/input/input.txt
     // https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
 
     bool has_changes = false;
-    input_event current_event;
+    input_event current_event{};
 
     while (read(this->input_fd, &current_event, sizeof(current_event)) != -1)
     {
@@ -110,7 +109,7 @@ bool input::fetch_events()
     return has_changes;
 }
 
-const input::slots_state_t& input::get_slots_state() const
+auto input::get_slots_state() const -> const input::slots_state_t&
 {
     return this->slots_state;
 }

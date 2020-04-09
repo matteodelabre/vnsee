@@ -125,19 +125,6 @@ void screen::update(int x, int y, int w, int h)
         );
     }
 
-    mxcfb::update_marker_data wait;
-    wait.update_marker = this->next_update_marker;
-    wait.collision_test = 0;
-
-    if (ioctl(this->framebuf_fd, mxcfb::wait_for_update_complete, &wait) == -1)
-    {
-        throw std::system_error(
-            errno,
-            std::generic_category(),
-            "(rmioc::screen::update) Wait for update completion"
-        );
-    }
-
     if (this->next_update_marker == 255)
     {
         this->next_update_marker = 1;

@@ -32,7 +32,7 @@ constexpr auto update_info_tag = 1;
  * VNC servers tend to send a lot of small updates in a short period of time.
  * This delay allows grouping those small updates into a larger screen update.
  */
-constexpr chrono::milliseconds update_delay{100};
+constexpr chrono::milliseconds update_delay{150};
 
 rfbBool create_framebuf(rfbClient*)
 {

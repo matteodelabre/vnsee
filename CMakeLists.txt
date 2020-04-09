@@ -26,10 +26,10 @@ set_property(TARGET PkgConfig::VNCCLIENT PROPERTY
     INTERFACE_LINK_LIBRARIES "${VNCCLIENT_STATIC_LIBRARIES}")
 
 add_executable(rmvncclient
+    src/rmioc/input.cpp
+    src/rmioc/screen.cpp
     src/client.cpp
-    src/input.cpp
     src/main.cpp
-    src/screen.cpp
 )
 
 set_property(TARGET rmvncclient PROPERTY CXX_STANDARD 17)

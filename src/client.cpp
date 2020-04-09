@@ -1,7 +1,7 @@
 #include "client.hpp"
-#include "input.hpp"
 #include "log.hpp"
-#include "screen.hpp"
+#include "rmioc/input.hpp"
+#include "rmioc/screen.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
@@ -89,8 +89,8 @@ void update_framebuf(rfbClient* client, int x, int y, int w, int h)
 
 client::client(
     const char* ip, int port,
-    rm::screen& rm_screen,
-    rm::input& rm_input
+    rmioc::screen& rm_screen,
+    rmioc::input& rm_input
 )
 : vnc_client(rfbGetClient(0, 0, 0))
 , rm_screen(rm_screen)
@@ -236,6 +236,11 @@ client::event_loop_status client::event_loop_screen()
         if (remaining_wait_time <= 0)
         {
             this->update_info.has_update = 0;
+
+            log::print("Screen Update")
+                << this->update_info.w << 'x' << this->update_info.h << '+'
+                << this->update_info.x << '+' << this->update_info.y << '\n';
+
             this->rm_screen.update(
                 this->update_info.x, this->update_info.y,
                 this->update_info.w, this->update_info.h
@@ -262,13 +267,13 @@ client::event_loop_status client::event_loop_input()
         auto x_slot_to_screen = [this](int x)
         {
             return this->rm_screen.get_xres() - this->rm_screen.get_xres()
-                * x / rm::input::slot_state::x_max;
+                * x / rmioc::input::slot_state::x_max;
         };
 
         auto y_slot_to_screen = [this](int y)
         {
             return this->rm_screen.get_yres() - this->rm_screen.get_yres()
-                * y / rm::input::slot_state::y_max;
+                * y / rmioc::input::slot_state::y_max;
         };
 
         for (const auto& [id, cur_slot] : cur_state)

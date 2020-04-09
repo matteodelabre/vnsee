@@ -1,6 +1,6 @@
 #include "client.hpp"
-#include "input.hpp"
-#include "screen.hpp"
+#include "rmioc/input.hpp"
+#include "rmioc/screen.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -51,8 +51,8 @@ int main(int argc, const char* argv[])
         server_ip = argv[1];
     }
 
-    rm::screen screen;
-    rm::input input;
+    rmioc::screen screen;
+    rmioc::input input;
 
     std::cerr << "Connecting to " << server_ip << ":" << server_port << "\n";
 

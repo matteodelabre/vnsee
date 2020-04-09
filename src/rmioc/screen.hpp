@@ -1,10 +1,10 @@
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef RMIOC_SCREEN_HPP
+#define RMIOC_SCREEN_HPP
 
 #include <cstdint>
 #include <linux/fb.h>
 
-namespace rm
+namespace rmioc
 {
 
 /**
@@ -80,6 +80,6 @@ private:
     uint32_t next_update_marker;
 }; // class screen
 
-} // namespace rm
+} // namespace rmioc
 
-#endif // SCREEN_HPP
+#endif // RMIOC_SCREEN_HPP

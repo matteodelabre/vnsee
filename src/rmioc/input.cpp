@@ -6,7 +6,7 @@
 #include <linux/input-event-codes.h>
 #include <unistd.h>
 
-namespace rm
+namespace rmioc
 {
 
 input::input()
@@ -17,7 +17,7 @@ input::input()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::input) Open input device"
+            "(rmioc::input) Open input device"
         );
     }
 
@@ -107,7 +107,7 @@ bool input::fetch_events()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::input) Open input device"
+            "(rmioc::input) Open input device"
         );
     }
 
@@ -124,4 +124,4 @@ const input::slots_state_t& input::get_previous_slots_state() const
     return this->previous_slots_state;
 }
 
-}
+} // namespace rmioc

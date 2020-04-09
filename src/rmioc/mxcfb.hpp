@@ -1,5 +1,5 @@
-#ifndef MXCFB_HPP
-#define MXCFB_HPP
+#ifndef RMIOC_MXCFB_HPP
+#define RMIOC_MXCFB_HPP
 
 #include <cstdint>
 #include <linux/ioctl.h>
@@ -173,4 +173,4 @@ constexpr auto wait_for_update_complete = _IOWR('F', 0x2F, update_marker_data);
 
 } // namespace mxcfb
 
-#endif // MXCFB_HPP
+#endif // RMIOC_MXCFB_HPP

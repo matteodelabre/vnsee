@@ -1,12 +1,12 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#ifndef RMIOC_INPUT_HPP
+#define RMIOC_INPUT_HPP
 
 #include <map>
 #include <vector>
 
 struct input_event;
 
-namespace rm
+namespace rmioc
 {
 
 class input
@@ -69,10 +69,8 @@ private:
 
     /** Currently active touch point slot. */
     int current_slot = 0;
-};
+}; // class input
 
-void read_input();
+} // namespace rmioc
 
-}
-
-#endif // INPUT_HPP
+#endif // RMIOC_INPUT_HPP

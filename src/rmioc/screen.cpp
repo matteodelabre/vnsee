@@ -1,6 +1,5 @@
 #include "mxcfb.hpp"
 #include "screen.hpp"
-#include "log.hpp"
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
@@ -11,7 +10,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-namespace rm
+namespace rmioc
 {
 
 screen::screen()
@@ -22,7 +21,7 @@ screen::screen()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::screen) Open device framebuffer"
+            "(rmioc::screen) Open device framebuffer"
         );
     }
 
@@ -35,7 +34,7 @@ screen::screen()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::screen) Fetch framebuffer vscreeninfo"
+            "(rmioc::screen) Fetch framebuffer vscreeninfo"
         );
     }
 
@@ -48,7 +47,7 @@ screen::screen()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::screen) Fetch framebuffer fscreeninfo"
+            "(rmioc::screen) Fetch framebuffer fscreeninfo"
         );
     }
 
@@ -106,9 +105,6 @@ void screen::update(int x, int y, int w, int h)
         return;
     }
 
-    log::print("Screen Update") << w << 'x' << h << '+' << x << '+' << y
-        << '\n';
-
     mxcfb::update_data update;
     update.update_region.left = x;
     update.update_region.top = y;
@@ -125,7 +121,7 @@ void screen::update(int x, int y, int w, int h)
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::screen::update) Send update"
+            "(rmioc::screen::update) Send update"
         );
     }
 
@@ -138,7 +134,7 @@ void screen::update(int x, int y, int w, int h)
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rm::screen::update) Wait for update completion"
+            "(rmioc::screen::update) Wait for update completion"
         );
     }
 
@@ -227,4 +223,4 @@ std::uint32_t screen::get_blue_max() const
     return (1 << this->framebuf_varinfo.blue.length) - 1;
 }
 
-} // namespace rm
+} // namespace rmioc

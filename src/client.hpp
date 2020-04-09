@@ -6,7 +6,7 @@
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <rfb/rfbproto.h>
 
-namespace rm
+namespace rmioc
 {
     class screen;
     class input;
@@ -28,8 +28,8 @@ public:
      */
     client(
         const char* ip, int port,
-        rm::screen& rm_screen,
-        rm::input& rm_input
+        rmioc::screen& rm_screen,
+        rmioc::input& rm_input
     );
 
     ~client();
@@ -88,10 +88,10 @@ private:
     rfbClient* vnc_client;
 
     /** reMarkable screen. */
-    rm::screen& rm_screen;
+    rmioc::screen& rm_screen;
 
     /** reMarkable input device. */
-    rm::input& rm_input;
+    rmioc::input& rm_input;
 
     update_info_struct update_info;
 }; // class client

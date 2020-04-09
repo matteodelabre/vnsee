@@ -69,9 +69,9 @@ ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient"
 
 ## Related work
 
-- [A currently-unfinished previous attempt at building a VNC client.](https://github.com/damienchallet/vnc-remarkable)
-- [libremarkable](https://github.com/canselcik/libremarkable), which was used as the basis for some input/output handling.
 - [A Hacker News comment requesting a VNC client for the reMarkable.](https://news.ycombinator.com/item?id=13115739)
+- [A currently-unfinished previous attempt at building a VNC client for the tablet.](https://github.com/damienchallet/vnc-remarkable)
+- [libremarkable](https://github.com/canselcik/libremarkable), which was used as the basis for some input/output handling.
 
 ## License
 

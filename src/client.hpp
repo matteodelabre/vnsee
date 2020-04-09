@@ -62,10 +62,14 @@ public:
         std::chrono::steady_clock::time_point last_update_time;
     };
 
+    /** Tag used for accessing the update accumulator from the C callbacks. */
+    static constexpr auto update_info_tag = 1;
+
 private:
+    update_info_struct update_info;
+
     /**
      * Informations returned by subroutines in the event loop.
-     *
      */
     struct event_loop_status
     {
@@ -81,8 +85,13 @@ private:
         int timeout;
     };
 
+    /** Subroutine for handling VNC events from the server. */
     event_loop_status event_loop_vnc();
+
+    /** Subroutine for updating the e-ink screen. */
     event_loop_status event_loop_screen();
+
+    /** Subroutine for processing user input. */
     event_loop_status event_loop_input();
 
     /** VNC connection. */
@@ -162,8 +171,20 @@ private:
     };
 
     std::map<int, touchpoint_state> touchpoints;
-
-    update_info_struct update_info;
 }; // class client
+
+/** Called by the VNC client library to initialize our local framebuffer. */
+rfbBool client_create_framebuf(rfbClient*);
+
+/**
+ * Called by the VNC client library to register an update from the server.
+ *
+ * @param client Handle to the VNC client.
+ * @param x Left bound of the updated rectangle (in pixels).
+ * @param y Top bound of the updated rectangle (in pixels).
+ * @param w Width of the updated rectangle (in pixels).
+ * @param h Height of the updated rectangle (in pixels).
+ */
+void client_update_framebuf(rfbClient* client, int x, int y, int w, int h);
 
 #endif // CLIENT_HPP

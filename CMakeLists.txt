@@ -29,6 +29,8 @@ add_executable(rmvncclient
     src/rmioc/input.cpp
     src/rmioc/screen.cpp
     src/client.cpp
+    src/client-input.cpp
+    src/client-screen.cpp
     src/main.cpp
 )
 

@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.4)
 project(rmvncclient)
 
+# Import libvncserver in static mode
+set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
+set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
+add_subdirectory(libvncserver)
+
+# Options for building rmvncclient
 option(CHECK_INCLUDES "Run include-what-you-use to check #includes" OFF)
 option(CHECK_TIDY "Run clang-tidy linter" OFF)
 option(TRACE "Print tracing messages on standard output" OFF)
@@ -29,11 +35,6 @@ if(TRACE)
     message(STATUS "Trace mode enabled")
     add_definitions(-DTRACE)
 endif()
-
-# Import libvncserver in static mode
-set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
-set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
-add_subdirectory(libvncserver)
 
 add_executable(rmvncclient
     src/rmioc/input.cpp

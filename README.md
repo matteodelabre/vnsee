@@ -2,16 +2,9 @@
 
 A simple [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client for the [reMarkable tablet](https://remarkable.com) allowing you to turn the device into an external screen for your computer.
 
-VNC is a desktop-sharing system that enables a client to see the screen of another computer and act on it remotely.
-It is a well-established protocol supporting multiple platforms including Windows, Linux and Android.
-The reMarkable is a writer tablet featuring an E-Ink display, Wacom pen digitizer and a touchscreen, that can be used for reading, sketching or note-taking.
-It runs Linux and is open to hacking.
-
-rmvncclient brings both worlds together by allowing the tablet to connect to a remote VNC server, show the computer’s screen on its E-Ink display and interact with it through the touchscreen.
-This effectively turns the tablet into an external screen for your computer.
-Applications include reading web-based documents, writing inside an editor or previewing your [LaTeX documents](https://www.latex-project.org/) as you compose them.
-
-* [Installation](#installation)
+* [Disclaimer](#disclaimer)
+* [Background](#background)
+* [Installing](#installing)
 * [Running](#running)
     - [Linux (X11 with xrandr)](#linux-x11-with-xrandr)
     - [Linux (Wayland) — _Help wanted!_](#linux-wayland)
@@ -22,7 +15,23 @@ Applications include reading web-based documents, writing inside an editor or pr
 * [Related work](#related-work)
 * [License](#license)
 
-## Installation
+## Disclaimer
+
+This project is not affiliated to, nor endorsed by, [reMarkable AS](https://remarkable.com/).
+**I am not responsible for any damage done to your device due to the use of this software.**
+
+## Background
+
+VNC is a desktop-sharing system that enables a client to see the screen of another computer and act on it remotely.
+It is a well-established protocol supporting multiple platforms including Windows, Linux and Android.
+The reMarkable is a writer tablet featuring an E-Ink display, Wacom pen digitizer and a touchscreen, that can be used for reading, sketching or note-taking.
+It runs Linux and is open to hacking.
+
+rmvncclient brings both worlds together by allowing the tablet to connect to a remote VNC server, show the computer’s screen on its E-Ink display and interact with it through the touchscreen.
+This effectively turns the tablet into an external screen for your computer.
+Applications include reading web-based documents, writing inside an editor or previewing your [LaTeX documents](https://www.latex-project.org/) as you compose them.
+
+## Installing
 
 Grab the latest build from the [releases page](https://github.com/matteodelabre/rmvncclient/releases) (or build the software yourself by following the [build guide](BUILD.md)), then copy the `rmvncclient` executable to the tablet by [using SSH](https://remarkablewiki.com/tech/ssh).
 
@@ -106,7 +115,7 @@ Activity on the touchscreen will be translated to mouse interactions following t
 
 ## Technologies
 
-This client is built in C++ using [libvncserver](https://github.com/LibVNC/libvncserver).
+This client is built in C++ using [libvncserver](https://github.com/LibVNC/libvncserver), which implements the [RFB protocol](https://tools.ietf.org/html/rfc6143) behind the VNC system.
 
 ## Related work
 

@@ -7,29 +7,30 @@
 \newcommand\outborder{.1}
 \newcommand\button{2 * \outborder}
 
-\begin{scope}
-    \tikzset{
-        back slate/.style={
-            border, fill=white,
-            rounded corners=1,
-        },
-        lower key/.style={
-            draw=border, line width=0.3, rectangle,
-            rounded corners=0.25,
-            minimum width={2 * \outborder cm},
-            minimum height={2 * \outborder cm},
-            inner sep=0pt,
-        },
-        upper key/.style={
-            fill=border, rectangle,
-            rounded corners=0.25,
-            minimum width={2 * \outborder cm},
-            minimum height=2pt,
-            yshift=-.25pt,
-            inner sep=0pt,
-        },
-    }
+\tikzset{
+    secondary/.style={line width=.3},
+    back slate/.style={
+        border, fill=white,
+        rounded corners=1,
+    },
+    lower key/.style={
+        draw=border, secondary, rectangle,
+        rounded corners=0.25,
+        minimum width={2 * \outborder cm},
+        minimum height={2 * \outborder cm},
+        inner sep=0pt,
+    },
+    upper key/.style={
+        fill=border, rectangle,
+        rounded corners=0.25,
+        minimum width={2 * \outborder cm},
+        minimum height=2pt,
+        yshift=-.25pt,
+        inner sep=0pt,
+    },
+}
 
+\begin{scope}
     \node[upper key] at (.5 * \width, \height) (key-t) {};
     \draw[back slate] (0, 0) rectangle (\width, \height);
 

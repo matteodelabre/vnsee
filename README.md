@@ -74,6 +74,34 @@ ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient"
 
 (Help wanted!)
 
+## Using
+
+While the client is running, frames will be displayed on the tablet’s screen as they are received from the server.
+Due to the properties of E-Ink, there will be some extra latency (up to 1 s) between the time of a change on the computer and the moment it appears on the screen.
+Activity on the touchscreen will be translated to mouse interactions following the mapping in the table below.
+
+<table>
+<tr>
+<th colspan="3">
+    Interaction mapping
+</th>
+</tr>
+<tr>
+<td align="center">
+    <img src="media/tap.png" alt=""><br>
+    Tap ⇒ Left click
+</td>
+<td align="center">
+    <img src="media/scroll-x.png" alt=""><br>
+    Horizontal swipe ⇒ Horizontal scroll
+</td>
+<td align="center">
+    <img src="media/scroll-y.png" alt=""><br>
+    Vertical swipe ⇒ Vertical scroll
+</td>
+</tr>
+</table>
+
 ## Related work
 
 - [A Hacker News comment requesting a VNC client for the reMarkable.](https://news.ycombinator.com/item?id=13115739)

@@ -24,7 +24,7 @@ Applications include reading web-based documents, writing inside an editor or pr
 
 ## Installation
 
-Grab the latest build from the releases page (or build the software yourself by following the [build guide](BUILD.md)), then copy the `rmvncclient` executable to the tablet by [using SSH](https://remarkablewiki.com/tech/ssh).
+Grab the latest build from the [releases page](https://github.com/matteodelabre/rmvncclient/releases) (or build the software yourself by following the [build guide](BUILD.md)), then copy the `rmvncclient` executable to the tablet by [using SSH](https://remarkablewiki.com/tech/ssh).
 
 ## Running
 

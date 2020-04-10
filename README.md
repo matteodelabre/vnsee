@@ -17,6 +17,8 @@ Applications include reading web-based documents, writing inside an editor or pr
     - [Linux (Wayland) — _Help wanted!_](#linux-wayland)
     - [Windows — _Help wanted!_](#windows)
     - [macOS — _Help wanted!_](#macos)
+* [Using](#using)
+* [Technologies](#technologies)
 * [Related work](#related-work)
 * [License](#license)
 
@@ -101,6 +103,10 @@ Activity on the touchscreen will be translated to mouse interactions following t
 </td>
 </tr>
 </table>
+
+## Technologies
+
+This client is built in C++ using [libvncserver](https://github.com/LibVNC/libvncserver).
 
 ## Related work
 

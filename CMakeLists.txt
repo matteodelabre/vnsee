@@ -31,8 +31,8 @@ if(TRACE)
 endif()
 
 # Import libvncserver in static mode
-set(BUILD_SHARED_LIBS OFF)
-set(WITH_GNUTLS OFF)
+set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
+set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
 add_subdirectory(libvncserver)
 
 add_executable(rmvncclient

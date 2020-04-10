@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <linux/fb.h>
 
+namespace mxcfb { struct update_data; }
+
 namespace rmioc
 {
 
@@ -17,14 +19,22 @@ public:
     ~screen();
 
     /**
-     * Update the given region of the screen.
+     * Update a partial region of the screen.
      *
      * @param x Left bound of the region to update (in pixels).
      * @param y Top bound of the region to update (in pixels).
      * @param w Width of the region to update (in pixels).
      * @param h Height of the region to update (in pixels).
+     * @param wait True to wait until update is complete.
      */
-    void update(int x, int y, int w, int h);
+    void update(int x, int y, int w, int h, bool wait = false);
+
+    /**
+     * Perform a full update of the screen (will flash).
+     *
+     * @param wait True to wait until update is complete.
+     */
+    void update(bool wait = true);
 
     /**
      * Access the screen data buffer.
@@ -74,7 +84,21 @@ private:
     fb_fix_screeninfo framebuf_fixinfo{};
 
     /** Pointer to the memory-mapped framebuffer. */
-    uint8_t* framebuf_ptr = nullptr;
+    std::uint8_t* framebuf_ptr = nullptr;
+
+    /**
+     * Send an update object to the framebuffer driver.
+     *
+     * @param update Update object to send.
+     * @param wait True to wait until update is complete.
+     */
+    void send_update(mxcfb::update_data& update, bool wait);
+
+    /** Next value to be used as an update marker. */
+    std::uint32_t next_update_marker = 1;
+
+    /** Maximum value to use for update markers. */
+    static constexpr std::uint32_t max_update_marker = 255;
 }; // class screen
 
 } // namespace rmioc

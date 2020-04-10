@@ -1,5 +1,5 @@
-#include "mxcfb.hpp"
 #include "screen.hpp"
+#include "mxcfb.hpp"
 #include <cerrno>
 #include <cstdint>
 #include <system_error>
@@ -74,7 +74,7 @@ screen::~screen()
     this->framebuf_fd = -1;
 }
 
-void screen::update(int x, int y, int w, int h)
+void screen::update(int x, int y, int w, int h, bool wait)
 {
     // Clip update region to screen bounds
     if (x < 0)
@@ -117,7 +117,28 @@ void screen::update(int x, int y, int w, int h)
     update.temp = mxcfb::temps::normal;
     update.update_mode = mxcfb::update_modes::partial;
     update.flags = 0;
-    update.update_marker = 0;
+
+    this->send_update(update, wait);
+}
+
+void screen::update(bool wait)
+{
+    mxcfb::update_data update{};
+    update.update_region.left = 0;
+    update.update_region.top = 0;
+    update.update_region.width = this->get_xres();
+    update.update_region.height = this->get_yres();
+    update.waveform_mode = mxcfb::waveform_modes::gc16;
+    update.temp = mxcfb::temps::normal;
+    update.update_mode = mxcfb::update_modes::full;
+    update.flags = 0;
+
+    this->send_update(update, wait);
+}
+
+void screen::send_update(mxcfb::update_data& update, bool wait)
+{
+    update.update_marker = this->next_update_marker;
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
     if (ioctl(this->framebuf_fd, mxcfb::send_update, &update) == -1)
@@ -125,8 +146,36 @@ void screen::update(int x, int y, int w, int h)
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::screen::update) Send update"
+            "(rmioc::screen::send_update) Screen update"
         );
+    }
+
+    if (!wait)
+    {
+        return;
+    }
+
+    mxcfb::update_marker_data data{};
+    data.update_marker = this->next_update_marker;
+    data.collision_test = 0;
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
+    if (ioctl(this->framebuf_fd, mxcfb::wait_for_update_complete, &data) == -1)
+    {
+        throw std::system_error(
+            errno,
+            std::generic_category(),
+            "(rmioc::screen::send_update) Wait for update completion"
+        );
+    }
+
+    if (this->next_update_marker == rmioc::screen::max_update_marker)
+    {
+        this->next_update_marker = 1;
+    }
+    else
+    {
+        ++this->next_update_marker;
     }
 }
 

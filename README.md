@@ -90,15 +90,15 @@ Activity on the touchscreen will be translated to mouse interactions following t
 </tr>
 <tr>
 <td align="center">
-    <img src="media/tap.png" alt=""><br>
+    <img src="media/tap.svg" width="200" alt=""><br>
     Tap ⇒ Left click
 </td>
 <td align="center">
-    <img src="media/scroll-x.png" alt=""><br>
+    <img src="media/scroll-x.svg" width="200" alt=""><br>
     Horizontal swipe ⇒ Horizontal scroll
 </td>
 <td align="center">
-    <img src="media/scroll-y.png" alt=""><br>
+    <img src="media/scroll-y.svg" width="200" alt=""><br>
     Vertical swipe ⇒ Vertical scroll
 </td>
 </tr>

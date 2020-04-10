@@ -9,9 +9,12 @@ namespace mxcfb
 
 /**
  * Adapted from the reMarkable kernel tree.
- * See https://github.com/reMarkable/linux/blob/zero-gravitas/include/uapi/linux/mxcfb.h
+ * See:
  *
- * Copyright (C) 2013-2015 Freescale Semiconductor, Inc. All Rights Reserved
+ * - https://github.com/reMarkable/linux/blob/zero-gravitas/include/uapi/linux/mxcfb.h
+ * - https://github.com/reMarkable/linux/blob/zero-gravitas/drivers/video/fbdev/mxc/mxc_epdc_v2_fb.c
+ *
+ * Copyright (C) 2013-2016 Freescale Semiconductor, Inc. All Rights Reserved
  */
 
 struct rect

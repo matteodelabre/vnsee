@@ -30,6 +30,9 @@ if(TRACE)
     add_definitions(-DTRACE)
 endif()
 
+# Import libvncserver in static mode
+set(BUILD_SHARED_LIBS OFF)
+set(WITH_GNUTLS OFF)
 add_subdirectory(libvncserver)
 
 add_executable(rmvncclient

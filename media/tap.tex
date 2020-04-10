@@ -2,20 +2,20 @@
 \usetikzlibrary{positioning}
 \usetikzlibrary{calc}
 \begin{document}
-\begin{tikzpicture}[rounded corners=1, very thin]
-    \input{base.tex}
+\begin{tikzpicture}
+    \input{remarkable}
     \newcommand\innerradius{.15}
     \newcommand\outerradius{.22}
     \newcommand\partialangle{50}
 
-    \draw[semithick] (screen-c) circle (\innerradius);
+    \draw[annotation, semithick] (screen-c) circle (\innerradius);
 
-    \draw ($(screen-c)+(\outerradius, 0)$)
+    \draw[annotation] ($(screen-c)+(\outerradius, 0)$)
          arc[radius=\outerradius, start angle=0, delta angle=\partialangle]
          ($(screen-c)+(\outerradius, 0)$)
          arc[radius=\outerradius, start angle=0, delta angle=-\partialangle];
 
-    \draw ($(screen-c)-(\outerradius, 0)$)
+    \draw[annotation] ($(screen-c)-(\outerradius, 0)$)
          arc[radius=\outerradius, start angle=180, delta angle=\partialangle]
          ($(screen-c)-(\outerradius, 0)$)
          arc[radius=\outerradius, start angle=180, delta angle=-\partialangle];

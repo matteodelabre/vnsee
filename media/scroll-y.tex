@@ -3,15 +3,15 @@
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows.meta}
 \begin{document}
-\begin{tikzpicture}[rounded corners=1, very thin]
-    \input{base.tex}
+\begin{tikzpicture}
+    \input{remarkable}
     \newcommand\radius{.15}
 
-    \draw[semithick] (screen-c) circle (\radius);
-    \draw[ultra thick, -{Latex[length=2.2mm]}]
+    \draw[annotation, semithick] (screen-c) circle (\radius);
+    \draw[annotation, ultra thick, -{Latex[length=2.2mm]}]
         ($(screen-c)+(0,\radius)$) -- ++(0, .4);
 
-    \draw[ultra thick, -{Latex[length=2.2mm]}]
+    \draw[annotation, ultra thick, -{Latex[length=2.2mm]}]
         ($(screen-c)-(0,\radius)$) -- ++(0, -.4);
 \end{tikzpicture}
 \end{document}

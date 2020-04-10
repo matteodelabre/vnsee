@@ -122,6 +122,7 @@ This client is built in C++ using [libvncserver](https://github.com/LibVNC/libvn
 ## Related work
 
 - [A Hacker News comment requesting a VNC client for the reMarkable.](https://news.ycombinator.com/item?id=13115739)
+- [Another VNC client built by @sandsmark which does not depend on libvncserver.](https://github.com/sandsmark/revncable)
 - [A currently-unfinished previous attempt at building a VNC client for the tablet.](https://github.com/damienchallet/vnc-remarkable)
 - [libremarkable](https://github.com/canselcik/libremarkable), which was used as the basis for some input/output handling.
 

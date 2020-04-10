@@ -5,12 +5,14 @@
 #include <bitset>
 #include <cstdint>
 #include <cstdlib>
+#include <iomanip>
 #include <iterator>
 #include <map>
 #include <ostream>
 #include <utility>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <type_traits>
+// IWYU pragma: no_include "rfb/rfbproto.h"
 
 /**
  * Minimal move in pixels to consider that a touchpoint has been dragged
@@ -187,9 +189,12 @@ void client::touchpoint_state::send_button_press(
     std::uint8_t btn
 ) const
 {
+    constexpr auto bits = 8 * sizeof(btn);
+
     log::print("Button press")
-        << x << 'x' << y
-        << " (button mask: " << std::bitset<sizeof(btn)>(btn) << ")\n";
+        << x << 'x' << y << " (button mask: "
+        << std::setfill('0') << std::setw(bits)
+        << std::bitset<bits>(btn) << ")\n";
 
     SendPointerEvent(this->parent.vnc_client, x, y, btn);
     SendPointerEvent(this->parent.vnc_client, x, y, 0);

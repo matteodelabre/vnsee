@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <map>
 #include <rfb/rfbclient.h>
-// IWYU pragma: no_include <rfb/rfbproto.h>
+// IWYU pragma: no_include "rfb/rfbproto.h"
 
 namespace rmioc
 {

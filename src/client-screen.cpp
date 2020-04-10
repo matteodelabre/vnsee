@@ -6,7 +6,7 @@
 #include <ostream>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <type_traits>
-// IWYU pragma: no_include <rfb/rfbproto.h>
+// IWYU pragma: no_include "rfb/rfbproto.h"
 
 namespace chrono = std::chrono;
 

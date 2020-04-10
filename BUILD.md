@@ -12,7 +12,7 @@ source /usr/local/oecore-x86_64/environment-setup-cortexa9hf-neon-oe-linux-gnuea
 Download the `OEToolchainConfig.cmake` file that is missing from the toolchain and install it in `/sysroots/x86_64-oesdk-linux/usr/share/cmake` directory of the toolchain.
 
 ```sh
-curl https://github.com/openembedded/openembedded-core/blob/master/meta/recipes-devtools/cmake/cmake/OEToolchainConfig.cmake -o OEToolchainConfig.cmake
+curl https://raw.githubusercontent.com/openembedded/openembedded-core/master/meta/recipes-devtools/cmake/cmake/OEToolchainConfig.cmake -o OEToolchainConfig.cmake
 sudo mkdir -p /usr/local/oecore-x86_64/sysroots/x86_64-oesdk-linux/usr/share/cmake
 sudo mv OEToolchainConfig.cmake /usr/local/oecore-x86_64/sysroots/x86_64-oesdk-linux/usr/share/cmake
 ```

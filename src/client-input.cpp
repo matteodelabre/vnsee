@@ -1,7 +1,7 @@
 #include "client.hpp"
 #include "log.hpp"
-#include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
+#include "rmioc/touch.hpp"
 #include <bitset>
 #include <cstdint>
 #include <cstdlib>
@@ -27,9 +27,9 @@ constexpr double scroll_speed = 0.05;
 
 auto client::event_loop_input() -> client::event_loop_status
 {
-    if (this->rm_input.fetch_events())
+    if (this->rm_touch.process_events())
     {
-        auto slots_state = this->rm_input.get_slots_state();
+        auto slots_state = this->rm_touch.get_slots_state();
 
         // Initialize new touchpoints or update existing ones
         for (const auto& [id, slot] : slots_state)
@@ -175,13 +175,13 @@ auto client::touchpoint_state::scrolling() const -> bool
 auto client::touchpoint_state::x_sensor_to_screen(int x_value) const -> int
 {
     int xres = static_cast<int>(this->parent.rm_screen.get_xres());
-    return xres - xres * x_value / rmioc::input::slot_state::x_max;
+    return xres - xres * x_value / rmioc::touch::slot_state::x_max;
 }
 
 auto client::touchpoint_state::y_sensor_to_screen(int y_value) const -> int
 {
     int yres = static_cast<int>(this->parent.rm_screen.get_yres());
-    return yres - yres * y_value / rmioc::input::slot_state::y_max;
+    return yres - yres * y_value / rmioc::touch::slot_state::y_max;
 }
 
 void client::touchpoint_state::send_button_press(

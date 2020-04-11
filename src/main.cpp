@@ -1,6 +1,6 @@
 #include "client.hpp"
-#include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
+#include "rmioc/touch.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -52,14 +52,14 @@ auto main(int argc, const char* argv[]) -> int
     try
     {
         rmioc::screen screen;
-        rmioc::input input;
+        rmioc::touch touch;
 
         std::cerr << "Connecting to "
             << server_ip << ":" << server_port << "...\n";
 
         client client_instance{
             server_ip.data(), server_port,
-            screen, input
+            screen, touch
         };
 
         std::cerr << "\e[1A\e[KConnected to "

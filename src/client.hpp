@@ -10,7 +10,7 @@
 namespace rmioc
 {
     class screen;
-    class input;
+    class touch;
 }
 
 /**
@@ -25,12 +25,12 @@ public:
      * @param ip IP address of the VNC server to connect to.
      * @param port Port of the VNC server to connect to.
      * @param rm_screen Screen to update with data from the VNC server.
-     * @param rm_input Input device to read mouse events from.
+     * @param rm_touch Touchscreen device to read input events from.
      */
     client(
         const char* ip, int port,
         rmioc::screen& rm_screen,
-        rmioc::input& rm_input
+        rmioc::touch& rm_touch
     );
 
     ~client();
@@ -119,8 +119,8 @@ private:
         int x, int y, int w, int h
     );
 
-    /** reMarkable input device. */
-    rmioc::input& rm_input;
+    /** reMarkable touchscreen device. */
+    rmioc::touch& rm_touch;
 
     class touchpoint_state
     {

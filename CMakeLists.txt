@@ -38,6 +38,7 @@ endif()
 
 add_executable(rmvncclient
     src/rmioc/input.cpp
+    src/rmioc/touch.cpp
     src/rmioc/screen.cpp
     src/client.cpp
     src/client-input.cpp

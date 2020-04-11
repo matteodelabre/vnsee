@@ -1,7 +1,7 @@
 #include "client.hpp"
 #include "log.hpp"
-#include "rmioc/input.hpp"
 #include "rmioc/screen.hpp"
+#include "rmioc/touch.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -44,12 +44,12 @@ void vnc_client_log(const char* format, ...)
 client::client(
     const char* ip, int port,
     rmioc::screen& rm_screen,
-    rmioc::input& rm_input
+    rmioc::touch& rm_touch
 )
 : vnc_client(rfbGetClient(0, 0, 0))
 , update_info{}
 , rm_screen(rm_screen)
-, rm_input(rm_input)
+, rm_touch(rm_touch)
 {
     rfbClientLog = vnc_client_log;
     rfbClientErr = vnc_client_log;
@@ -118,9 +118,8 @@ void client::event_loop()
     polled_fds[poll_vnc].fd = this->vnc_client->sock;
     polled_fds[poll_vnc].events = POLLIN;
 
-    constexpr std::size_t poll_input = 1;
-    polled_fds[poll_input].fd = this->rm_input.get_device_fd();
-    polled_fds[poll_input].events = POLLIN;
+    constexpr std::size_t poll_touch = 1;
+    this->rm_touch.setup_poll(polled_fds[poll_touch]);
 
     // Maximum time to wait before timeout in the next poll
     int timeout = -1;
@@ -173,7 +172,7 @@ void client::event_loop()
         handle_status(this->event_loop_screen());
 
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
-        if ((polled_fds[poll_input].revents & POLLIN) != 0)
+        if ((polled_fds[poll_touch].revents & POLLIN) != 0)
         {
             handle_status(this->event_loop_input());
         }

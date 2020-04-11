@@ -1,69 +1,60 @@
 #ifndef RMIOC_INPUT_HPP
 #define RMIOC_INPUT_HPP
 
-#include <map>
 #include <vector>
 #include <linux/input.h>
+
+struct pollfd;
 
 namespace rmioc
 {
 
+/**
+ * Generic class for reading Linux input devices.
+ *
+ * See the Linux documentation on input:
+ *
+ * - https://www.kernel.org/doc/Documentation/input/input.txt
+ * - https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
+ */
 class input
 {
 public:
-    input();
+    /**
+     * Open an input device.
+     *
+     * @param device_path Path to the device.
+     */
+    input(const char* device_path);
+
+    /** Close the input device. */
     ~input();
 
-    /** Access the file descriptor of the input device. */
-    int get_device_fd();
-
     /**
-     * Check for new events.
+     * Setup a pollfd structure to wait for events on the device.
      *
-     * @return True if touch state changed since last call.
+     * @param in_pollfd Structure to modify.
      */
-    bool fetch_events();
+    void setup_poll(pollfd& in_pollfd);
 
-    /** Current state of a touch point slot. */
-    struct slot_state
-    {
-        int x;
-
-        static constexpr int x_min = 0;
-        static constexpr int x_max = 767;
-
-        int y;
-
-        static constexpr int y_min = 0;
-        static constexpr int y_max = 1023;
-
-        int pressure;
-
-        static constexpr int pressure_min = 0;
-        static constexpr int pressure_max = 255;
-
-        int orientation;
-
-        static constexpr int orientation_min = -127;
-        static constexpr int orientation_max = 127;
-    };
-
-    using slots_state_t = std::map<int, slot_state>;
-
-    const slots_state_t& get_slots_state() const;
+protected:
+    /**
+     * Fetch the next set of events from the device.
+     *
+     * If no EV_SYN event is available, queue existing events and return an
+     * empty set. This function will not block if no events are available on
+     * the device.
+     *
+     * @return Next set of available events.
+     */
+    std::vector<input_event> fetch_events();
 
 private:
     /** File descriptor for the input device. */
     int input_fd;
 
-    /** List of events to be processed. */
-    std::vector<input_event> pending_events;
-
-    /** List of active touch point slots indexed by their ID. */
-    slots_state_t slots_state;
-
-    /** Currently active touch point slot. */
-    int current_slot = 0;
+    /** List of queued events. */
+    std::vector<input_event> queued_events;
 }; // class input
 
 } // namespace rmioc

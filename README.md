@@ -58,13 +58,13 @@ Enable and arrange the `VIRTUAL1` output through your usual dual screen configur
 Then, start the x11vnc server (you will need to install this package first if needed).
 
 ```sh
-x11vnc -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor
+x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}')
 ```
 
 > _Alternative: Flip the screen upside down_
 >
 > ```sh
-> x11vnc -rotate xy -repeat -forever -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}') -nocursor
+> x11vnc -rotate xy -repeat -forever -nocursor -allow 10.11.99.1 -clip $(xrandr | awk '/VIRTUAL1 connected/{print $3}')
 > ```
 
 Finally, start rmvncclient using SSH.

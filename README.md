@@ -92,7 +92,7 @@ ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient; systemctl start xo
 You can quit rmvncclient at any time using the “Power” button (the one above the screen).
 
 While the client is running, frames will be displayed on the tablet’s screen as they are received from the server.
-Due to the properties of E-Ink, there will be some extra latency (up to 1 s) between the time of a change on the computer and the moment it appears on the screen.
+Due to the properties of E-Ink, there will be some extra latency (up to 1s) between the time of a change on the computer and the moment it appears on the screen.
 On dark background apps, there will be some ghosting on the screen: use the “Home” button (the one in the middle of the button row below the screen) to force a refresh and clear those artifacts out.
 
 Activity on the touchscreen will be translated to mouse interactions following the mapping in the table below.

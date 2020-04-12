@@ -37,13 +37,13 @@ if(TRACE)
 endif()
 
 add_executable(rmvncclient
+    src/app/client.cpp
+    src/app/screen.cpp
+    src/app/touch.cpp
     src/rmioc/buttons.cpp
     src/rmioc/input.cpp
     src/rmioc/screen.cpp
     src/rmioc/touch.cpp
-    src/client.cpp
-    src/client-input.cpp
-    src/client-screen.cpp
     src/main.cpp
 )
 

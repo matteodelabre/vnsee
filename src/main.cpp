@@ -1,4 +1,4 @@
-#include "client.hpp"
+#include "app/client.hpp"
 #include "rmioc/screen.hpp"
 #include "rmioc/touch.hpp"
 #include <algorithm>
@@ -57,7 +57,7 @@ auto main(int argc, const char* argv[]) -> int
         std::cerr << "Connecting to "
             << server_ip << ":" << server_port << "...\n";
 
-        client client_instance{
+        app::client client{
             server_ip.data(), server_port,
             screen, touch
         };
@@ -65,7 +65,7 @@ auto main(int argc, const char* argv[]) -> int
         std::cerr << "\e[1A\e[KConnected to "
             << server_ip << ':' << server_port << "!\n";
 
-        client_instance.event_loop();
+        client.event_loop();
     }
     catch (const std::exception& err)
     {

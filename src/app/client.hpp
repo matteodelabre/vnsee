@@ -1,6 +1,8 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#ifndef APP_CLIENT_HPP
+#define APP_CLIENT_HPP
 
+#include "event_loop.hpp"
+#include "touch.hpp"
 #include <chrono>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include "rfb/rfbproto.h"
@@ -10,6 +12,9 @@ namespace rmioc
     class screen;
     class touch;
 }
+
+namespace app
+{
 
 /**
  * VNC client for the reMarkable tablet.
@@ -22,13 +27,13 @@ public:
      *
      * @param ip IP address of the VNC server to connect to.
      * @param port Port of the VNC server to connect to.
-     * @param rm_screen Screen to update with data from the VNC server.
-     * @param rm_touch Touchscreen device to read input events from.
+     * @param screen_device Screen to update with data from the VNC server.
+     * @param touch_device Touchscreen device to read input events from.
      */
     client(
         const char* ip, int port,
-        rmioc::screen& rm_screen,
-        rmioc::touch& rm_touch
+        rmioc::screen& screen_device,
+        rmioc::touch& touch_device
     );
 
     ~client();
@@ -41,23 +46,6 @@ public:
 private:
     /** Tag used for accessing the update accumulator from the C callbacks. */
     static constexpr auto update_info_tag = 1;
-
-    /**
-     * Informations returned by subroutines of the event loop.
-     */
-    struct event_loop_status
-    {
-        /** True if the client must quit the event loop. */
-        bool quit;
-
-        /**
-         * Timeout to use for the next poll call (in milliseconds).
-         *
-         * The minimum timeout among all called subroutines will be used.
-         * Can be -1 if no more work is needed (wait indefinitely).
-         */
-        int timeout;
-    };
 
     /** Subroutine for handling VNC events from the server. */
     event_loop_status event_loop_vnc();
@@ -91,7 +79,7 @@ private:
     event_loop_status event_loop_screen();
 
     /** reMarkable screen. */
-    rmioc::screen& rm_screen;
+    rmioc::screen& screen_device;
 
     /**
      * Called by the VNC client library to initialize our local framebuffer.
@@ -114,68 +102,8 @@ private:
         int x, int y, int w, int h
     );
 
-    /** Subroutine for processing user input. */
-    event_loop_status event_loop_input();
-
-    /** reMarkable touchscreen device. */
-    rmioc::touch& rm_touch;
-
-    /** Current state of the touch interaction. */
-    enum class TouchState
-    {
-        /** No touch point is active. */
-        Inactive,
-
-        /** Touch points are active but did not move enough to scroll. */
-        Tap,
-
-        /** Touch points are active and scrolling horizontally. */
-        ScrollX,
-
-        /** Touch points are active and scrolling vertically. */
-        ScrollY,
-    } touch_state = TouchState::Inactive;
-
-    void on_touch_update(int x, int y);
-    void on_touch_end();
-
-    /** Current X position of the touch interaction, if not inactive. */
-    int touch_x = 0;
-
-    /** Current Y position of the touch interaction, if not inactive. */
-    int touch_y = 0;
-
-    /** Initial X position of the touch interaction, if not inactive. */
-    int touch_x_initial = 0;
-
-    /** Initial Y position of the touch interaction, if not inactive. */
-    int touch_y_initial = 0;
-
-    /**
-     * Total number of horizontal scroll events that were sent in this
-     * interaction, positive for scrolling right and negative for
-     * scrolling left.
-     */
-    int touch_x_scroll_events = 0;
-
-    /**
-     * Total number of vertical scroll events that were sent in this
-     * interaction, positive for scrolling down and negative for
-     * scrolling up.
-     */
-    int touch_y_scroll_events = 0;
-
-    /** List of mouse button flags used by the VNC protocol. */
-    enum class MouseButton : std::uint8_t
-    {
-        Left = 1,
-        // Right = 1U << 1U,
-        // Middle = 1U << 2U,
-        ScrollDown = 1U << 3U,
-        ScrollUp = 1U << 4U,
-        ScrollLeft = 1U << 5U,
-        ScrollRight = 1U << 6U,
-    };
+    rmioc::touch& touch_device;
+    touch touch_handler;
 
     /**
      * Send press and release events for the given button to VNC.
@@ -187,4 +115,6 @@ private:
     void send_button_press(int x, int y, MouseButton button) const;
 }; // class client
 
-#endif // CLIENT_HPP
+} // namespace app
+
+#endif // APP_CLIENT_HPP

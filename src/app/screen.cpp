@@ -1,6 +1,7 @@
 #include "client.hpp"
-#include "log.hpp"
-#include "rmioc/screen.hpp"
+#include "event_loop.hpp"
+#include "../log.hpp"
+#include "../rmioc/screen.hpp"
 #include <algorithm>
 #include <chrono>
 #include <ostream>
@@ -19,7 +20,10 @@ namespace chrono = std::chrono;
  */
 constexpr chrono::milliseconds update_delay{150};
 
-auto client::event_loop_screen() -> client::event_loop_status
+namespace app
+{
+
+auto client::event_loop_screen() -> event_loop_status
 {
     if (this->update_info.has_update)
     {
@@ -37,7 +41,7 @@ auto client::event_loop_screen() -> client::event_loop_status
                 << this->update_info.w << 'x' << this->update_info.h << '+'
                 << this->update_info.x << '+' << this->update_info.y << '\n';
 
-            this->rm_screen.update(
+            this->screen_device.update(
                 this->update_info.x, this->update_info.y,
                 this->update_info.w, this->update_info.h
             );
@@ -95,4 +99,6 @@ void client::update_framebuf(rfbClient* client, int x, int y, int w, int h)
     }
 
     update_info->last_update_time = chrono::steady_clock::now();
+}
+
 }

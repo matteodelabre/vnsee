@@ -1,14 +1,18 @@
 #include "client.hpp"
-#include "log.hpp"
-#include "rmioc/screen.hpp"
-#include "rmioc/touch.hpp"
+#include "../log.hpp"
+#include "../rmioc/screen.hpp"
+#include "../rmioc/touch.hpp"
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cerrno>
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
@@ -41,15 +45,22 @@ void vnc_client_log(const char* format, ...)
     va_end(args);
 }
 
+namespace app
+{
+
+using namespace std::placeholders;
+
 client::client(
     const char* ip, int port,
-    rmioc::screen& rm_screen,
-    rmioc::touch& rm_touch
+    rmioc::screen& screen_device,
+    rmioc::touch& touch_device
 )
 : vnc_client(rfbGetClient(0, 0, 0))
 , update_info{}
-, rm_screen(rm_screen)
-, rm_touch(rm_touch)
+, screen_device(screen_device)
+, touch_device(touch_device)
+, touch_handler(touch_device, screen_device,
+                std::bind(&client::send_button_press, this, _1, _2, _3))
 {
     rfbClientLog = vnc_client_log;
     rfbClientErr = vnc_client_log;
@@ -72,14 +83,16 @@ client::client(
     this->vnc_client->GotFrameBufferUpdate = client::update_framebuf;
 
     // Configure connection with device framebuffer settings
-    this->vnc_client->frameBuffer = this->rm_screen.get_data();
-    this->vnc_client->format.bitsPerPixel = this->rm_screen.get_bits_per_pixel();
-    this->vnc_client->format.redShift = this->rm_screen.get_red_offset();
-    this->vnc_client->format.redMax = this->rm_screen.get_red_max();
-    this->vnc_client->format.greenShift = this->rm_screen.get_green_offset();
-    this->vnc_client->format.greenMax = this->rm_screen.get_green_max();
-    this->vnc_client->format.blueShift = this->rm_screen.get_blue_offset();
-    this->vnc_client->format.blueMax = this->rm_screen.get_blue_max();
+    this->vnc_client->frameBuffer = this->screen_device.get_data();
+    this->vnc_client->format.bitsPerPixel
+        = this->screen_device.get_bits_per_pixel();
+    this->vnc_client->format.redShift = this->screen_device.get_red_offset();
+    this->vnc_client->format.redMax = this->screen_device.get_red_max();
+    this->vnc_client->format.greenShift
+        = this->screen_device.get_green_offset();
+    this->vnc_client->format.greenMax = this->screen_device.get_green_max();
+    this->vnc_client->format.blueShift = this->screen_device.get_blue_offset();
+    this->vnc_client->format.blueMax = this->screen_device.get_blue_max();
 
     if (rfbInitClient(this->vnc_client, nullptr, nullptr) == 0)
     {
@@ -87,19 +100,20 @@ client::client(
     }
 
     // Make sure the server gives us a compatible format
+    int xres_mem = static_cast<int>(this->screen_device.get_xres_memory());
+    int yres_mem = static_cast<int>(this->screen_device.get_yres_memory());
+
     if (this->vnc_client->width < 0
         || this->vnc_client->height < 0
-        || static_cast<unsigned int>(this->vnc_client->width)
-            != this->rm_screen.get_xres_memory()
-        || static_cast<unsigned int>(this->vnc_client->height)
-            > this->rm_screen.get_yres_memory())
+        || this->vnc_client->width != xres_mem
+        || this->vnc_client->height > yres_mem)
     {
         std::stringstream msg;
         msg << "Server uses an unsupported resolution ("
             << this->vnc_client->width << 'x' << this->vnc_client->height
             << "). This client can only cope with a screen width of exactly "
-            << this->rm_screen.get_xres_memory() << " pixels and a screen "
-            "height of " << this->rm_screen.get_yres() << " pixels";
+            << xres_mem << " pixels and a screen height of "
+            << yres_mem << " pixels";
         throw std::runtime_error{msg.str()};
     }
 }
@@ -119,7 +133,7 @@ void client::event_loop()
     polled_fds[poll_vnc].events = POLLIN;
 
     constexpr std::size_t poll_touch = 1;
-    this->rm_touch.setup_poll(polled_fds[poll_touch]);
+    this->touch_device.setup_poll(polled_fds[poll_touch]);
 
     // Maximum time to wait before timeout in the next poll
     int timeout = -1;
@@ -174,12 +188,12 @@ void client::event_loop()
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
         if ((polled_fds[poll_touch].revents & POLLIN) != 0)
         {
-            handle_status(this->event_loop_input());
+            handle_status(this->touch_handler.event_loop());
         }
     }
 }
 
-auto client::event_loop_vnc() -> client::event_loop_status
+auto client::event_loop_vnc() -> event_loop_status
 {
     if (HandleRFBServerMessage(this->vnc_client) == 0)
     {
@@ -188,3 +202,22 @@ auto client::event_loop_vnc() -> client::event_loop_status
 
     return {false, -1};
 }
+
+void client::send_button_press(
+    int x, int y,
+    MouseButton button
+) const
+{
+    auto button_flag = static_cast<std::uint8_t>(button);
+    constexpr auto bits = 8 * sizeof(button_flag);
+
+    log::print("Button press")
+        << x << 'x' << y << " (button mask: "
+        << std::setfill('0') << std::setw(bits)
+        << std::bitset<bits>(button_flag) << ")\n";
+
+    SendPointerEvent(this->vnc_client, x, y, button_flag);
+    SendPointerEvent(this->vnc_client, x, y, 0);
+}
+
+} // namespace app

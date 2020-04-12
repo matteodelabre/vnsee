@@ -66,11 +66,11 @@ auto screen::event_loop() -> event_loop_status
         else
         {
             // Wait until the next update is due
-            return {false, remaining_wait_time};
+            return {/* quit = */ false, /* timeout = */ remaining_wait_time};
         }
     }
 
-    return {false, -1};
+    return {/* quit = */ false, /* timeout = */ -1};
 }
 
 auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
@@ -155,4 +155,4 @@ void screen::update_framebuf(rfbClient* vnc_client, int x, int y, int w, int h)
     that->update_info.last_update_time = chrono::steady_clock::now();
 }
 
-}
+} // namespace app

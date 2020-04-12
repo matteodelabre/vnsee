@@ -32,10 +32,10 @@ public:
      */
     struct buttons_state
     {
-        bool left_pressed = false;
-        bool home_pressed = false;
-        bool right_pressed = false;
-        bool power_pressed = false;
+        bool left = false;
+        bool home = false;
+        bool right = false;
+        bool power = false;
     };
 
     const buttons_state& get_state() const;

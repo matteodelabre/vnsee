@@ -23,19 +23,19 @@ auto buttons::process_events() -> bool
                 switch (event.code)
                 {
                 case KEY_LEFT:
-                    this->state.left_pressed = (event.value != 0);
+                    this->state.left = (event.value != 0);
                     break;
 
                 case KEY_HOME:
-                    this->state.home_pressed = (event.value != 0);
+                    this->state.home = (event.value != 0);
                     break;
 
                 case KEY_RIGHT:
-                    this->state.right_pressed = (event.value != 0);
+                    this->state.right = (event.value != 0);
                     break;
 
                 case KEY_POWER:
-                    this->state.power_pressed = (event.value != 0);
+                    this->state.power = (event.value != 0);
                     break;
                 }
             }

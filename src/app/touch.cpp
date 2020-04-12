@@ -3,6 +3,7 @@
 #include "../rmioc/touch.hpp"
 #include <cstdlib>
 #include <map>
+#include <utility>
 // IWYU pragma: no_include <type_traits>
 
 namespace app
@@ -73,7 +74,7 @@ auto touch::event_loop() -> event_loop_status
         }
     }
 
-    return {false, -1};
+    return {/* quit = */ false, /* timeout = */ -1};
 }
 
 void touch::on_update(int x, int y)
@@ -168,4 +169,4 @@ void touch::on_end()
     this->state = TouchState::Inactive;
 }
 
-}
+} // namespace app

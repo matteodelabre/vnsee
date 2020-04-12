@@ -6,9 +6,7 @@
 namespace app
 {
 
-/**
- * Informations returned by subroutines of the event loop.
- */
+/** Informations returned by subroutines of the event loop.  */
 struct event_loop_status
 {
     /** True if the client must quit the event loop. */

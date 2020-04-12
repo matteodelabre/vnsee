@@ -19,7 +19,7 @@ input::input(const char* device_path)
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::input) Open input device: " + std::string(device_path)
+            "(rmioc::input) Open input device " + std::string(device_path)
         );
     }
 }

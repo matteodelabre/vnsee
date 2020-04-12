@@ -37,6 +37,7 @@ if(TRACE)
 endif()
 
 add_executable(rmvncclient
+    src/app/buttons.cpp
     src/app/client.cpp
     src/app/screen.cpp
     src/app/touch.cpp

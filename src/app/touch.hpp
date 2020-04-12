@@ -31,9 +31,7 @@ public:
         MouseCallback send_button_press
     );
 
-    /**
-     * Subroutine for processing touch input.
-     */
+    /** Subroutine for processing touch input. */
     event_loop_status event_loop();
 
 private:

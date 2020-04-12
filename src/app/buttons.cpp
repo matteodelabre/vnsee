@@ -14,22 +14,25 @@ buttons::buttons(
 , previous_state{}
 {}
 
-auto buttons::event_loop() -> event_loop_status
+auto buttons::process_events(bool inhibit) -> event_loop_status
 {
     if (this->device.process_events())
     {
         auto device_state = this->device.get_state();
 
-        if (!device_state.power && this->previous_state.power)
+        if (!inhibit)
         {
-            // Quit application when pressing power
-            return {/* quit = */ true, /* timeout = */ -1};
-        }
+            if (!device_state.power && this->previous_state.power)
+            {
+                // Quit application when pressing power
+                return {/* quit = */ true, /* timeout = */ -1};
+            }
 
-        if (!device_state.home && this->previous_state.home)
-        {
-            // Full screen refresh when pressing home
-            this->screen_device.update();
+            if (!device_state.home && this->previous_state.home)
+            {
+                // Full screen refresh when pressing home
+                this->screen_device.update();
+            }
         }
 
         this->previous_state = device_state;

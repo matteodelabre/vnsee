@@ -60,9 +60,6 @@ private:
     static constexpr std::size_t poll_touch = 2;
     static constexpr std::size_t poll_vnc = 3;
 
-    /** Subroutine for handling VNC events from the server. */
-    event_loop_status event_loop_vnc();
-
     /** VNC connection. */
     rfbClient* vnc_client;
 

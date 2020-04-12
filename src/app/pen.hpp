@@ -21,8 +21,11 @@ public:
         MouseCallback send_button_press
     );
 
-    /** Subroutine for processing pen input. */
-    event_loop_status event_loop();
+    /** Process events from the pen digitizer. */
+    event_loop_status process_events();
+
+    /** Whether other forms of input should be inhibited. */
+    bool is_inhibiting() const;
 
 private:
     /** reMarkable pen digitizer device. */

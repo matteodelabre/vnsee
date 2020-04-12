@@ -144,39 +144,34 @@ void client::event_loop()
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
         if ((polled_fds[poll_vnc].revents & POLLIN) != 0)
         {
-            handle_status(this->event_loop_vnc());
+            if (HandleRFBServerMessage(this->vnc_client) == 0)
+            {
+                break;
+            }
         }
 
         handle_status(this->screen_handler.event_loop());
 
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
-        if ((polled_fds[poll_buttons].revents & POLLIN) != 0)
-        {
-            handle_status(this->buttons_handler.event_loop());
-        }
-
-        // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
         if ((polled_fds[poll_pen].revents & POLLIN) != 0)
         {
-            handle_status(this->pen_handler.event_loop());
+            handle_status(this->pen_handler.process_events());
+        }
+
+        bool inhibit = this->pen_handler.is_inhibiting();
+
+        // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
+        if ((polled_fds[poll_buttons].revents & POLLIN) != 0)
+        {
+            handle_status(this->buttons_handler.process_events(inhibit));
         }
 
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
         if ((polled_fds[poll_touch].revents & POLLIN) != 0)
         {
-            handle_status(this->touch_handler.event_loop());
+            handle_status(this->touch_handler.process_events(inhibit));
         }
     }
-}
-
-auto client::event_loop_vnc() -> event_loop_status
-{
-    if (HandleRFBServerMessage(this->vnc_client) == 0)
-    {
-        return {/* quit = */ true, /* timeout = */ -1};
-    }
-
-    return {/* quit = */ false, /* timeout = */ -1};
 }
 
 void client::send_button_press(

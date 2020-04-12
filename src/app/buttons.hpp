@@ -20,8 +20,12 @@ public:
         rmioc::screen& screen_device
     );
 
-    /** Subroutine for processing buttons input. */
-    event_loop_status event_loop();
+    /**
+     * Process input from the physical buttons.
+     *
+     * @param inhibit True to discard any event from the buttons.
+     */
+    event_loop_status process_events(bool inhibit);
 
 private:
     /** reMarkable buttons device. */

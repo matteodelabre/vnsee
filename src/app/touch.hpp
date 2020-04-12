@@ -21,8 +21,12 @@ public:
         MouseCallback send_button_press
     );
 
-    /** Subroutine for processing touch input. */
-    event_loop_status event_loop();
+    /**
+     * Process events from the touchscreen.
+     *
+     * @param inhibit True to discard any event from the touchscreen.
+     */
+    event_loop_status process_events(bool inhibit);
 
 private:
     /** reMarkable touchscreen device. */

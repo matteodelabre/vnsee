@@ -21,38 +21,36 @@ auto touch::process_events() -> bool
             switch (event.code)
             {
             case ABS_MT_SLOT:
-                this->current_slot = event.value;
+                this->current_id = event.value;
                 break;
 
             case ABS_MT_TRACKING_ID:
                 if (event.value == -1)
                 {
-                    // Destroy current touch point slot
-                    this->slots_state.erase(this->current_slot);
+                    // Destroy current touch point
+                    this->state.erase(this->current_id);
                 }
                 else
                 {
-                    // Create touch point slot
-                    this->slots_state[this->current_slot] = {};
+                    // Create a new touch point
+                    this->state[this->current_id] = {};
                 }
                 break;
 
             case ABS_MT_POSITION_X:
-                this->slots_state[this->current_slot].x = event.value;
+                this->state[this->current_id].x = event.value;
                 break;
 
             case ABS_MT_POSITION_Y:
-                this->slots_state[this->current_slot].y = event.value;
+                this->state[this->current_id].y = event.value;
                 break;
 
             case ABS_MT_PRESSURE:
-                this->slots_state[this->current_slot].pressure
-                    = event.value;
+                this->state[this->current_id].pressure = event.value;
                 break;
 
             case ABS_MT_ORIENTATION:
-                this->slots_state[this->current_slot].orientation
-                    = event.value;
+                this->state[this->current_id].orientation = event.value;
                 break;
             }
         }
@@ -63,9 +61,9 @@ auto touch::process_events() -> bool
     return false;
 }
 
-auto touch::get_slots_state() const -> const touch::slots_state_t&
+auto touch::get_state() const -> const touch::touchpoints_state&
 {
-    return this->slots_state;
+    return this->state;
 }
 
 } // namespace rmioc

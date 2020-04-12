@@ -6,10 +6,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iomanip>
-#include <iterator>
 #include <map>
 #include <ostream>
-#include <utility>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include <type_traits>
 // IWYU pragma: no_include "rfb/rfbproto.h"
@@ -23,179 +21,165 @@ constexpr int scroll_delta = 10;
 /**
  * Scroll speed factor.
  */
-constexpr double scroll_speed = 0.05;
+constexpr double scroll_speed = 0.013;
 
 auto client::event_loop_input() -> client::event_loop_status
 {
     if (this->rm_touch.process_events())
     {
-        auto slots_state = this->rm_touch.get_slots_state();
+        auto touch_state = this->rm_touch.get_state();
 
-        // Initialize new touchpoints or update existing ones
-        for (const auto& [id, slot] : slots_state)
+        if (!touch_state.empty())
         {
-            auto touchpoint_it = this->touchpoints.find(id);
+            // Compute the mean touch position
+            int summed_x = 0;
+            int summed_y = 0;
+            int total_points = touch_state.size();
 
-            if (touchpoint_it == std::end(this->touchpoints))
+            for (const auto& [id, slot] : touch_state)
             {
-                this->touchpoints.insert({
-                    id, touchpoint_state{*this, slot.x, slot.y}
-                });
+                summed_x += slot.x;
+                summed_y += slot.y;
             }
-            else
-            {
-                touchpoint_it->second.update(slot.x, slot.y);
-            }
+
+            summed_x /= total_points;
+            summed_y /= total_points;
+
+            // Convert to screen coordinates
+            int xres = static_cast<int>(this->rm_screen.get_xres());
+            int yres = static_cast<int>(this->rm_screen.get_yres());
+
+            int screen_x = (
+                xres - xres * summed_x
+                / rmioc::touch::touchpoint_state::x_max
+            );
+
+            int screen_y = (
+                yres - yres * summed_y
+                / rmioc::touch::touchpoint_state::y_max
+            );
+
+            this->on_touch_update(screen_x, screen_y);
         }
-
-        // Remove stale touchpoints
-        for (
-            auto touchpoint_it = std::begin(this->touchpoints);
-            touchpoint_it != std::end(this->touchpoints);
-        )
+        else
         {
-            int id = touchpoint_it->first;
-
-            if (slots_state.count(id) == 0U)
-            {
-                touchpoint_it->second.terminate();
-                touchpoint_it = this->touchpoints.erase(touchpoint_it);
-            }
-            else { ++touchpoint_it; }
+            this->on_touch_end();
         }
     }
 
     return {false, -1};
 }
 
-/** List of mouse button flags used by the VNC protocol. */
-namespace MouseButton
+void client::on_touch_update(int x, int y)
 {
-    constexpr std::uint8_t Left = 1;
-    // constexpr std::uint8_t Right = 1U << 1U;
-    // constexpr std::uint8_t Middle = 1U << 2U;
-    constexpr std::uint8_t ScrollDown = 1U << 3U;
-    constexpr std::uint8_t ScrollUp = 1U << 4U;
-    constexpr std::uint8_t ScrollLeft = 1U << 5U;
-    constexpr std::uint8_t ScrollRight = 1U << 6U;
-}
+    if (this->touch_state == TouchState::Inactive)
+    {
+        this->touch_state = TouchState::Tap;
+        this->touch_x_initial = x;
+        this->touch_y_initial = y;
+        this->touch_x_scroll_events = 0;
+        this->touch_y_scroll_events = 0;
+    }
 
-client::touchpoint_state::touchpoint_state(client& parent, int x, int y)
-: parent(parent)
-, x(x), y(y)
-, x_initial(x), y_initial(y)
-{}
-
-void client::touchpoint_state::update(int x, int y)
-{
-    this->x = x;
-    this->y = y;
+    this->touch_x = x;
+    this->touch_y = y;
 
     // Initiate scrolling if the touchpoint has travelled enough
-    if (!this->scrolling())
+    if (this->touch_state == TouchState::Tap)
     {
-        if (std::abs(this->x - this->x_initial) >= scroll_delta)
+        if (std::abs(this->touch_x - this->touch_x_initial) >= scroll_delta)
         {
-            this->x_scrolling = true;
+            this->touch_state = TouchState::ScrollX;
         }
-        else if (std::abs(this->y - this->y_initial) >= scroll_delta)
+        else if (std::abs(this->touch_y - this->touch_y_initial)
+                    >= scroll_delta)
         {
-            this->y_scrolling = true;
+            this->touch_state = TouchState::ScrollY;
         }
     }
 
     // Send discrete scroll events to reflect travelled distance
-    if (this->x_scrolling)
+    if (this->touch_state == TouchState::ScrollX)
     {
         int x_units = static_cast<int>(
-            (this->x - this->x_initial) * scroll_speed);
+            (this->touch_x - this->touch_x_initial) * scroll_speed);
 
-        for (; x_units > this->x_sent_events; ++this->x_sent_events)
+        for (; x_units > this->touch_x_scroll_events;
+               ++this->touch_x_scroll_events)
         {
             this->send_button_press(
-                this->x_sensor_to_screen(this->x_initial),
-                this->y_sensor_to_screen(this->y_initial),
+                this->touch_x_initial,
+                this->touch_y_initial,
                 MouseButton::ScrollRight
             );
         }
 
-        for (; x_units < this->x_sent_events; --this->x_sent_events)
+        for (; x_units < this->touch_x_scroll_events;
+               --this->touch_x_scroll_events)
         {
             this->send_button_press(
-                this->x_sensor_to_screen(this->x_initial),
-                this->y_sensor_to_screen(this->y_initial),
+                this->touch_x_initial,
+                this->touch_y_initial,
                 MouseButton::ScrollLeft
             );
         }
     }
 
-    if (this->y_scrolling)
+    if (this->touch_state == TouchState::ScrollY)
     {
         int y_units = static_cast<int>(
-            (this->y - this->y_initial) * scroll_speed);
+            (this->touch_y - this->touch_y_initial) * scroll_speed);
 
-        for (; y_units > this->y_sent_events; ++this->y_sent_events)
+        for (; y_units > this->touch_y_scroll_events;
+               ++this->touch_y_scroll_events)
         {
             this->send_button_press(
-                this->x_sensor_to_screen(this->x_initial),
-                this->y_sensor_to_screen(this->y_initial),
-                MouseButton::ScrollUp
-            );
-        }
-
-        for (; y_units < this->y_sent_events; --this->y_sent_events)
-        {
-            this->send_button_press(
-                this->x_sensor_to_screen(this->x_initial),
-                this->y_sensor_to_screen(this->y_initial),
+                this->touch_x_initial,
+                this->touch_y_initial,
                 MouseButton::ScrollDown
             );
         }
+
+        for (; y_units < this->touch_y_scroll_events;
+               --this->touch_y_scroll_events)
+        {
+            this->send_button_press(
+                this->touch_x_initial,
+                this->touch_y_initial,
+                MouseButton::ScrollUp
+            );
+        }
     }
 }
 
-void client::touchpoint_state::terminate()
+void client::on_touch_end()
 {
     // Perform tap action if the touchpoint was not used for scrolling
-    if (!this->scrolling())
+    if (this->touch_state == TouchState::Tap)
     {
         this->send_button_press(
-            this->x_sensor_to_screen(this->x),
-            this->y_sensor_to_screen(this->y),
+            this->touch_x_initial,
+            this->touch_y_initial,
             MouseButton::Left
         );
     }
+
+    this->touch_state = TouchState::Inactive;
 }
 
-auto client::touchpoint_state::scrolling() const -> bool
-{
-    return this->x_scrolling || this->y_scrolling;
-}
-
-auto client::touchpoint_state::x_sensor_to_screen(int x_value) const -> int
-{
-    int xres = static_cast<int>(this->parent.rm_screen.get_xres());
-    return xres - xres * x_value / rmioc::touch::slot_state::x_max;
-}
-
-auto client::touchpoint_state::y_sensor_to_screen(int y_value) const -> int
-{
-    int yres = static_cast<int>(this->parent.rm_screen.get_yres());
-    return yres - yres * y_value / rmioc::touch::slot_state::y_max;
-}
-
-void client::touchpoint_state::send_button_press(
+void client::send_button_press(
     int x, int y,
-    std::uint8_t btn
+    MouseButton button
 ) const
 {
-    constexpr auto bits = 8 * sizeof(btn);
+    auto button_flag = static_cast<std::uint8_t>(button);
+    constexpr auto bits = 8 * sizeof(button_flag);
 
     log::print("Button press")
         << x << 'x' << y << " (button mask: "
         << std::setfill('0') << std::setw(bits)
-        << std::bitset<bits>(btn) << ")\n";
+        << std::bitset<bits>(button_flag) << ")\n";
 
-    SendPointerEvent(this->parent.vnc_client, x, y, btn);
-    SendPointerEvent(this->parent.vnc_client, x, y, 0);
+    SendPointerEvent(this->vnc_client, x, y, button_flag);
+    SendPointerEvent(this->vnc_client, x, y, 0);
 }

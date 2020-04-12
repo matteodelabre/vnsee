@@ -21,7 +21,7 @@ constexpr chrono::milliseconds update_delay{150};
 
 auto client::event_loop_screen() -> client::event_loop_status
 {
-    if (this->update_info.has_update != 0)
+    if (this->update_info.has_update)
     {
         int remaining_wait_time =
             chrono::duration_cast<chrono::milliseconds>(
@@ -31,7 +31,7 @@ auto client::event_loop_screen() -> client::event_loop_status
 
         if (remaining_wait_time <= 0)
         {
-            this->update_info.has_update = 0;
+            this->update_info.has_update = false;
 
             log::print("Screen update")
                 << this->update_info.w << 'x' << this->update_info.h << '+'
@@ -72,7 +72,7 @@ void client::update_framebuf(rfbClient* client, int x, int y, int w, int h)
 
     log::print("VNC update") << w << 'x' << h << '+' << x << '+' << y << '\n';
 
-    if (update_info->has_update != 0)
+    if (update_info->has_update)
     {
         // Merge new rectangle with existing one
         int left_x = std::min(x, update_info->x);
@@ -91,7 +91,7 @@ void client::update_framebuf(rfbClient* client, int x, int y, int w, int h)
         update_info->y = y;
         update_info->w = w;
         update_info->h = h;
-        update_info->has_update = 1;
+        update_info->has_update = true;
     }
 
     update_info->last_update_time = chrono::steady_clock::now();

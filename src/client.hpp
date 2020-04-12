@@ -2,8 +2,6 @@
 #define CLIENT_HPP
 
 #include <chrono>
-#include <cstdint>
-#include <map>
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include "rfb/rfbproto.h"
 
@@ -40,12 +38,12 @@ public:
      */
     void event_loop();
 
+private:
     /** Tag used for accessing the update accumulator from the C callbacks. */
     static constexpr auto update_info_tag = 1;
 
-private:
     /**
-     * Informations returned by subroutines in the event loop.
+     * Informations returned by subroutines of the event loop.
      */
     struct event_loop_status
     {
@@ -63,12 +61,6 @@ private:
 
     /** Subroutine for handling VNC events from the server. */
     event_loop_status event_loop_vnc();
-
-    /** Subroutine for updating the e-ink screen. */
-    event_loop_status event_loop_screen();
-
-    /** Subroutine for processing user input. */
-    event_loop_status event_loop_input();
 
     /** VNC connection. */
     rfbClient* vnc_client;
@@ -89,11 +81,14 @@ private:
         int h;
 
         /** Whether at least one update has been registered. */
-        short has_update;
+        bool has_update;
 
         /** Last time an update was registered. */
         std::chrono::steady_clock::time_point last_update_time;
     } update_info;
+
+    /** Subroutine for updating the e-ink screen. */
+    event_loop_status event_loop_screen();
 
     /** reMarkable screen. */
     rmioc::screen& rm_screen;
@@ -119,77 +114,77 @@ private:
         int x, int y, int w, int h
     );
 
+    /** Subroutine for processing user input. */
+    event_loop_status event_loop_input();
+
     /** reMarkable touchscreen device. */
     rmioc::touch& rm_touch;
 
-    class touchpoint_state
+    /** Current state of the touch interaction. */
+    enum class TouchState
     {
-    public:
-        touchpoint_state(client& parent, int x, int y);
+        /** No touch point is active. */
+        Inactive,
 
-        /** Register a move of the touch point on the sensor. */
-        void update(int x, int y);
+        /** Touch points are active but did not move enough to scroll. */
+        Tap,
 
-        /** Register the removal of a touch point. */
-        void terminate();
+        /** Touch points are active and scrolling horizontally. */
+        ScrollX,
 
-        /** Whether this touchpoint is used for scrolling in any direction. */
-        bool scrolling() const;
+        /** Touch points are active and scrolling vertically. */
+        ScrollY,
+    } touch_state = TouchState::Inactive;
 
-    private:
-        /** Reference to the parent client instance. */
-        client& parent;
+    void on_touch_update(int x, int y);
+    void on_touch_end();
 
-        int x;
-        int y;
+    /** Current X position of the touch interaction, if not inactive. */
+    int touch_x = 0;
 
-        /** Initial X position of the touchpoint in the sensor frame. */
-        int x_initial;
+    /** Current Y position of the touch interaction, if not inactive. */
+    int touch_y = 0;
 
-        /** Initial Y position of the touchpoint in the sensor frame. */
-        int y_initial;
+    /** Initial X position of the touch interaction, if not inactive. */
+    int touch_x_initial = 0;
 
-        /** True if this touchpoint is used for scrolling horizontally. */
-        bool x_scrolling = false;
+    /** Initial Y position of the touch interaction, if not inactive. */
+    int touch_y_initial = 0;
 
-        /** True if this touchpoint is used for scrolling vertically. */
-        bool y_scrolling = false;
+    /**
+     * Total number of horizontal scroll events that were sent in this
+     * interaction, positive for scrolling right and negative for
+     * scrolling left.
+     */
+    int touch_x_scroll_events = 0;
 
-        /**
-         * Effective number of horizontal discrete scroll events that were
-         * already sent to the server to reflect the dragging of this
-         * touchpoint.
-         *
-         * Negative values are for leftward events, positive for rightward.
-         */
-        int x_sent_events = 0;
+    /**
+     * Total number of vertical scroll events that were sent in this
+     * interaction, positive for scrolling down and negative for
+     * scrolling up.
+     */
+    int touch_y_scroll_events = 0;
 
-        /**
-         * Effective number of vertical discrete scroll events that were
-         * already sent to the server to reflect the dragging of this
-         * touchpoint.
-         *
-         * Negative values are for upward scroll, positive for downward.
-         */
-        int y_sent_events = 0;
-
-        /** Convert an X position on the sensor to its on-screen position. */
-        int x_sensor_to_screen(int x_value) const;
-
-        /** Convert an Y position on the sensor to its on-screen position. */
-        int y_sensor_to_screen(int y_value) const;
-
-        /**
-         * Press and release the given button on the server.
-         *
-         * @param x Pointer X location on the screen.
-         * @param y Pointer Y location on the screen.
-         * @param button Button to press.
-         */
-        void send_button_press(int x, int y, std::uint8_t btn) const;
+    /** List of mouse button flags used by the VNC protocol. */
+    enum class MouseButton : std::uint8_t
+    {
+        Left = 1,
+        // Right = 1U << 1U,
+        // Middle = 1U << 2U,
+        ScrollDown = 1U << 3U,
+        ScrollUp = 1U << 4U,
+        ScrollLeft = 1U << 5U,
+        ScrollRight = 1U << 6U,
     };
 
-    std::map<int, touchpoint_state> touchpoints;
+    /**
+     * Send press and release events for the given button to VNC.
+     *
+     * @param x Pointer X location on the screen.
+     * @param y Pointer Y location on the screen.
+     * @param button Button to press.
+     */
+    void send_button_press(int x, int y, MouseButton button) const;
 }; // class client
 
 #endif // CLIENT_HPP

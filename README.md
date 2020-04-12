@@ -99,23 +99,40 @@ Activity on the touchscreen will be translated to mouse interactions following t
 
 <table>
 <tr>
-<th colspan="3">
-    Interaction mapping
+<th colspan="4">
+    Interactions
 </th>
 </tr>
 <tr>
-<td align="center">
-    <img src="media/tap.svg" width="200" alt=""><br>
-    Tap ⇒ Left click
-</td>
-<td align="center">
-    <img src="media/scroll-x.svg" width="200" alt=""><br>
-    Horizontal swipe ⇒ Horizontal scroll
-</td>
-<td align="center">
-    <img src="media/scroll-y.svg" width="200" alt=""><br>
-    Vertical swipe ⇒ Vertical scroll
-</td>
+    <th>Touch<br>screen</th>
+    <td align="center">
+        <img src="media/tap.svg" width="200" alt=""><br>
+        <strong>Tap</strong><br>
+        Left click
+    </td>
+    <td align="center">
+        <img src="media/scroll-x.svg" width="200" alt=""><br>
+        <strong>Horizontal swipe</strong><br>
+        Horizontal scroll
+    </td>
+    <td align="center">
+        <img src="media/scroll-y.svg" width="200" alt=""><br>
+        <strong>Vertical swipe</strong><br>
+        Vertical scroll
+    </td>
+</tr>
+<tr>
+    <th>Buttons</th>
+    <td align="center">
+        <img src="media/tap.svg" width="200" alt=""><br>
+        <strong>Home button</strong><br>
+        Force refresh
+    </td>
+    <td align="center">
+        <img src="media/tap.svg" width="200" alt=""><br>
+        <strong>Power button</strong><br>
+        Quit app
+    </td>
 </tr>
 </table>
 

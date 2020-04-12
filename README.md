@@ -124,7 +124,7 @@ Activity on the touchscreen will be translated to mouse interactions following t
 <tr>
     <th>Buttons</th>
     <td align="center">
-        <img src="media/tap.svg" width="200" alt=""><br>
+        <img src="media/home.svg" width="200" alt=""><br>
         <strong>Home button</strong><br>
         Force refresh
     </td>

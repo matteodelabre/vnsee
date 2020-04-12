@@ -2,8 +2,11 @@
 #define APP_CLIENT_HPP
 
 #include "event_loop.hpp"
+#include "screen.hpp"
 #include "touch.hpp"
-#include <chrono>
+#include <array>
+#include <iosfwd>
+#include <poll.h> // IWYU pragma: keep
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include "rfb/rfbproto.h"
 
@@ -44,8 +47,11 @@ public:
     void event_loop();
 
 private:
-    /** Tag used for accessing the update accumulator from the C callbacks. */
-    static constexpr auto update_info_tag = 1;
+    /** List of file descriptors to watch in the event loop. */
+    std::array<pollfd, 2> polled_fds;
+
+    static constexpr std::size_t poll_vnc = 0;
+    static constexpr std::size_t poll_touch = 1;
 
     /** Subroutine for handling VNC events from the server. */
     event_loop_status event_loop_vnc();
@@ -53,56 +59,10 @@ private:
     /** VNC connection. */
     rfbClient* vnc_client;
 
-    /** Accumulator for updates received from the VNC server. */
-    struct update_info_struct
-    {
-        /** Left bound of the overall updated rectangle (in pixels). */
-        int x;
+    /** Event handler for the screen device. */
+    screen screen_handler;
 
-        /** Top bound of the overall updated rectangle (in pixels). */
-        int y;
-
-        /** Width of the overall updated rectangle (in pixels). */
-        int w;
-
-        /** Height of the overall updated rectangle (in pixels). */
-        int h;
-
-        /** Whether at least one update has been registered. */
-        bool has_update;
-
-        /** Last time an update was registered. */
-        std::chrono::steady_clock::time_point last_update_time;
-    } update_info;
-
-    /** Subroutine for updating the e-ink screen. */
-    event_loop_status event_loop_screen();
-
-    /** reMarkable screen. */
-    rmioc::screen& screen_device;
-
-    /**
-     * Called by the VNC client library to initialize our local framebuffer.
-     *
-     * @param client Handle to the VNC client.
-     */
-    static rfbBool create_framebuf(rfbClient* client);
-
-    /**
-     * Called by the VNC client library to register an update from the server.
-     *
-     * @param client Handle to the VNC client.
-     * @param x Left bound of the updated rectangle (in pixels).
-     * @param y Top bound of the updated rectangle (in pixels).
-     * @param w Width of the updated rectangle (in pixels).
-     * @param h Height of the updated rectangle (in pixels).
-     */
-    static void update_framebuf(
-        rfbClient* client,
-        int x, int y, int w, int h
-    );
-
-    rmioc::touch& touch_device;
+    /** Event handler for the touch device. */
     touch touch_handler;
 
     /**
@@ -112,7 +72,7 @@ private:
      * @param y Pointer Y location on the screen.
      * @param button Button to press.
      */
-    void send_button_press(int x, int y, MouseButton button) const;
+    void send_button_press(int x, int y, MouseButton button);
 }; // class client
 
 } // namespace app

@@ -28,7 +28,7 @@ public:
     touch(
         rmioc::touch& device,
         const rmioc::screen& screen_device,
-        const MouseCallback& send_button_press
+        MouseCallback send_button_press
     );
 
     /**
@@ -44,7 +44,7 @@ private:
     const rmioc::screen& screen_device;
 
     /** Callback for sending mouse events. */
-    const MouseCallback& send_button_press;
+    MouseCallback send_button_press;
 
     /** Current state of the touch interaction. */
     enum class TouchState

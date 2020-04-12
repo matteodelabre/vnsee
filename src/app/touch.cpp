@@ -22,11 +22,11 @@ constexpr double scroll_speed = 0.013;
 touch::touch(
     rmioc::touch& device,
     const rmioc::screen& screen_device,
-    const MouseCallback& send_button_press
+    MouseCallback send_button_press
 )
 : device(device)
 , screen_device(screen_device)
-, send_button_press(send_button_press)
+, send_button_press(std::move(send_button_press))
 {}
 
 auto touch::event_loop() -> event_loop_status

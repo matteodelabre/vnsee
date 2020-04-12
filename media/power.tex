@@ -1,0 +1,14 @@
+\documentclass[crop, tikz, border=.1cm]{standalone}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{arrows.meta}
+\begin{document}
+\begin{tikzpicture}
+    \newcommand{\uppercolor}{annotation}
+    \input{remarkable}
+    \newcommand\radius{.15}
+
+    \draw[annotation, ultra thick, {Latex[length=2.2mm]}-]
+        (key-t.south) to [bend left=15] ++(-.2, -.6);
+\end{tikzpicture}
+\end{document}

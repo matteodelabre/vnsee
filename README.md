@@ -129,7 +129,7 @@ Activity on the touchscreen will be translated to mouse interactions following t
         Force refresh
     </td>
     <td align="center">
-        <img src="media/tap.svg" width="200" alt=""><br>
+        <img src="media/power.svg" width="200" alt=""><br>
         <strong>Power button</strong><br>
         Quit app
     </td>

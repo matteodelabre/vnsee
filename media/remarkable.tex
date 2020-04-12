@@ -7,6 +7,8 @@
 \newcommand\outborder{.1}
 \newcommand\button{2 * \outborder}
 
+\ifdefined\uppercolor\else\newcommand\uppercolor{border}\fi
+
 \tikzset{
     secondary/.style={line width=.3},
     back slate/.style={
@@ -21,7 +23,7 @@
         inner sep=0pt,
     },
     upper key/.style={
-        fill=border, rectangle,
+        fill=\uppercolor, rectangle,
         rounded corners=0.25,
         minimum width={2 * \outborder cm},
         minimum height=2pt,

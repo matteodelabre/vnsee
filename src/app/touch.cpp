@@ -2,6 +2,7 @@
 #include "../rmioc/screen.hpp"
 #include "../rmioc/touch.hpp"
 #include <cstdlib>
+#include <functional>
 #include <map>
 #include <utility>
 // IWYU pragma: no_include <type_traits>
@@ -113,18 +114,26 @@ void touch::on_update(int x, int y)
         for (; x_units > this->x_scroll_events; ++this->x_scroll_events)
         {
             this->send_button_press(
-                this->x_initial,
-                this->y_initial,
+                this->x_initial, this->y_initial,
                 MouseButton::ScrollRight
+            );
+
+            this->send_button_press(
+                this->x_initial, this->y_initial,
+                MouseButton::None
             );
         }
 
         for (; x_units < this->x_scroll_events; --this->x_scroll_events)
         {
             this->send_button_press(
-                this->x_initial,
-                this->y_initial,
+                this->x_initial, this->y_initial,
                 MouseButton::ScrollLeft
+            );
+
+            this->send_button_press(
+                this->x_initial, this->y_initial,
+                MouseButton::None
             );
         }
     }
@@ -137,18 +146,26 @@ void touch::on_update(int x, int y)
         for (; y_units > this->y_scroll_events; ++this->y_scroll_events)
         {
             this->send_button_press(
-                this->x_initial,
-                this->y_initial,
+                this->x_initial, this->y_initial,
                 MouseButton::ScrollDown
+            );
+
+            this->send_button_press(
+                this->x_initial, this->y_initial,
+                MouseButton::None
             );
         }
 
         for (; y_units < this->y_scroll_events; --this->y_scroll_events)
         {
             this->send_button_press(
-                this->x_initial,
-                this->y_initial,
+                this->x_initial, this->y_initial,
                 MouseButton::ScrollUp
+            );
+
+            this->send_button_press(
+                this->x_initial, this->y_initial,
+                MouseButton::None
             );
         }
     }
@@ -160,9 +177,13 @@ void touch::on_end()
     if (this->state == TouchState::Tap)
     {
         this->send_button_press(
-            this->x_initial,
-            this->y_initial,
+            this->x_initial, this->y_initial,
             MouseButton::Left
+        );
+
+        this->send_button_press(
+            this->x_initial, this->y_initial,
+            MouseButton::None
         );
     }
 

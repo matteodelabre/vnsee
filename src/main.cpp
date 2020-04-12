@@ -1,5 +1,6 @@
 #include "app/client.hpp"
 #include "rmioc/buttons.hpp"
+#include "rmioc/pen.hpp"
 #include "rmioc/screen.hpp"
 #include "rmioc/touch.hpp"
 #include <algorithm>
@@ -53,6 +54,7 @@ auto main(int argc, const char* argv[]) -> int
     try
     {
         rmioc::buttons buttons;
+        rmioc::pen pen;
         rmioc::screen screen;
         rmioc::touch touch;
 
@@ -61,7 +63,7 @@ auto main(int argc, const char* argv[]) -> int
 
         app::client client{
             server_ip.data(), server_port,
-            buttons, screen, touch
+            buttons, pen, screen, touch
         };
 
         std::cerr << "\e[1A\e[KConnected to "

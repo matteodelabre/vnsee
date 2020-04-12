@@ -13,9 +13,7 @@ namespace rmioc
  * Generic class for reading Linux input devices.
  *
  * See the Linux documentation on input:
- *
- * - https://www.kernel.org/doc/Documentation/input/input.txt
- * - https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
+ * https://www.kernel.org/doc/Documentation/input/input.txt
  */
 class input
 {

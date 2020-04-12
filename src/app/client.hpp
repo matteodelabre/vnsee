@@ -3,6 +3,7 @@
 
 #include "event_loop.hpp"
 #include "buttons.hpp"
+#include "pen.hpp"
 #include "screen.hpp"
 #include "touch.hpp"
 #include <array>
@@ -14,6 +15,7 @@
 namespace rmioc
 {
     class buttons;
+    class pen;
     class screen;
     class touch;
 }
@@ -39,6 +41,7 @@ public:
     client(
         const char* ip, int port,
         rmioc::buttons& buttons_device,
+        rmioc::pen& pen_device,
         rmioc::screen& screen_device,
         rmioc::touch& touch_device
     );
@@ -50,11 +53,12 @@ public:
 
 private:
     /** List of file descriptors to watch in the event loop. */
-    std::array<pollfd, 3> polled_fds;
+    std::array<pollfd, 4> polled_fds;
 
     static constexpr std::size_t poll_buttons = 0;
-    static constexpr std::size_t poll_touch = 1;
-    static constexpr std::size_t poll_vnc = 2;
+    static constexpr std::size_t poll_pen = 1;
+    static constexpr std::size_t poll_touch = 2;
+    static constexpr std::size_t poll_vnc = 3;
 
     /** Subroutine for handling VNC events from the server. */
     event_loop_status event_loop_vnc();
@@ -65,6 +69,9 @@ private:
     /** Event handler for the buttons device. */
     buttons buttons_handler;
 
+    /** Event handler for the pen device. */
+    pen pen_handler;
+
     /** Event handler for the screen device. */
     screen screen_handler;
 
@@ -72,7 +79,7 @@ private:
     touch touch_handler;
 
     /**
-     * Send press and release events for the given button to VNC.
+     * Send a pointer event to VNC.
      *
      * @param x Pointer X location on the screen.
      * @param y Pointer Y location on the screen.

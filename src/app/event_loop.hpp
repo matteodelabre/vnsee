@@ -2,6 +2,7 @@
 #define APP_EVENT_LOOP_HPP
 
 #include <cstdint>
+#include <functional>
 
 namespace app
 {
@@ -24,6 +25,7 @@ struct event_loop_status
 /** List of mouse button flags used by the VNC protocol. */
 enum class MouseButton : std::uint8_t
 {
+    None = 0,
     Left = 1,
     Right = 1U << 1U,
     Middle = 1U << 2U,
@@ -32,6 +34,15 @@ enum class MouseButton : std::uint8_t
     ScrollLeft = 1U << 5U,
     ScrollRight = 1U << 6U,
 };
+
+/**
+ * Callback used to send mouse events to the VNC server.
+ *
+ * @param x Pointer X location on the screen.
+ * @param y Pointer Y location on the screen.
+ * @param button Button to press.
+ */
+using MouseCallback = std::function<void(int, int, MouseButton)>;
 
 } // namespace app
 

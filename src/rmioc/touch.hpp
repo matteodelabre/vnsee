@@ -9,6 +9,9 @@ namespace rmioc
 
 /**
  * Access to the state of the device’s touchscreen.
+ *
+ * See the Linux documentation on multi-touch input:
+ * https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
  */
 class touch : public input
 {
@@ -25,9 +28,9 @@ public:
     /**
      * Information about a touch point on the screen.
      *
-     * Coordinates are in the sensor’s frame, which has its origin on the
-     * bottom right of the screen and increases in the upper and left
-     * direction.
+     * Coordinates are in the touch sensor’s frame, which has its origin on
+     * the bottom right of the screen with the X axis increasing in the left
+     * direction and the Y axis increasing in the upper direction.
      *
      *     (767, 1023) ← (0, 1023)
      *     |                     |
@@ -58,8 +61,9 @@ public:
         /**
          * Orientation of the touch point.
          *
-         * A signed value indicating clockwise rotation from the Y-axis-aligned
-         * default position.
+         * A positive value indicates clockwise rotation from the
+         * Y-axis-aligned default position, a negative one indicates
+         * counter-clockwise rotation.
          */
         int orientation;
 

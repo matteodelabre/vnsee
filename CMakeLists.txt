@@ -39,10 +39,12 @@ endif()
 add_executable(rmvncclient
     src/app/buttons.cpp
     src/app/client.cpp
+    src/app/pen.cpp
     src/app/screen.cpp
     src/app/touch.cpp
     src/rmioc/buttons.cpp
     src/rmioc/input.cpp
+    src/rmioc/pen.cpp
     src/rmioc/screen.cpp
     src/rmioc/touch.cpp
     src/main.cpp

@@ -1,6 +1,7 @@
 #include "client.hpp"
 #include "../log.hpp"
 #include "../rmioc/buttons.hpp"
+#include "../rmioc/pen.hpp"
 #include "../rmioc/touch.hpp"
 #include <algorithm>
 #include <array>
@@ -53,12 +54,15 @@ using namespace std::placeholders;
 client::client(
     const char* ip, int port,
     rmioc::buttons& buttons_device,
+    rmioc::pen& pen_device,
     rmioc::screen& screen_device,
     rmioc::touch& touch_device
 )
 : polled_fds{}
 , vnc_client(rfbGetClient(0, 0, 0))
 , buttons_handler(buttons_device, screen_device)
+, pen_handler(pen_device, screen_device,
+              std::bind(&client::send_button_press, this, _1, _2, _3))
 , screen_handler(screen_device, vnc_client)
 , touch_handler(touch_device, screen_device,
                 std::bind(&client::send_button_press, this, _1, _2, _3))
@@ -78,6 +82,7 @@ client::client(
     }
 
     buttons_device.setup_poll(this->polled_fds[poll_buttons]);
+    pen_device.setup_poll(this->polled_fds[poll_pen]);
     touch_device.setup_poll(this->polled_fds[poll_touch]);
 
     this->polled_fds[poll_vnc].fd = this->vnc_client->sock;
@@ -151,6 +156,12 @@ void client::event_loop()
         }
 
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
+        if ((polled_fds[poll_pen].revents & POLLIN) != 0)
+        {
+            handle_status(this->pen_handler.event_loop());
+        }
+
+        // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
         if ((polled_fds[poll_touch].revents & POLLIN) != 0)
         {
             handle_status(this->touch_handler.event_loop());
@@ -182,7 +193,6 @@ void client::send_button_press(
         << std::bitset<bits>(button_flag) << ")\n";
 
     SendPointerEvent(this->vnc_client, x, y, button_flag);
-    SendPointerEvent(this->vnc_client, x, y, 0);
 }
 
 } // namespace app

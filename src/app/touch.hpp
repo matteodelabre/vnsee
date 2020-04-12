@@ -2,7 +2,6 @@
 #define APP_TOUCH_HPP
 
 #include "event_loop.hpp"
-#include <functional>
 
 namespace rmioc
 {
@@ -16,15 +15,6 @@ namespace app
 class touch
 {
 public:
-    /**
-     * Callback used to send mouse events to the VNC server.
-     *
-     * @param x Pointer X location on the screen.
-     * @param y Pointer Y location on the screen.
-     * @param button Button to press.
-     */
-    using MouseCallback = std::function<void(int, int, MouseButton)>;
-
     touch(
         rmioc::touch& device,
         const rmioc::screen& screen_device,

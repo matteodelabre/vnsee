@@ -107,8 +107,8 @@ Activity on the touchscreen will be translated to mouse interactions following t
     <th>Touch<br>screen</th>
     <td align="center">
         <img src="media/tap.svg" width="200" alt=""><br>
-        <strong>Tap</strong><br>
-        Left click
+        <strong>Tap</strong> → Left click<br>
+        <strong>Long press</strong> → Right click
     </td>
     <td align="center">
         <img src="media/scroll-x.svg" width="200" alt=""><br>

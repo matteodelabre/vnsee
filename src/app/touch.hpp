@@ -2,6 +2,7 @@
 #define APP_TOUCH_HPP
 
 #include "event_loop.hpp"
+#include <chrono>
 
 namespace rmioc
 {
@@ -38,6 +39,17 @@ private:
     /** Callback for sending mouse events. */
     MouseCallback send_button_press;
 
+    /**
+     * Called when the touch point position changes.
+     *
+     * @param x New X position of the touch point.
+     * @param y New Y position of the touch point.
+     */
+    void on_update(int x, int y);
+
+    /** Called when all touch points are removed from the screen. */
+    void on_end();
+
     /** Current state of the touch interaction. */
     enum class TouchState
     {
@@ -54,16 +66,8 @@ private:
         ScrollY,
     } state = TouchState::Inactive;
 
-    /**
-     * Called when the touch point position changes.
-     *
-     * @param x New X position of the touch point.
-     * @param y New Y position of the touch point.
-     */
-    void on_update(int x, int y);
-
-    /** Called when all touch points are removed from the screen. */
-    void on_end();
+    /** Starting time of the current touch interaction. */
+    std::chrono::steady_clock::time_point touch_start{};
 
     /** Current X position of the touch interaction, if not inactive. */
     int x = 0;

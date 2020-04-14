@@ -27,8 +27,8 @@ enum class MouseButton : std::uint8_t
 {
     None = 0,
     Left = 1,
-    Right = 1U << 1U,
-    Middle = 1U << 2U,
+    Middle = 1U << 1U,
+    Right = 1U << 2U,
     ScrollDown = 1U << 3U,
     ScrollUp = 1U << 4U,
     ScrollLeft = 1U << 5U,

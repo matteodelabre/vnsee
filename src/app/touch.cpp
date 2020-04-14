@@ -17,6 +17,11 @@ namespace app
 constexpr int scroll_delta = 10;
 
 /**
+ * Duration of a tap to make it a right click action.
+ */
+constexpr auto right_click_time = std::chrono::milliseconds{500};
+
+/**
  * Number of scroll events to send per screen pixel that is dragged.
  */
 constexpr double scroll_speed = 0.013;
@@ -90,6 +95,7 @@ void touch::on_update(int x, int y)
     if (this->state == TouchState::Inactive)
     {
         this->state = TouchState::Tap;
+        this->touch_start = std::chrono::steady_clock::now();
         this->x_initial = x;
         this->y_initial = y;
         this->x_scroll_events = 0;
@@ -183,9 +189,15 @@ void touch::on_end()
     // Perform tap action if the touchpoint was not used for scrolling
     if (this->state == TouchState::Tap)
     {
+        auto touch_duration
+            = std::chrono::steady_clock::now().time_since_epoch()
+            - this->touch_start.time_since_epoch();
+
         this->send_button_press(
             this->x_initial, this->y_initial,
-            MouseButton::Left
+            touch_duration < right_click_time
+                ? MouseButton::Left
+                : MouseButton::Right
         );
 
         this->send_button_press(

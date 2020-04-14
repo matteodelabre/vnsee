@@ -4,10 +4,9 @@
 \usetikzlibrary{arrows.meta}
 \begin{document}
 \begin{tikzpicture}
+    \newcommand\HighlightHomeKey{}
     \input{remarkable}
     \newcommand\radius{.15}
-
-    \node[lower key, fill=annotation] at (key-c) {};
 
     \draw[annotation, ultra thick, {Latex[length=2.2mm]}-]
         ($(key-c.north)+(0, .05)$)

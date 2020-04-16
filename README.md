@@ -140,12 +140,15 @@ Activity on the touchscreen will be translated to mouse interactions following t
 
 This client is built in C++ using [libvncserver](https://github.com/LibVNC/libvncserver), which implements the [RFB protocol](https://tools.ietf.org/html/rfc6143) behind the VNC system.
 
-## Related work
+## Acknowledgments
 
-- [A Hacker News comment requesting a VNC client for the reMarkable.](https://news.ycombinator.com/item?id=13115739)
-- [Another VNC client built by @sandsmark which does not depend on libvncserver.](https://github.com/sandsmark/revncable)
-- [A currently-unfinished previous attempt at building a VNC client for the tablet.](https://github.com/damienchallet/vnc-remarkable)
-- [libremarkable](https://github.com/canselcik/libremarkable), which was used as the basis for some input/output handling.
+[Martin Sandsmark](https://github.com/sandsmark) also built [a VNC client for the reMarkable](https://github.com/sandsmark/revncable) which only depends on Qt.
+
+Many thanks to:
+
+- [libremarkable](https://github.com/canselcik/libremarkable) and [FBInk](https://github.com/NiLuJe/FBInk), on which input/output handling in this client is based.
+- [Damien Challet](https://github.com/damienchallet) and [Qwertystop](https://news.ycombinator.com/item?id=13115739) for providing the inspiration of a VNC client for the reMarkable.
+- The [Discord developer community](https://discord.gg/JSSGnFY) for providing initial feedback and testing.
 
 ## License
 

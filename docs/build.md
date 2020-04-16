@@ -1,4 +1,6 @@
-# Building
+# Build guide
+
+**This build guide assumes you’re using a Linux system.**
 
 Download the [reMarkable toolchain](https://remarkable.engineering/), install it and source it.
 

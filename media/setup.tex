@@ -1,19 +1,25 @@
 \documentclass[crop, tikz, border=.1cm]{standalone}
+
 \usetikzlibrary{positioning}
 \usetikzlibrary{calc}
 \usetikzlibrary{svg.path}
+
+\input{common}
+
 \begin{document}
-\begin{tikzpicture}
+\fontsize{3pt}{4pt}\selectfont
+\newcommand\setupdrawing[1]{
     \input{remarkable}
 
     % Monitor
-    \newcommand\monitorwidth{6}
+    \newcommand\monitorwidth{5}
     \newcommand\monitorheight{9*\monitorwidth/14}
     \newcommand\monitorborder{.15}
 
-    \draw[back slate]
-        (-8, 0)
-        coordinate (monitor-bl)
+    \draw[
+        border, fill=white,
+        rounded corners=1,
+    ]   (-6, 0) coordinate (monitor-bl)
         rectangle ++(\monitorwidth, \monitorheight)
         coordinate (monitor-tr);
 
@@ -29,17 +35,19 @@
     \path let \p1 = (monitor-tr), \p2 = (monitor-bl) in
         (.5 * \x1 + .5 * \x2, \y2) coordinate (monitor-b);
 
-    \newcommand\supportbase{1.2}
-    \newcommand\supportheight{1}
-    \newcommand\supporttop{.6}
+    \newcommand\supportback{1}
+    \newcommand\supportheight{0.8}
+    \newcommand\supporttop{0.8}
+    \newcommand\supportbase{1.8}
 
-    \draw[border] (monitor-b)
-        -- ++(-.5 * \supporttop, 0)
+    \draw[border]
+        ($(monitor-b)+(-.5 * \supporttop, 0)$)
         {[rounded corners=3]
-        -- ++({-.5 * (\supportbase - \supporttop)}, -\supportheight)
-        -- ++(\supportbase, 0)}
-        -- ++({-.5 * (\supportbase - \supporttop)}, \supportheight)
-        -- cycle;
+        -- ($(monitor-b)+(-.5 * \supportback, -\supportheight)$)
+        -- ($(monitor-b)+(-.5 * \supportbase, -\supportheight)$)
+        -- ($(monitor-b)+(.5 * \supportbase, -\supportheight)$)
+        -- ($(monitor-b)+(.5 * \supportback, -\supportheight)$)}
+        -- ($(monitor-b)+(.5 * \supporttop, 0)$);
 
     % Cable
     \newcommand\logo{
@@ -51,7 +59,7 @@
     \path (monitor-tr) ++(0, -.5 * \monitorheight) coordinate (monitor-port);
 
     \draw[
-        border, rounded corners=3,
+        border, rounded corners=2,
         double, double distance=2,
         secondary
     ]
@@ -84,57 +92,125 @@
     \end{scope}
 
     % Window
-    \newcommand{\windowcontents}{
-        \detokenize{[rm@rm ~]$ echo "Hello, world!"}\\
-        Hello, world!\\
-        \detokenize{[rm@rm ~]$ :(){ :|:& };:}\\
-        ...
+    \definecolor{button-red}{HTML}{EE5D68}
+    \definecolor{button-yellow}{HTML}{ECC55C}
+    \definecolor{button-green}{HTML}{3CEB54}
+
+    \tikzset{
+        button/.style={
+            circle,
+            inner sep=0pt,
+            minimum width=.08cm
+        },
+        button red/.style={button, fill=button-red},
+        button yellow/.style={button, fill=button-yellow},
+        button green/.style={button, fill=button-green},
     }
 
-    \begin{scope}[shift={(-4, 1)}]
-        \clip (monitor-screen-bl) rectangle (monitor-screen-tr);
-        \fill[annotation, rounded corners=1] (0, 0) rectangle ++(3, 2.25);
+    \newcommand\window[4]{
+        \path[fill=##3, rounded corners=1]
+            (0, 0) rectangle ++(##1, ##2);
 
-        \definecolor{button-red}{HTML}{EE5D68}
-        \definecolor{button-yellow}{HTML}{ECC55C}
-        \definecolor{button-green}{HTML}{3CEB54}
+        \path[fill=##4]
+            (0, ##2 - 2 * \monitorborder)
+            {[rounded corners=1]
+            -- (0, ##2)
+            -- (##1, ##2)
+            -- (##1, ##2 - 2 * \monitorborder)};
+
+        \node[button red] at (\monitorborder, ##2 - \monitorborder)
+            (red) {};
+        \node[button yellow, right=.5 * \monitorborder of red]
+            (yellow) {};
+        \node[button green, right=.5 * \monitorborder of yellow]
+            (green) {};
+    }
+
+    \newcommand\browser{
+        \newcommand\windowwidth{3}
+        \newcommand\windowheight{2}
+        \window{\windowwidth}{\windowheight}{white}{annotation}
+
+        \newcommand\sheetwidth{(2 + 2 * \monitorborder)}
+        \newcommand\sheetheight{1.5}
+
+        \fill[overscreen]
+            ({.5 * (\windowwidth - \sheetwidth)}, 0)
+            coordinate (sheet-bl)
+            {[rounded corners=1]
+            -- ({.5 * (\windowwidth - \sheetwidth)}, \sheetheight)
+            -- ({.5 * (\windowwidth + \sheetwidth)}, \sheetheight)
+            -- ({.5 * (\windowwidth + \sheetwidth)}, 0)}
+            coordinate (sheet-tr);
 
         \tikzset{
-            button/.style={
-                circle,
-                inner sep=0pt,
-                minimum width=.08cm
-            },
-            button red/.style={button, fill=button-red},
-            button yellow/.style={button, fill=button-yellow},
-            button green/.style={button, fill=button-green},
+            textbox/.style={
+                anchor=north west,
+                color=annotation,
+                text width=2cm,
+            }
         }
 
-        \node[button red] at (\monitorborder, 2.25 - \monitorborder) (red) {};
-        \node[button yellow, right=.5 * \monitorborder of red] (yellow) {};
-        \node[button green, right=.5 * \monitorborder of yellow] (green) {};
+        \node[
+            textbox,
+            font=\bfseries,
+        ] (sheet-title) at (
+            {.5 * (\windowwidth - \sheetwidth) + \monitorborder},
+            \sheetheight - \monitorborder
+        ) {rmvncclient};
+
+        \node[textbox, below=0.1cm of sheet-title] (sheet-desc) {
+            VNC client for the reMarkable tablet allowing you to turn the
+            device into a second screen for your computer.
+        };
+    }
+
+    \newcommand\terminal{
+        \newcommand\windowwidth{2.5}
+        \newcommand\windowheight{1.5}
+        \window{\windowwidth}{\windowheight}{annotation}{none}
 
         \node[
             align=left,
-            font=\ttfamily\tiny\color{black!10},
+            font=\ttfamily\color{white},
             anchor=north west,
             inner sep=0pt,
             outer sep=0pt,
-        ] at (\monitorborder, 2.25 - 3 * \monitorborder) {\windowcontents};
+        ] at (\monitorborder, \windowheight - 3 * \monitorborder) {
+            \detokenize{[rm@rm ~]$ echo "Hello, world!"}\\
+            Hello, world!\\[1em]
+            \detokenize{[rm@rm ~]$ :(){ :|:& };:}\\
+            #1
+        };
+    }
+
+    \begin{scope}[shift={(-5, .8)}]
+        \clip (monitor-screen-bl) rectangle (monitor-screen-tr);
+        \browser
     \end{scope}
 
-    \begin{scope}[shift={(-1, .7)}]
-        \clip (screen-bl) rectangle (screen-tr);
-        \fill[annotation, rounded corners=1] (0, 0) rectangle ++(2, 1.5);
+    \begin{scope}[shift={(-2.5, .6)}]
+        \begin{scope}
+            \clip (monitor-screen-bl) rectangle (monitor-screen-tr);
+            \terminal
+        \end{scope}
 
-        \node[
-            align=left,
-            font=\ttfamily\tiny\color{black!10},
-            anchor=north east,
-            inner sep=0pt,
-            outer sep=0pt,
-            scale=.6,
-        ] at (2 - \monitorborder, 1.5 - 2 * \monitorborder) {\windowcontents};
+        \begin{scope}[shift={(1.25, 0)}]
+            \clip (screen-bl) rectangle (screen-tr);
+            \terminal
+        \end{scope}
     \end{scope}
-\end{tikzpicture}
+}
+\foreach \cursor in {\_, ~} {
+    \begin{tikzpicture}
+        \begin{scope}
+            \setupdrawing{\cursor}
+        \end{scope}
+
+        \clip (-4.5, .8) rectangle ++(2, 1);
+        \begin{scope}[shift={(-16.25, 2.9)}, transform canvas={scale=.2}]
+            \setupdrawing{\cursor}
+        \end{scope}
+    \end{tikzpicture}
+}
 \end{document}

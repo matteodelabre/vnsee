@@ -2,7 +2,7 @@
 
 [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client for the [reMarkable tablet](https://remarkable.com) allowing you to turn the device into a second screen for your computer.
 
-<img alt="Illustration of a reMarkable table connected to a computer, showing half of a terminal window through its E-Ink screen" src="media/setup.svg" width="700">
+<img alt="Illustration of a reMarkable table connected to a computer, showing half of a terminal window through its E-Ink screen" src="media/setup.gif" width="700">
 
 ## Disclaimer
 

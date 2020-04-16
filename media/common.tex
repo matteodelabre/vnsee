@@ -1,0 +1,27 @@
+\usepackage{fontspec}
+\setmainfont{Fira Sans}
+\setmonofont{Fira Mono}
+
+\colorlet{border}{black!60}
+\colorlet{screen}{black!6}
+\colorlet{overscreen}{black!10}
+\colorlet{annotation}{black!80}
+
+\newcommand\width{1.75}
+\newcommand\height{2.55}
+\newcommand\outborder{.1}
+\newcommand\button{2 * \outborder}
+
+\newcommand\definehighlightoption[3]{
+    \ifcsname Highlight#1\endcsname
+        \expandafter\newcommand\csname #1FillColor\endcsname{annotation}
+        \expandafter\newcommand\csname #1DrawColor\endcsname{annotation}
+    \else
+        \expandafter\newcommand\csname #1FillColor\endcsname{#2}
+        \expandafter\newcommand\csname #1DrawColor\endcsname{#3}
+    \fi
+}
+
+\tikzset{
+    secondary/.style={line width=.3},
+}

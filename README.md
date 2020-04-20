@@ -7,14 +7,14 @@
 ## Disclaimer
 
 This project is not affiliated to, nor endorsed by, [reMarkable AS](https://remarkable.com/).\
-**I am not responsible for any damage done to your device due to the use of this software.**
+**I assume no responsiblitiy for any damage done to your device due to the use of this software.**
 
 ## Background
 
 VNC is a desktop-sharing system that enables a client to see the screen of another computer and act on it remotely.
-It is a well-established protocol supporting multiple platforms including Windows, Linux and Android.
-The reMarkable is a writer tablet featuring an E-Ink display, Wacom pen digitizer and a touchscreen, that can be used for reading, sketching or note-taking.
-It runs Linux and is open to hacking.
+It relies on a well-established protocol supporting multiple platforms including Windows, Linux and Android.
+The reMarkable is a writer tablet featuring an E-Ink display, a Wacom pen digitizer and a touchscreen, that can be used for reading, sketching or note-taking.
+It runs a fully open, Linux-based, system.
 
 rmvncclient brings both worlds together by allowing the tablet to connect to a remote VNC server, show the remote screen on its E-Ink display and interact with it through the touchscreen.
 This can effectively turn the tablet into a second screen for your computer.

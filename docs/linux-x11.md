@@ -38,7 +38,7 @@ Flag         | Description
 ----         | -----------
 `-repeat`    | If omitted, your computer keys will not repeat when you hold them
 `-forever`   | Keep the server alive even after the first client has disconnected
-`-nocursor`  | Do not show the mouse pointer on the screen tablet
+`-nocursor`  | Hide the mouse pointer when it is on the tablet’s screen
 `-allow`     | **Security:** Only allow connections through the USB interface
 `-clip`      | Restrict the display to the `VIRTUAL1` output
 

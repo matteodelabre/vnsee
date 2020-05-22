@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.7)
 project(rmvncclient)
 
 # Import libvncserver in static mode
@@ -50,7 +50,16 @@ add_executable(rmvncclient
     src/main.cpp
 )
 
-set_property(TARGET rmvncclient PROPERTY CXX_STANDARD 17)
+if(CMAKE_VERSION VERSION_LESS "3.8")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+    else()
+        message(FATAL_ERROR "Unknown compiler")
+    endif()
+else()
+    set_property(TARGET rmvncclient PROPERTY CXX_STANDARD 17)
+endif()
+
 target_link_libraries(rmvncclient PRIVATE vncclient)
 target_include_directories(rmvncclient PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/libvncserver

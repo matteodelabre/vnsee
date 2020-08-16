@@ -16,7 +16,7 @@ It relies on a well-established protocol supporting multiple platforms including
 The reMarkable is a writer tablet featuring an E-Ink display, a Wacom pen digitizer and a touchscreen, that can be used for reading, sketching or note-taking.
 It runs a fully open, Linux-based, system.
 
-rmvncclient brings both worlds together by allowing the tablet to connect to a remote VNC server, show the remote screen on its E-Ink display and interact with it through the touchscreen.
+rmvncclient brings both worlds together by allowing the tablet to connect to a remote VNC server, show the remote screen on its E-Ink display and interact with it through the pen digitizer and touchscreen.
 This can effectively turn the tablet into a second screen for your computer.
 Applications include reading web-based content, typing documents, drawing, or previewing [LaTeX documents](https://www.latex-project.org/) as you compose them.
 

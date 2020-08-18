@@ -76,7 +76,7 @@ auto screen::event_loop() -> event_loop_status
 auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
 {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    auto that = reinterpret_cast<screen*>(
+    auto* that = reinterpret_cast<screen*>(
         rfbClientGetClientData(
             vnc_client,
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -117,7 +117,7 @@ auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
 void screen::update_framebuf(rfbClient* vnc_client, int x, int y, int w, int h)
 {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    auto that = reinterpret_cast<screen*>(
+    auto* that = reinterpret_cast<screen*>(
         rfbClientGetClientData(
             vnc_client,
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)

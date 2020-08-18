@@ -3,20 +3,24 @@
 
 #include "event_loop.hpp"
 #include "buttons.hpp"
+// IWYU pragma: no_forward_declare app::buttons
 #include "pen.hpp"
+// IWYU pragma: no_forward_declare app::pen
 #include "screen.hpp"
 #include "touch.hpp"
-#include <array>
+// IWYU pragma: no_forward_declare app::touch
 #include <iosfwd>
+#include <optional>
 #include <poll.h> // IWYU pragma: keep
 #include <rfb/rfbclient.h>
 // IWYU pragma: no_include "rfb/rfbproto.h"
+#include <vector>
 
 namespace rmioc
 {
+    class screen;
     class buttons;
     class pen;
-    class screen;
     class touch;
 }
 
@@ -34,16 +38,20 @@ public:
      *
      * @param ip IP address of the VNC server to connect to.
      * @param port Port of the VNC server to connect to.
-     * @param buttons_device Buttons device to read input events from.
      * @param screen_device Screen to update with data from the VNC server.
-     * @param touch_device Touchscreen device to read input events from.
+     * @param buttons_device Buttons device to read input events from, or
+     * nullptr to ignore input events from the buttons.
+     * @param pen_device Pen digitizer to read input events from, or
+     * nullptr to ignore input events from the pen.
+     * @param touch_device Touchscreen device to read input events from, or
+     * nullptr to ignore input events from the touchscreen.
      */
     client(
         const char* ip, int port,
-        rmioc::buttons& buttons_device,
-        rmioc::pen& pen_device,
         rmioc::screen& screen_device,
-        rmioc::touch& touch_device
+        rmioc::buttons* buttons_device,
+        rmioc::pen* pen_device,
+        rmioc::touch* touch_device
     );
 
     ~client();
@@ -53,30 +61,37 @@ public:
 
 private:
     /** List of file descriptors to watch in the event loop. */
-    std::array<pollfd, 4> polled_fds;
+    std::vector<pollfd> polled_fds;
 
-    static constexpr std::size_t poll_buttons = 0;
-    static constexpr std::size_t poll_pen = 1;
-    static constexpr std::size_t poll_touch = 2;
-    static constexpr std::size_t poll_vnc = 3;
+    /** Index of the buttons file descriptor in the poll structure. */
+    std::size_t poll_buttons = -1;
+
+    /** Index of the pen file descriptor in the poll structure. */
+    std::size_t poll_pen = -1;
+
+    /** Index of the touch file descriptor in the poll structure. */
+    std::size_t poll_touch = -1;
+
+    /** Index of the VNC socket file descriptor in the poll structure. */
+    std::size_t poll_vnc = -1;
 
     /** VNC connection. */
     rfbClient* vnc_client;
 
-    /** Event handler for the buttons device. */
-    buttons buttons_handler;
-
-    /** Event handler for the pen device. */
-    pen pen_handler;
-
     /** Event handler for the screen device. */
     screen screen_handler;
 
+    /** Event handler for the buttons device. */
+    std::optional<buttons> buttons_handler;
+
+    /** Event handler for the pen device. */
+    std::optional<pen> pen_handler;
+
     /** Event handler for the touch device. */
-    touch touch_handler;
+    std::optional<touch> touch_handler;
 
     /**
-     * Send a pointer event to VNC.
+     * Send a pointer event to the VNC server.
      *
      * @param x Pointer X location on the screen.
      * @param y Pointer Y location on the screen.

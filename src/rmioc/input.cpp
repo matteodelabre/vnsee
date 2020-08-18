@@ -29,7 +29,7 @@ input::~input()
     close(this->input_fd);
 }
 
-void input::setup_poll(pollfd& in_pollfd)
+void input::setup_poll(pollfd& in_pollfd) const
 {
     in_pollfd.fd = this->input_fd;
     in_pollfd.events = POLLIN;

@@ -4,7 +4,6 @@
 #include "../rmioc/pen.hpp"
 #include "../rmioc/touch.hpp"
 #include <algorithm>
-#include <array>
 #include <bitset>
 #include <cerrno>
 #include <cstdarg>
@@ -15,6 +14,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <system_error>
 #include <vector>
@@ -53,19 +53,13 @@ using namespace std::placeholders;
 
 client::client(
     const char* ip, int port,
-    rmioc::buttons& buttons_device,
-    rmioc::pen& pen_device,
     rmioc::screen& screen_device,
-    rmioc::touch& touch_device
+    rmioc::buttons* buttons_device,
+    rmioc::pen* pen_device,
+    rmioc::touch* touch_device
 )
-: polled_fds{}
-, vnc_client(rfbGetClient(0, 0, 0))
-, buttons_handler(buttons_device, screen_device)
-, pen_handler(pen_device, screen_device,
-              std::bind(&client::send_button_press, this, _1, _2, _3))
+: vnc_client(rfbGetClient(0, 0, 0))
 , screen_handler(screen_device, vnc_client)
-, touch_handler(touch_device, screen_device,
-                std::bind(&client::send_button_press, this, _1, _2, _3))
 {
     rfbClientLog = vnc_client_log;
     rfbClientErr = vnc_client_log;
@@ -81,12 +75,45 @@ client::client(
         throw std::runtime_error{"Failed to initialize VNC connection"};
     }
 
-    buttons_device.setup_poll(this->polled_fds[poll_buttons]);
-    pen_device.setup_poll(this->polled_fds[poll_pen]);
-    touch_device.setup_poll(this->polled_fds[poll_touch]);
+    if (buttons_device != nullptr)
+    {
+        this->buttons_handler.emplace(*buttons_device, screen_device);
+        this->poll_buttons = this->polled_fds.size();
+        this->polled_fds.push_back(pollfd{});
+        buttons_device->setup_poll(this->polled_fds[this->poll_buttons]);
+    }
 
-    this->polled_fds[poll_vnc].fd = this->vnc_client->sock;
-    this->polled_fds[poll_vnc].events = POLLIN;
+    auto button_callback = [this](int x, int y, MouseButton button)
+    {
+        this->send_button_press(x, y, button);
+    };
+
+    if (pen_device != nullptr)
+    {
+        this->pen_handler.emplace(
+            *pen_device, screen_device,
+            button_callback);
+        this->poll_pen = this->polled_fds.size();
+        this->polled_fds.push_back(pollfd{});
+        pen_device->setup_poll(this->polled_fds[this->poll_pen]);
+    }
+
+    if (touch_device != nullptr)
+    {
+        this->touch_handler.emplace(
+            *touch_device, screen_device,
+            button_callback);
+        this->poll_touch = this->polled_fds.size();
+        this->polled_fds.push_back(pollfd{});
+        touch_device->setup_poll(this->polled_fds[this->poll_touch]);
+    }
+
+    this->poll_vnc = this->polled_fds.size();
+    this->polled_fds.push_back(pollfd{
+        /* fd = */ this->vnc_client->sock,
+        /* events = */ POLLIN,
+        /* revents = */ 0
+    });
 }
 
 client::~client()
@@ -142,7 +169,7 @@ void client::event_loop()
         timeout = -1;
 
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
-        if ((polled_fds[poll_vnc].revents & POLLIN) != 0)
+        if ((polled_fds[this->poll_vnc].revents & POLLIN) != 0)
         {
             if (HandleRFBServerMessage(this->vnc_client) == 0)
             {
@@ -152,24 +179,27 @@ void client::event_loop()
 
         handle_status(this->screen_handler.event_loop());
 
+        if (this->pen_handler.has_value()
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
-        if ((polled_fds[poll_pen].revents & POLLIN) != 0)
+                && (polled_fds[this->poll_pen].revents & POLLIN) != 0)
         {
-            handle_status(this->pen_handler.process_events());
+            handle_status(this->pen_handler->process_events());
         }
 
-        bool inhibit = this->pen_handler.is_inhibiting();
+        bool inhibit = this->pen_handler->is_inhibiting();
 
+        if (this->buttons_handler.has_value()
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
-        if ((polled_fds[poll_buttons].revents & POLLIN) != 0)
+                && (polled_fds[this->poll_buttons].revents & POLLIN) != 0)
         {
-            handle_status(this->buttons_handler.process_events(inhibit));
+            handle_status(this->buttons_handler->process_events(inhibit));
         }
 
+        if (this->touch_handler.has_value()
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
-        if ((polled_fds[poll_touch].revents & POLLIN) != 0)
+                && (polled_fds[this->poll_touch].revents & POLLIN) != 0)
         {
-            handle_status(this->touch_handler.process_events(inhibit));
+            handle_status(this->touch_handler->process_events(inhibit));
         }
     }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## Next version (unpublished)
+
+- Update libvncserver to 0.9.13
+- Add help message with `--help`
+- Add `--no-buttons`, `--no-pen` and `--no-touch` flags to disable interactions with the respective input devices
+
 ## v0.2.0
 
 - Add support for pen input

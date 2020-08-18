@@ -33,7 +33,7 @@ public:
      *
      * @param in_pollfd Structure to modify.
      */
-    void setup_poll(pollfd& in_pollfd);
+    void setup_poll(pollfd& in_pollfd) const;
 
 protected:
     /**

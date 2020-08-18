@@ -73,7 +73,7 @@ Any VNC server can be used for this task.
 We recommend x11vnc, which can be launched using the following command line:
 
 ```sh
-$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -clip $(xrandr | perl -n -e'/OUTPUTNAME .*?(\d+x\d+\+\d+\+\d+)/ && print $1)
+$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -nopw -clip $(xrandr | perl -n -e'/OUTPUTNAME .*?(\d+x\d+\+\d+\+\d+)/ && print $1')
 ```
 
 ### Options
@@ -83,7 +83,8 @@ Flag         | Description
 `-repeat`    | If omitted, your computer keys will not repeat when you hold them
 `-forever`   | Keep the server alive even after the first client has disconnected
 `-nocursor`  | Hide the mouse pointer when it is on the tablet’s screen
-`-allow`     | **Security:** Only allow connections through the USB interface
+`-allow`     | **Security:** Only allow connections through the local USB interface
+`-nopw`      | Hide the banner saying that running x11vnc without a password is insecure. It is safe in this case because we’re only accepting connections through the local USB interface
 `-clip`      | Restrict the display to the set output
 
 Here are some additional flags that might be of interest:

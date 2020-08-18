@@ -73,7 +73,7 @@ Any VNC server can be used for this task.
 We recommend x11vnc, which can be launched using the following command line:
 
 ```sh
-$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -clip $(xrandr | perl -n -e'/VIRTUAL1 .*?(\d+x\d+\+\d+\+\d+)/ && print $1)
+$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -clip $(xrandr | perl -n -e'/OUTPUTNAME .*?(\d+x\d+\+\d+\+\d+)/ && print $1)
 ```
 
 ### Options
@@ -84,7 +84,7 @@ Flag         | Description
 `-forever`   | Keep the server alive even after the first client has disconnected
 `-nocursor`  | Hide the mouse pointer when it is on the tablet’s screen
 `-allow`     | **Security:** Only allow connections through the USB interface
-`-clip`      | Restrict the display to the `VIRTUAL1` output
+`-clip`      | Restrict the display to the set output
 
 Here are some additional flags that might be of interest:
 
@@ -101,4 +101,4 @@ $ ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient; systemctl start 
 ```
 
 **Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not configure your screen correctly.
-Please make sure that the `VIRTUAL1` output is enabled.
+Please make sure that the chosen output is enabled.

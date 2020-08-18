@@ -35,7 +35,7 @@ For this scenario, you will need to configure your system to create a virtual se
 
 The details are specific to the operating system you’re using:
 
-* [Linux with X11](docs/linux-x11.md)
+* [Linux with X11](docs/second-screen/linux-x11.md)
 * Linux with Wayland (Help wanted!)
 * macOS (Help wanted!)
 * Windows (Help wanted!)
@@ -106,6 +106,7 @@ Many thanks to:
 - [libremarkable](https://github.com/canselcik/libremarkable) and [FBInk](https://github.com/NiLuJe/FBInk), on which input/output handling in this client is based.
 - [Damien Challet](https://github.com/damienchallet) and [Qwertystop](https://news.ycombinator.com/item?id=13115739) for providing the inspiration of a VNC client for the reMarkable.
 - The [Discord developer community](https://discord.gg/JSSGnFY) for providing initial feedback and testing.
+- [Florian Magin](https://github.com/fmagin) for contributing a driver-generic way of setting up Linux/X11 systems.
 
 [Martin Sandsmark](https://github.com/sandsmark) also built [a VNC client for the reMarkable](https://github.com/sandsmark/revncable) which only depends on Qt.
 

@@ -1,0 +1,104 @@
+# Setup as a second screen on Linux with X11
+
+## Find a suitable output
+
+The first step is to create a new space on your computer on which applications can be launched and that can be mirrored on the reMarkable through VNC, without being visible on your computer.
+
+It is assumed that you are using the [RandR X extension](https://www.x.org/releases/current/doc/randrproto/randrproto.txt) to arrange the different screens of your computer, which is likely the case with any recent Linux distribution.
+With RandR, each screen connected to your computer (called an _output_) sees a subregion of a larger shared image (perhaps confusingly called a _screen_).
+Even though the overall size of that shared image can be controlled manually—which could allow us to allocate some extra space outside of the other outputs for use as a second screen—this size is usually automatically calculated to cover the combined sizes of all available outputs, so the most robust way to allocate that space is to create a _virtual_ output.
+The steps required to enable those _virtual_ outputs, which are treated like any other output but are not visible, vary depending on the driver that you use.
+
+### Intel
+
+When using the Intel X11 driver, virtual outputs called `VIRTUAL1` and `VIRTUAL2` are available: you should see them at the bottom of `xrandr`’s output, listed as `disconnected`.
+
+### AMD
+
+AMD drivers seem to lack support for true virtual outputs like Intel.
+They have a virtual display feature (see the `virtual_display` parameter in the [AMDgpu driver documentation](https://dri.freedesktop.org/docs/drm/gpu/amdgpu.html)), but this disables all physical outputs by design, so it doesn't help in this use case.
+
+### Nvidia
+
+Unknown.
+
+### Generic workaround
+
+One workaround is to use any existing output that isn't plugged in.
+This might lead to weird issues, especially if the corresponding screen is later connected.
+To list all disconnected outputs, use the following command:
+
+```sh
+$ xrandr | grep disconnected
+DP-3 disconnected (normal left inverted right x axis y axis)
+HDMI-1 disconnected (normal left inverted right x axis y axis)
+```
+
+Here, you may use either of the `DP-3` or `HDMI-1` outputs for the following instructions.
+
+## Create a compatible display mode
+
+Create a new mode compatible with the tablet’s resolution:
+
+```sh
+$ xrandr --newmode 1408x1872 $(gtf 1408 1872 60 | tail -n2 | head -n1 | tr -s ' ' | cut -d' ' -f4-)
+```
+
+## Setup the output
+
+_In the following, replace `OUTPUTNAME` by the name of the output you want to mirror on the reMarkable, as determined in the first section._
+
+First add the display mode to the set output:
+
+```sh
+$ xrandr --addmode OUTPUTNAME 1408x1872
+```
+
+Enable and place the set output through your usual dual screen configuration program such as arandr, GNOME’s settings panel or KDE settings.
+When using the generic workaround, the output you chose will not appear in those programs, and you need to use `xrandr` as follows:
+
+```sh
+$ xrandr --output OUTPUTNAME --mode 1408x1872 --right-of MAINOUTPUT
+```
+
+Where `MAINOUTPUT` is the name of your main screen to the right of which you want to place the second screen.
+You may replace `--right-of` by `--left-of`, `--above`, or `--below`.
+Ignore any error saying `xrandr: Configure crtc X failed`.
+
+## Start the VNC server
+
+_In the following, replace `OUTPUTNAME` by the name of the output you want to mirror on the reMarkable, as determined in the first section._
+
+Any VNC server can be used for this task.
+We recommend x11vnc, which can be launched using the following command line:
+
+```sh
+$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -clip $(xrandr | perl -n -e'/VIRTUAL1 .*?(\d+x\d+\+\d+\+\d+)/ && print $1)
+```
+
+### Options
+
+Flag         | Description
+----         | -----------
+`-repeat`    | If omitted, your computer keys will not repeat when you hold them
+`-forever`   | Keep the server alive even after the first client has disconnected
+`-nocursor`  | Hide the mouse pointer when it is on the tablet’s screen
+`-allow`     | **Security:** Only allow connections through the USB interface
+`-clip`      | Restrict the display to the `VIRTUAL1` output
+
+Here are some additional flags that might be of interest:
+
+Flag         | Description
+----         | -----------
+`-rotate xy` | Use to flip the screen upside down
+
+## Start rmvncclient
+
+Finally, start rmvncclient using SSH.
+
+```sh
+$ ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient; systemctl start xochitl"
+```
+
+**Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not configure your screen correctly.
+Please make sure that the `VIRTUAL1` output is enabled.

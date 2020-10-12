@@ -22,8 +22,8 @@ sudo mv OEToolchainConfig.cmake /usr/local/oecore-x86_64/sysroots/x86_64-oesdk-l
 Clone this repository with its dependencies and change directory into it.
 
 ```sh
-git clone --recursive https://github.com/matteodelabre/rmvncclient
-cd rmvncclient
+git clone --recursive https://github.com/matteodelabre/vnsee
+cd vnsee
 ```
 
 Create a directory for build artifacts.
@@ -44,7 +44,7 @@ The output should not contain any error and should end with those lines:
 ```txt
 -- Configuring done
 -- Generating done
--- Build files have been written to: …/rmvncclient/build/Release
+-- Build files have been written to: …/vnsee/build/Release
 ```
 
 Run build.
@@ -53,4 +53,4 @@ Run build.
 make
 ```
 
-You now have a `rmvncclient` executable ready to be executed on your reMarkable!
+You now have a `vnsee` executable ready to be executed on your reMarkable!

@@ -26,7 +26,7 @@ auto help(const char* name) -> void
 {
     std::cerr << "Usage: " << name << " [IP [PORT]] [OPTION...]\n"
 "Connect to the VNC server at IP:PORT.\n\n"
-"Only when launching rmvncclient from a SSH session is the IP optional,\n"
+"Only when launching VNSee from a SSH session is the IP optional,\n"
 "in which case the client’s IP address is taken by default.\n"
 "By default, PORT is 5900.\n\n"
 "Available options:\n"

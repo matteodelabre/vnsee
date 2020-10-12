@@ -157,11 +157,11 @@
         ] (sheet-title) at (
             {.5 * (\windowwidth - \sheetwidth) + \monitorborder},
             \sheetheight - \monitorborder
-        ) {rmvncclient};
+        ) {VNSee};
 
-        \node[textbox, below=0.1cm of sheet-title] (sheet-desc) {
-            VNC client for the reMarkable tablet allowing you to turn the
-            device into a second screen for your computer.
+        \node[textbox, below=0.1cm of sheet-title, align=flush left] (sheet-desc) {
+            VNC client for the reMarkable tablet allowing you to use the device as a second screen.
+            (Previously called \emph{rmvncclient}.)
         };
     }
 

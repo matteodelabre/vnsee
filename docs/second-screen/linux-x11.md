@@ -93,12 +93,12 @@ Flag         | Description
 ----         | -----------
 `-rotate xy` | Use to flip the screen upside down
 
-## Start rmvncclient
+## Start VNSee
 
-Finally, start rmvncclient using SSH.
+Finally, start VNSee using SSH.
 
 ```sh
-$ ssh root@10.11.99.1 "systemctl stop xochitl && ./rmvncclient; systemctl start xochitl"
+$ ssh root@10.11.99.1 "systemctl stop xochitl && ./vnsee; systemctl start xochitl"
 ```
 
 **Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not configure your screen correctly.

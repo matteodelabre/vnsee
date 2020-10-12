@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.7)
-project(rmvncclient)
+project(vnsee)
 
 # Import libvncserver in static mode
 set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
 set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
 add_subdirectory(libvncserver)
 
-# Options for building rmvncclient
+# Options for building vnsee
 option(CHECK_INCLUDES "Run include-what-you-use to check #includes" OFF)
 option(CHECK_TIDY "Run clang-tidy linter" OFF)
 option(TRACE "Print tracing messages on standard output" OFF)
@@ -36,7 +36,7 @@ if(TRACE)
     add_definitions(-DTRACE)
 endif()
 
-add_executable(rmvncclient
+add_executable(vnsee
     src/app/buttons.cpp
     src/app/client.cpp
     src/app/pen.cpp
@@ -57,11 +57,11 @@ if(CMAKE_VERSION VERSION_LESS "3.8")
         message(FATAL_ERROR "Unknown compiler")
     endif()
 else()
-    set_property(TARGET rmvncclient PROPERTY CXX_STANDARD 17)
+    set_property(TARGET vnsee PROPERTY CXX_STANDARD 17)
 endif()
 
-target_link_libraries(rmvncclient PRIVATE vncclient)
-target_include_directories(rmvncclient PRIVATE
+target_link_libraries(vnsee PRIVATE vncclient)
+target_include_directories(vnsee PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/libvncserver
     libvncserver
 )

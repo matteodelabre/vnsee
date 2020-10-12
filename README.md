@@ -1,6 +1,7 @@
-# rmvncclient
+# VNSee
 
-[VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client for the [reMarkable tablet](https://remarkable.com) allowing you to turn the device into a second screen for your computer.
+[VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client for the [reMarkable tablet](https://remarkable.com) allowing you to use the device as a second screen.\
+(Previously called _rmvncclient_.)
 
 <img alt="Illustration of a reMarkable table connected to a computer, showing half of a terminal window through its E-Ink screen" src="media/setup.gif" width="700">
 
@@ -16,13 +17,13 @@ It relies on a well-established protocol supporting multiple platforms including
 The reMarkable is a writer tablet featuring an E-Ink display, a Wacom pen digitizer and a touchscreen, that can be used for reading, sketching or note-taking.
 It runs a fully open, Linux-based, system.
 
-rmvncclient brings both worlds together by allowing the tablet to connect to a remote VNC server, show the remote screen on its E-Ink display and interact with it through the pen digitizer and touchscreen.
+VNSee brings both worlds together by allowing the tablet to connect to a remote VNC server, show the remote screen on its E-Ink display and interact with it through the pen digitizer and touchscreen.
 This can effectively turn the tablet into a second screen for your computer.
 Applications include reading web-based content, typing documents, drawing, or previewing [LaTeX documents](https://www.latex-project.org/) as you compose them.
 
 ## Install on the reMarkable
 
-Grab the latest build from the [releases page](https://github.com/matteodelabre/rmvncclient/releases) (or build the software yourself by following the [build guide](docs/build.md)), then copy the `rmvncclient` executable to the tablet by [using SSH](https://remarkablewiki.com/tech/ssh).
+Grab the latest build from the [releases page](https://github.com/matteodelabre/vnsee/releases) (or build the software yourself by following the [build guide](docs/build.md)), then copy the `vnsee` executable to the tablet [using SSH](https://remarkablewiki.com/tech/ssh).
 
 This VNC client is compatible with VNC servers that are capable of sending pixels in the RGB565 format and that use a resolution compatible with reMarkable’s screen size (1408 × 1872 pixels).
 It has successfully been tested with [x11vnc](https://github.com/LibVNC/x11vnc).
@@ -42,7 +43,7 @@ The details are specific to the operating system you’re using:
 
 ## Using the client
 
-You can quit rmvncclient at any time using the “Power” button (the one above the screen).
+You can quit VNSee at any time using the “Power” button (the one above the screen).
 Activity on the touchscreen will be translated to mouse interactions following the mapping in the table below.
 
 <table>

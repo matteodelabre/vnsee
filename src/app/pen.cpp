@@ -16,6 +16,7 @@ pen::pen(
 : device(device)
 , screen(screen)
 , send_button_press(std::move(send_button_press))
+, state(MouseButton::None)
 {}
 
 auto pen::process_events() -> event_loop_status
@@ -38,12 +39,13 @@ auto pen::process_events() -> event_loop_status
 
             // Move cursor to pen position, generate a click if the pen is
             // touching the screen
-            this->send_button_press(
-                screen_x, screen_y,
-                device_state.pressure > 0
-                    ? MouseButton::Left
-                    : MouseButton::None
-            );
+            MouseButton new_state =
+               device_state.pressure > 0
+                ? MouseButton::Left
+                : MouseButton::None;
+            this->send_button_press(screen_x, screen_y, new_state);
+
+            this->state = new_state;
         }
     }
 

@@ -37,6 +37,9 @@ private:
 
     /** Callback for sending mouse events. */
     MouseCallback send_button_press;
+
+    /** Current state of the pen */
+    MouseButton state;
 };
 
 } // namespace app

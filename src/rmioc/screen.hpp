@@ -25,16 +25,18 @@ public:
      * @param y Top bound of the region to update (in pixels).
      * @param w Width of the region to update (in pixels).
      * @param h Height of the region to update (in pixels).
+     * @param direct True to use direct mode rendering (du). 
      * @param wait True to wait until update is complete.
      */
-    void update(int x, int y, int w, int h, bool wait = false);
+    void update(int x, int y, int w, int h, bool direct = false, bool wait = false);
 
     /**
      * Perform a full update of the screen (will flash).
      *
      * @param wait True to wait until update is complete.
+     * @param direct True to use direct mode rendering (du). 
      */
-    void update(bool wait = true);
+    void update(bool direct = false, bool wait = true);
 
     /**
      * Access the screen data buffer.

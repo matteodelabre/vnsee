@@ -45,6 +45,12 @@ auto pen::process_events() -> event_loop_status
                 : MouseButton::None;
             this->send_button_press(screen_x, screen_y, new_state);
 
+            if (this->state != new_state) {
+                if (this->state == MouseButton::Left)
+                    this->screen.set_repainting_mode(repainting_mode::fast);
+                else
+                    this->screen.set_repainting_mode(repainting_mode::standard);
+            }
             this->state = new_state;
         }
     }

@@ -40,6 +40,19 @@ screen::screen(rmioc::screen& device, rfbClient* vnc_client)
     this->vnc_client->GotFrameBufferUpdate = screen::update_framebuf;
 }
 
+void screen::repaint()
+{
+     this->update_info.has_update = false;
+
+     log::print("Screen update")
+           << this->update_info.w << 'x' << this->update_info.h << '+'
+           << this->update_info.x << '+' << this->update_info.y << '\n';
+
+     this->device.update(
+           this->update_info.x, this->update_info.y,
+           this->update_info.w, this->update_info.h
+     );
+}
 auto screen::event_loop() -> event_loop_status
 {
     if (this->update_info.has_update)
@@ -52,16 +65,7 @@ auto screen::event_loop() -> event_loop_status
 
         if (remaining_wait_time <= 0)
         {
-            this->update_info.has_update = false;
-
-            log::print("Screen update")
-                << this->update_info.w << 'x' << this->update_info.h << '+'
-                << this->update_info.x << '+' << this->update_info.y << '\n';
-
-            this->device.update(
-                this->update_info.x, this->update_info.y,
-                this->update_info.w, this->update_info.h
-            );
+            this->repaint();
         }
         else
         {

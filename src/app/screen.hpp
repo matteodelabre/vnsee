@@ -25,6 +25,8 @@ public:
 
     event_loop_status event_loop();
 
+    /** repaint the reMarkable screen. */
+    void repaint();
 private:
     /** reMarkable screen device. */
     rmioc::screen& device;

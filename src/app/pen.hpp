@@ -2,6 +2,7 @@
 #define APP_PEN_HPP
 
 #include "event_loop.hpp"
+#include "screen.hpp"
 
 namespace rmioc
 {
@@ -17,7 +18,7 @@ class pen
 public:
     pen(
         rmioc::pen& device,
-        const rmioc::screen& screen_device,
+        app::screen& screen_device,
         MouseCallback send_button_press
     );
 
@@ -31,8 +32,8 @@ private:
     /** reMarkable pen digitizer device. */
     rmioc::pen& device;
 
-    /** reMarkable screen device. */
-    const rmioc::screen& screen_device;
+    /** reMarkable screen. */
+    app::screen& screen;
 
     /** Callback for sending mouse events. */
     MouseCallback send_button_press;

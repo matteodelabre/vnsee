@@ -26,7 +26,7 @@ public:
     event_loop_status event_loop();
 
     /** repaint the reMarkable screen. */
-    void repaint();
+    void repaint(bool direct=false);
 
     /** get x resolution */
     int get_xres();

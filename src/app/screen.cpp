@@ -40,17 +40,22 @@ screen::screen(rmioc::screen& device, rfbClient* vnc_client)
     this->vnc_client->GotFrameBufferUpdate = screen::update_framebuf;
 }
 
-void screen::repaint()
+void screen::repaint(bool direct)
 {
-     this->update_info.has_update = false;
+    /* If the update is direct, we don't clear the has_update flag
+          * Since direct updates only update black pixel, we still need to do a proper update every once in a whil
+          */
+    if(!direct)
+       this->update_info.has_update = false;
 
-     log::print("Screen update")
-           << this->update_info.w << 'x' << this->update_info.h << '+'
-           << this->update_info.x << '+' << this->update_info.y << '\n';
+    log::print("Screen update")
+        << this->update_info.w << 'x' << this->update_info.h << '+'
+        << this->update_info.x << '+' << this->update_info.y << '\n';
 
-     this->device.update(
+    this->device.update(
            this->update_info.x, this->update_info.y,
-           this->update_info.w, this->update_info.h
+           this->update_info.w, this->update_info.h,
+           direct
      );
 }
 int screen::get_xres()

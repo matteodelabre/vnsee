@@ -53,6 +53,14 @@ void screen::repaint()
            this->update_info.w, this->update_info.h
      );
 }
+int screen::get_xres()
+{
+    return this->device.get_xres();
+}
+int screen::get_yres()
+{
+    return this->device.get_yres();
+}
 auto screen::event_loop() -> event_loop_status
 {
     if (this->update_info.has_update)

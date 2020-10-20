@@ -27,6 +27,12 @@ public:
 
     /** repaint the reMarkable screen. */
     void repaint();
+
+    /** get x resolution */
+    int get_xres();
+
+    /** get x resolution */
+    int get_yres();
 private:
     /** reMarkable screen device. */
     rmioc::screen& device;

@@ -10,12 +10,13 @@ namespace app
 
 pen::pen(
     rmioc::pen& device,
-    const rmioc::screen& screen_device,
+    app::screen& screen,
     MouseCallback send_button_press
 )
 : device(device)
-, screen_device(screen_device)
+, screen(screen)
 , send_button_press(std::move(send_button_press))
+, state(MouseButton::None)
 {}
 
 auto pen::process_events() -> event_loop_status
@@ -27,8 +28,8 @@ auto pen::process_events() -> event_loop_status
         if (device_state.tool_set.pen())
         {
             // Convert to screen coordinates
-            int xres = static_cast<int>(this->screen_device.get_xres());
-            int yres = static_cast<int>(this->screen_device.get_yres());
+            int xres = static_cast<int>(this->screen.get_xres());
+            int yres = static_cast<int>(this->screen.get_yres());
 
             int screen_x = device_state.y * xres
                 / rmioc::pen::pen_state::y_max;
@@ -38,12 +39,21 @@ auto pen::process_events() -> event_loop_status
 
             // Move cursor to pen position, generate a click if the pen is
             // touching the screen
-            this->send_button_press(
-                screen_x, screen_y,
-                device_state.pressure > 0
-                    ? MouseButton::Left
-                    : MouseButton::None
-            );
+            MouseButton new_state =
+               device_state.pressure > 0
+                ? MouseButton::Left
+                : MouseButton::None;
+            this->send_button_press(screen_x, screen_y, new_state);
+
+            if (this->state != new_state) {
+                if (new_state == MouseButton::Left)
+                    this->screen.set_repainting_mode(repainting_mode::fast);
+                else {
+                    this->screen.repaint();
+                    this->screen.set_repainting_mode(repainting_mode::standard);
+                }
+            }
+            this->state = new_state;
         }
     }
 

@@ -15,6 +15,19 @@ namespace rmioc
 namespace app
 {
 
+/**
+ * Describes the different repainting mode used by the screen.
+ *
+ */
+enum repainting_mode
+{
+    /** Standard mode. */
+    standard = 0,
+
+    /** Fast mode: Direct rendering as soon as possible. */
+    fast = 1
+};
+    
 class screen
 {
 public:
@@ -25,6 +38,17 @@ public:
 
     event_loop_status event_loop();
 
+    /** repaint the reMarkable screen. */
+    void repaint(bool direct=false);
+
+    /** get x resolution */
+    int get_xres();
+
+    /** get x resolution */
+    int get_yres();
+
+    /** set the rendering mode */
+    void set_repainting_mode(repainting_mode);
 private:
     /** reMarkable screen device. */
     rmioc::screen& device;
@@ -73,10 +97,17 @@ private:
 
         /** Last time an update was registered. */
         std::chrono::steady_clock::time_point last_update_time;
+
+        /** Last time the reMarkable screen was repainted. */
+        std::chrono::steady_clock::time_point last_repaint_time;
     } update_info;
 
     /** Tag used for accessing the instance from C callbacks. */
     static constexpr std::size_t instance_tag = 6803;
+
+    /** Current repainting mode */
+    repainting_mode repaint_mode;
+
 }; // class screen
 
 } // namespace app

@@ -91,7 +91,7 @@ client::client(
     if (pen_device != nullptr)
     {
         this->pen_handler.emplace(
-            *pen_device, screen_device,
+            *pen_device, this->screen_handler,
             button_callback);
         this->poll_pen = this->polled_fds.size();
         this->polled_fds.push_back(pollfd{});

@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version (unpublished)
+## v0.3.0
 
 - Rename from rmvncclient to VNSee.
 - Update libvncserver to 0.9.13.

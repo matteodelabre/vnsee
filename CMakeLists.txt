@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(vnsee)
+project(VNSee VERSION 0.2.0)
 
 # Import libvncserver in static mode
 set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
@@ -60,8 +60,11 @@ else()
     set_property(TARGET vnsee PROPERTY CXX_STANDARD 17)
 endif()
 
+configure_file(src/config.hpp.in src/config.hpp)
+
 target_link_libraries(vnsee PRIVATE vncclient)
 target_include_directories(vnsee PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/libvncserver
+    ${CMAKE_CURRENT_BINARY_DIR}/src
     libvncserver
 )

@@ -1,5 +1,6 @@
 #include "options.hpp"
 #include "app/client.hpp"
+#include "config.hpp"
 #include "rmioc/buttons.hpp"
 #include "rmioc/pen.hpp"
 #include "rmioc/screen.hpp"
@@ -24,16 +25,25 @@
  */
 auto help(const char* name) -> void
 {
-    std::cerr << "Usage: " << name << " [IP [PORT]] [OPTION...]\n"
+    std::cout << "Usage: " << name << " [IP [PORT]] [OPTION...]\n"
 "Connect to the VNC server at IP:PORT.\n\n"
-"Only when launching VNSee from a SSH session is the IP optional,\n"
+"Only when launching " PROJECT_NAME " from a SSH session is the IP optional,\n"
 "in which case the client’s IP address is taken by default.\n"
 "By default, PORT is 5900.\n\n"
 "Available options:\n"
-"  -h, --help               show this help message\n"
-"  --no-buttons             disable buttons interaction\n"
-"  --no-pen                 disable pen interaction\n"
-"  --no-touch               disable touchscreen interaction\n";
+"  -h, --help           Show this help message and exit.\n"
+"  -v, --version        Show the current version of " PROJECT_NAME " and exit.\n"
+"  --no-buttons         Disable buttons interaction.\n"
+"  --no-pen             Disable pen interaction.\n"
+"  --no-touch           Disable touchscreen interaction.\n";
+}
+
+/**
+ * Print current version.
+ */
+auto version() -> void
+{
+    std::cout << PROJECT_NAME << ' ' << PROJECT_VERSION << '\n';
 }
 
 constexpr int default_server_port = 5900;
@@ -56,6 +66,12 @@ auto main(int argc, const char* argv[]) -> int
     if ((opts.count("help") >= 1) || (opts.count("h") >= 1))
     {
         help(name);
+        return EXIT_SUCCESS;
+    }
+
+    if ((opts.count("version") >= 1) || (opts.count("v") >= 1))
+    {
+        version();
         return EXIT_SUCCESS;
     }
 

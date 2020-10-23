@@ -37,22 +37,30 @@ auto pen::process_events() -> event_loop_status
             int screen_y = yres - yres * device_state.x
                 / rmioc::pen::pen_state::x_max;
 
-            // Move cursor to pen position, generate a click if the pen is
-            // touching the screen
-            MouseButton new_state =
-               device_state.pressure > 0
+            // Move the mouse cursor to the pen position and generate a click
+            // if the pen is touching the screen
+            MouseButton new_state = device_state.pressure > 0
                 ? MouseButton::Left
                 : MouseButton::None;
+
             this->send_button_press(screen_x, screen_y, new_state);
 
-            if (this->state != new_state) {
+            // Switch to the fast update mode for as long as the pen
+            // touches the screen
+            if (this->state != new_state)
+            {
                 if (new_state == MouseButton::Left)
-                    this->screen.set_repainting_mode(repainting_mode::fast);
-                else {
+                {
+                    this->screen.set_repaint_mode(screen::repaint_modes::fast);
+                }
+                else
+                {
+                    this->screen.set_repaint_mode(
+                        screen::repaint_modes::standard);
                     this->screen.repaint();
-                    this->screen.set_repainting_mode(repainting_mode::standard);
                 }
             }
+
             this->state = new_state;
         }
     }

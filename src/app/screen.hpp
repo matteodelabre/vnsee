@@ -15,19 +15,6 @@ namespace rmioc
 namespace app
 {
 
-/**
- * Describes the different repainting mode used by the screen.
- *
- */
-enum repainting_mode
-{
-    /** Standard mode. */
-    standard = 0,
-
-    /** Fast mode: Direct rendering as soon as possible. */
-    fast = 1
-};
-    
 class screen
 {
 public:
@@ -38,8 +25,10 @@ public:
 
     event_loop_status event_loop();
 
-    /** repaint the reMarkable screen. */
-    void repaint(bool direct=false);
+    /**
+     * Force flushing any pending updates to the screen.
+     */
+    void repaint();
 
     /** get x resolution */
     int get_xres();
@@ -47,8 +36,31 @@ public:
     /** get x resolution */
     int get_yres();
 
+    /**
+     * Available repaint modes.
+     */
+    enum class repaint_modes
+    {
+        /**
+         * High quality repaints with ~450 ms latency.
+         *
+         * In this mode, updates are throttled …
+         */
+        standard = 0,
+
+        /**
+         * Black-and-white repaints with ~260 ms latency.
+         *
+         * Does not clear the flag for pending updates. Is only meant for
+         * transitional updates and must be followed by a standard repaint to
+         * fully flush pending updates.
+         */
+        fast = 1
+    };
+
     /** set the rendering mode */
-    void set_repainting_mode(repainting_mode);
+    void set_repaint_mode(repaint_modes mode);
+
 private:
     /** reMarkable screen device. */
     rmioc::screen& device;
@@ -72,7 +84,7 @@ private:
      * @param w Width of the updated rectangle (in pixels).
      * @param h Height of the updated rectangle (in pixels).
      */
-    static void update_framebuf(
+    static void recv_framebuf(
         rfbClient* client,
         int x, int y, int w, int h
     );
@@ -94,20 +106,16 @@ private:
 
         /** Whether at least one update has been registered. */
         bool has_update;
-
-        /** Last time an update was registered. */
-        std::chrono::steady_clock::time_point last_update_time;
-
-        /** Last time the reMarkable screen was repainted. */
-        std::chrono::steady_clock::time_point last_repaint_time;
     } update_info;
+
+    /** Last time the reMarkable screen was repainted. */
+    std::chrono::steady_clock::time_point last_repaint_time;
 
     /** Tag used for accessing the instance from C callbacks. */
     static constexpr std::size_t instance_tag = 6803;
 
-    /** Current repainting mode */
-    repainting_mode repaint_mode;
-
+    /** Current repaint mode. */
+    repaint_modes repaint_mode;
 }; // class screen
 
 } // namespace app

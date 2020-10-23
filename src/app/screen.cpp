@@ -13,19 +13,12 @@
 namespace chrono = std::chrono;
 
 /**
- * Time to wait after the last update from VNC before updating the screen
- * (in microseconds).
+ * Time to wait between two repaints.
  *
  * VNC servers tend to send a lot of small updates in a short period of time.
  * This delay allows grouping those small updates into a larger screen update.
  */
-constexpr chrono::milliseconds update_delay{150};
-
-/**
- * Maximum time to wait in between two repaints. If the screen is unstable, then the
- * first mechanism might never repaint the screen.
- */
-constexpr chrono::milliseconds update_max_delay{500};
+constexpr chrono::milliseconds repaint_delay{400};
 
 namespace app
 {
@@ -33,7 +26,7 @@ namespace app
 screen::screen(rmioc::screen& device, rfbClient* vnc_client)
 : device(device)
 , vnc_client(vnc_client)
-, repaint_mode(repainting_mode::standard)
+, repaint_mode(repaint_modes::standard)
 {
     rfbClientSetClientData(
         this->vnc_client,
@@ -44,70 +37,80 @@ screen::screen(rmioc::screen& device, rfbClient* vnc_client)
     );
 
     this->vnc_client->MallocFrameBuffer = screen::create_framebuf;
-    this->vnc_client->GotFrameBufferUpdate = screen::update_framebuf;
+    this->vnc_client->GotFrameBufferUpdate = screen::recv_framebuf;
 }
 
-void screen::repaint(bool direct)
+void screen::repaint()
 {
-    /* If the update is direct, we don't clear the has_update flag
-          * Since direct updates only update black pixel, we still need to do a proper update every once in a whil
-          */
-    if(!direct) {
-       this->update_info.has_update = false;
-       this->update_info.last_repaint_time = chrono::steady_clock::now();
+    // Clear the has_update flag only in standard repaint mode
+    // In fast mode, a clean update will be needed in the future
+    if (this->repaint_mode == repaint_modes::standard)
+    {
+        this->update_info.has_update = false;
     }
+
+    this->last_repaint_time = chrono::steady_clock::now();
+
     log::print("Screen update")
         << this->update_info.w << 'x' << this->update_info.h << '+'
         << this->update_info.x << '+' << this->update_info.y << '\n';
 
     this->device.update(
-           this->update_info.x, this->update_info.y,
-           this->update_info.w, this->update_info.h,
-           direct
-     );
+        this->update_info.x, this->update_info.y,
+        this->update_info.w, this->update_info.h,
+        this->repaint_mode == repaint_modes::standard
+            ? mxcfb::waveform_modes::gc16
+            : mxcfb::waveform_modes::du
+    );
 }
+
 int screen::get_xres()
 {
     return this->device.get_xres();
 }
+
 int screen::get_yres()
 {
     return this->device.get_yres();
 }
- 
-void screen::set_repainting_mode(repainting_mode mode)
+
+void screen::set_repaint_mode(repaint_modes mode)
 {
     this->repaint_mode = mode;
+
+    log::print("Screen update") << (mode == repaint_modes::standard
+        ? "Switched to standard mode\n"
+        : "Switched to fast mode\n");
 }
 
-   
 auto screen::event_loop() -> event_loop_status
 {
     if (this->update_info.has_update)
     {
-        auto now = chrono::steady_clock::now();
-        int remaining_wait_time =
-            chrono::duration_cast<chrono::milliseconds>(
-                this->update_info.last_update_time + update_delay
-                - now
-            ).count();
-
-        int must_repaint = 
-            chrono::duration_cast<chrono::milliseconds>(
-                this->update_info.last_repaint_time + update_max_delay
-                - now
-            ).count();
-        if (remaining_wait_time <= 0 || must_repaint <= 0)
+        if (this->repaint_mode == repaint_modes::fast)
         {
             this->repaint();
         }
         else
         {
-            if (this->repaint_mode == app::repainting_mode::fast)
-                this->repaint(true);
+            auto now = chrono::steady_clock::now();
+            int remaining_wait_time =
+                chrono::duration_cast<chrono::milliseconds>(
+                    this->last_repaint_time + repaint_delay - now
+                ).count();
 
-            // Wait until the next update is due
-            return {/* quit = */ false, /* timeout = */ std::min(remaining_wait_time, must_repaint)};
+            if (remaining_wait_time <= 0)
+            {
+                this->repaint();
+            }
+            else
+            {
+                // Wait until the next update is due
+                return {
+                    /* quit = */ false,
+                    /* timeout = */ remaining_wait_time
+                };
+            }
         }
     }
 
@@ -155,7 +158,7 @@ auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
     return TRUE;
 }
 
-void screen::update_framebuf(rfbClient* vnc_client, int x, int y, int w, int h)
+void screen::recv_framebuf(rfbClient* vnc_client, int x, int y, int w, int h)
 {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     auto* that = reinterpret_cast<screen*>(
@@ -192,8 +195,6 @@ void screen::update_framebuf(rfbClient* vnc_client, int x, int y, int w, int h)
         that->update_info.h = h;
         that->update_info.has_update = true;
     }
-
-    that->update_info.last_update_time = chrono::steady_clock::now();
 }
 
 } // namespace app

@@ -74,7 +74,8 @@ screen::~screen()
     this->framebuf_fd = -1;
 }
 
-void screen::update(int x, int y, int w, int h, bool direct, bool wait)
+void screen::update(
+    int x, int y, int w, int h, mxcfb::waveform_modes mode, bool wait)
 {
     // Clip update region to screen bounds
     if (x < 0)
@@ -113,7 +114,7 @@ void screen::update(int x, int y, int w, int h, bool direct, bool wait)
     update.update_region.top = y;
     update.update_region.width = w;
     update.update_region.height = h;
-    update.waveform_mode = direct ? mxcfb::waveform_modes::du : mxcfb::waveform_modes::gc16;
+    update.waveform_mode = mode;
     update.temp = mxcfb::temps::normal;
     update.update_mode = mxcfb::update_modes::partial;
     update.flags = 0;
@@ -121,14 +122,14 @@ void screen::update(int x, int y, int w, int h, bool direct, bool wait)
     this->send_update(update, wait);
 }
 
-void screen::update(bool direct, bool wait)
+void screen::update(mxcfb::waveform_modes mode, bool wait)
 {
     mxcfb::update_data update{};
     update.update_region.left = 0;
     update.update_region.top = 0;
     update.update_region.width = this->get_xres();
     update.update_region.height = this->get_yres();
-    update.waveform_mode = direct ? mxcfb::waveform_modes::du : mxcfb::waveform_modes::gc16;
+    update.waveform_mode = mode;
     update.temp = mxcfb::temps::normal;
     update.update_mode = mxcfb::update_modes::full;
     update.flags = 0;

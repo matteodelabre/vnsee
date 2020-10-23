@@ -1,10 +1,9 @@
 #ifndef RMIOC_SCREEN_HPP
 #define RMIOC_SCREEN_HPP
 
+#include "mxcfb.hpp"
 #include <cstdint>
 #include <linux/fb.h>
-
-namespace mxcfb { struct update_data; }
 
 namespace rmioc
 {
@@ -25,18 +24,23 @@ public:
      * @param y Top bound of the region to update (in pixels).
      * @param w Width of the region to update (in pixels).
      * @param h Height of the region to update (in pixels).
-     * @param direct True to use direct mode rendering (du). 
-     * @param wait True to wait until update is complete.
+     * @param mode Update mode to use (default GC16).
+     * @param wait True to block until the update is complete.
      */
-    void update(int x, int y, int w, int h, bool direct = false, bool wait = false);
+    void update(
+        int x, int y, int w, int h,
+        mxcfb::waveform_modes mode = mxcfb::waveform_modes::gc16,
+        bool wait = false);
 
     /**
-     * Perform a full update of the screen (will flash).
+     * Perform a full update of the screen.
      *
-     * @param wait True to wait until update is complete.
-     * @param direct True to use direct mode rendering (du). 
+     * @param mode Update mode to use (default GC16).
+     * @param wait True to block until the update is complete.
      */
-    void update(bool direct = false, bool wait = true);
+    void update(
+        mxcfb::waveform_modes mode = mxcfb::waveform_modes::gc16,
+        bool wait = true);
 
     /**
      * Access the screen data buffer.

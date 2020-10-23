@@ -108,6 +108,7 @@ Many thanks to:
 - [Damien Challet](https://github.com/damienchallet) and [Qwertystop](https://news.ycombinator.com/item?id=13115739) for providing the inspiration of a VNC client for the reMarkable.
 - The [Discord developer community](https://discord.gg/JSSGnFY) for providing initial feedback and testing.
 - [Florian Magin](https://github.com/fmagin) for contributing a driver-generic way of setting up Linux/X11 systems.
+- [@asmanur](https://github.com/asmanur) for improving the repaint latency.
 
 [Martin Sandsmark](https://github.com/sandsmark) also built [a VNC client for the reMarkable](https://github.com/sandsmark/revncable) which only depends on Qt.
 

@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <utility>
+// IWYU pragma: no_include <ratio>
 // IWYU pragma: no_include <type_traits>
 
 namespace app

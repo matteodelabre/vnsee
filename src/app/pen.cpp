@@ -1,6 +1,6 @@
 #include "pen.hpp"
+#include "screen.hpp"
 #include "../rmioc/pen.hpp"
-#include "../rmioc/screen.hpp"
 #include <functional>
 #include <utility>
 // IWYU pragma: no_include <type_traits>

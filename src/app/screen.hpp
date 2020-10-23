@@ -93,19 +93,19 @@ private:
     struct update_info_struct
     {
         /** Left bound of the overall updated rectangle (in pixels). */
-        int x;
+        int x = 0;
 
         /** Top bound of the overall updated rectangle (in pixels). */
-        int y;
+        int y = 0;
 
         /** Width of the overall updated rectangle (in pixels). */
-        int w;
+        int w = 0;
 
         /** Height of the overall updated rectangle (in pixels). */
-        int h;
+        int h = 0;
 
         /** Whether at least one update has been registered. */
-        bool has_update;
+        bool has_update = false;
     } update_info;
 
     /** Last time the reMarkable screen was repainted. */

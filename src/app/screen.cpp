@@ -2,6 +2,7 @@
 #include "event_loop.hpp"
 #include "../log.hpp"
 #include "../rmioc/screen.hpp"
+#include "../rmioc/mxcfb.hpp"
 #include <algorithm>
 #include <chrono>
 #include <ostream>
@@ -64,12 +65,12 @@ void screen::repaint()
     );
 }
 
-int screen::get_xres()
+auto screen::get_xres() -> int
 {
     return this->device.get_xres();
 }
 
-int screen::get_yres()
+auto screen::get_yres() -> int
 {
     return this->device.get_yres();
 }

@@ -2,17 +2,18 @@
 #define APP_PEN_HPP
 
 #include "event_loop.hpp"
-#include "screen.hpp"
 
 namespace rmioc
 {
-    class screen;
-    class pen;
+
+class pen;
+
 }
 
 namespace app
 {
 
+class screen;
 class pen
 {
 public:

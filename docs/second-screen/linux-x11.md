@@ -11,11 +11,10 @@ The steps required to enable those _virtual_ outputs, which are treated like any
 
 ### Intel
 
-When using the Intel X11 driver, virtual outputs called `VIRTUAL1` and `VIRTUAL2` are available: you should see them at the bottom of `xrandr`’s output, listed as `disconnected`.
+When using the Intel X11 driver, virtual outputs called `VIRTUAL1`, `VIRTUAL2`, … should be available.
+You should see them at the bottom of `xrandr`’s output, listed as `disconnected`.
+If not, you need to configure the driver’s `VirtualHeads` option appropriately; if you don’t already have an existing configuration file for the Intel driver, create one at `/etc/X11/xorg.conf.d/20-intel.conf` with the following contents:
 
-#### Creating a new virtual outputs
-If you have a intel gpu and can not see a VIRTUAL output when running `xrandr` command. 
-Add this snippet:
 ```sh
 Section "Device"
     Identifier "intelgpu0"
@@ -23,9 +22,8 @@ Section "Device"
     Option "VirtualHeads" "1"
 EndSection
 ```
-to a newly created file in this path`/etc/X11/xorg.conf.d/20-intel.conf`. Restart the computer and check `xrandr` output again. 
 
-
+If you changed the driver configuration, restart your X session before proceeding.
 
 ### AMD
 

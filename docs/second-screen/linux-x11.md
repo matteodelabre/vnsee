@@ -85,7 +85,7 @@ Any VNC server can be used for this task.
 We recommend x11vnc, which can be launched using the following command line:
 
 ```sh
-$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -nopw -clip $(xrandr | perl -n -e'/OUTPUTNAME .*?(\d+x\d+\+\d+\+\d+)/ && print $1')
+$ x11vnc -repeat -forever -nocursor -allow 10.11.99.1 -nopw -clip xinerama1
 ```
 
 ### Options

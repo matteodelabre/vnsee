@@ -109,6 +109,7 @@ Many thanks to:
 - The [Discord developer community](https://discord.gg/JSSGnFY) for providing initial feedback and testing.
 - [Florian Magin](https://github.com/fmagin) for contributing a driver-generic way of setting up Linux/X11 systems.
 - [@asmanur](https://github.com/asmanur) for improving the repaint latency.
+- [@mhhf](https://github.com/mhhf) for helping with TigerVNC compatibility.
 
 [Martin Sandsmark](https://github.com/sandsmark) also built [a VNC client for the reMarkable](https://github.com/sandsmark/revncable) which only depends on Qt.
 

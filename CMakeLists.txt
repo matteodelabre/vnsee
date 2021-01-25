@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(VNSee VERSION 0.3.0)
+project(VNSee VERSION 0.3.1)
 
 # Import libvncserver in static mode
 set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)

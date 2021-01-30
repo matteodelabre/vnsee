@@ -38,6 +38,8 @@ This guide assumes that you use wayvnc as a vnc server. It requires you to speci
 $ wayvnc --output=HEADLESS-1 0.0.0.0
 ```
 
+This will create a new workspace in sway under the lowest number that is not assigned to an output yet (the lowest number you cannot see in the workspace overview). To see it, connect the VNC client.
+
 ## Start VNSee
 
 Finally, start VNSee using SSH.

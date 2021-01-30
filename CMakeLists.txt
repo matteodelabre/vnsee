@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.7)
 project(VNSee VERSION 0.3.1)
 
-# Import libvncserver in static mode
-set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
-set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
-add_subdirectory(libvncserver)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LibVNCClient libvncclient)
+
+if(NOT LibVNCClient_FOUND)
+    message(STATUS "LibVNCClient not installed - using built-in version")
+    set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
+    set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
+    add_subdirectory(libvncserver)
+endif()
 
 # Options for building vnsee
 option(CHECK_INCLUDES "Run include-what-you-use to check #includes" OFF)
@@ -61,10 +66,12 @@ else()
 endif()
 
 configure_file(src/config.hpp.in src/config.hpp)
+target_include_directories(vnsee PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 
-target_link_libraries(vnsee PRIVATE vncclient)
-target_include_directories(vnsee PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/libvncserver
-    ${CMAKE_CURRENT_BINARY_DIR}/src
-    libvncserver
-)
+if(NOT LibVNCClient_FOUND)
+    target_link_libraries(vnsee PRIVATE vncclient)
+    target_include_directories(vnsee PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libvncserver libvncserver)
+else()
+    target_link_libraries(vnsee PUBLIC ${LibVNCClient_LDFLAGS})
+    target_include_directories(vnsee PUBLIC ${LibVNCClient_INCLUDE_DIRS})
+endif()

@@ -38,6 +38,7 @@ The details are specific to the operating system you’re using:
 
 * [Linux with X11](docs/second-screen/linux-x11.md)
 * Linux with Wayland (Help wanted!)
+  * [Linux with sway](docs/second-screen/linux-sway.md)
 * macOS (Help wanted!)
 * Windows (Help wanted!)
 

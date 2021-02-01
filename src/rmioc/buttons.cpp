@@ -6,9 +6,19 @@
 namespace rmioc
 {
 
-buttons::buttons()
-: input("/dev/input/event2")
+buttons::buttons(const char* device_path)
+: input(device_path)
 {}
+
+buttons::buttons(buttons&& other) noexcept
+: input(std::move(other))
+{}
+
+auto buttons::operator=(buttons&& other) noexcept -> buttons&
+{
+    input::operator=(std::move(other));
+    return *this;
+}
 
 auto buttons::process_events() -> bool
 {

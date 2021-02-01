@@ -30,10 +30,14 @@ public:
      */
     void repaint();
 
-    /** get x resolution */
+    /**
+     * Get the number of usable pixel columns on the screen.
+     */
     int get_xres();
 
-    /** get x resolution */
+    /**
+     * Get the number of usable pixel rows on the screen.
+     */
     int get_yres();
 
     /**
@@ -58,7 +62,6 @@ public:
         fast = 1
     };
 
-    /** set the rendering mode */
     void set_repaint_mode(repaint_modes mode);
 
 private:

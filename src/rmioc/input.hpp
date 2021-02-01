@@ -28,6 +28,14 @@ public:
     /** Close the input device. */
     ~input();
 
+    // Disallow copying input device handles
+    input(const input& other) = delete;
+    input& operator=(const input& other) = delete;
+
+    // Transfer handle ownership
+    input(input&& other) noexcept;
+    input& operator=(input&& other) noexcept;
+
     /**
      * Setup a pollfd structure to wait for events on the device.
      *

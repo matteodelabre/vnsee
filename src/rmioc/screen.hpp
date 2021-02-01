@@ -9,13 +9,27 @@ namespace rmioc
 {
 
 /**
- * Information and resources for using the device screen.
+ * Information about the location of a RGB component in a packed pixel.
+ */
+struct component_format
+{
+    /** Offset of the first bit of the component. */
+    unsigned short offset;
+
+    /** Number of contiguous bits used to represent the component. */
+    unsigned short length;
+
+    /** Maximum value. */
+    std::uint32_t max() const;
+}; // struct component_format
+
+/**
+ * Abstract class for accessing the device screen.
  */
 class screen
 {
 public:
-    screen();
-    ~screen();
+    virtual ~screen() = default;
 
     /**
      * Update a partial region of the screen.
@@ -27,10 +41,10 @@ public:
      * @param mode Update mode to use (default GC16).
      * @param wait True to block until the update is complete.
      */
-    void update(
+    virtual void update(
         int x, int y, int w, int h,
         mxcfb::waveform_modes mode = mxcfb::waveform_modes::gc16,
-        bool wait = false);
+        bool wait = false) = 0;
 
     /**
      * Perform a full update of the screen.
@@ -38,9 +52,9 @@ public:
      * @param mode Update mode to use (default GC16).
      * @param wait True to block until the update is complete.
      */
-    void update(
+    virtual void update(
         mxcfb::waveform_modes mode = mxcfb::waveform_modes::gc16,
-        bool wait = true);
+        bool wait = true) = 0;
 
     /**
      * Access the screen data buffer.
@@ -55,56 +69,33 @@ public:
      *
      * Each pixel is represented by `get_bits_per_pixel()` bits split among
      * red, blue and green components as specified by the
-     * `get_{red|green|blue}_{offset|length}()` values.
+     * `get_{red|green|blue}_format()` values.
      */
-    std::uint8_t* get_data();
+    virtual std::uint8_t* get_data() = 0;
 
-    std::uint32_t get_xres() const;
-    std::uint32_t get_xres_memory() const;
+    /** Number of visible pixels in each row of the screen. */
+    virtual int get_xres() const = 0;
 
-    std::uint32_t get_yres() const;
-    std::uint32_t get_yres_memory() const;
+    /** Number of in-memory pixels in each row of the screen. */
+    virtual int get_xres_memory() const = 0;
 
-    std::uint32_t get_bits_per_pixel() const;
+    /** Number of visible rows in the screen. */
+    virtual int get_yres() const = 0;
 
-    std::uint32_t get_red_offset() const;
-    std::uint32_t get_red_length() const;
-    std::uint32_t get_red_max() const;
+    /** Number of in-memory rows in the screen. */
+    virtual int get_yres_memory() const = 0;
 
-    std::uint32_t get_green_offset() const;
-    std::uint32_t get_green_length() const;
-    std::uint32_t get_green_max() const;
+    /** Get the number of bits in a packed pixel. */
+    virtual unsigned short get_bits_per_pixel() const = 0;
 
-    std::uint32_t get_blue_offset() const;
-    std::uint32_t get_blue_length() const;
-    std::uint32_t get_blue_max() const;
+    /** Get packing information about the red pixel component. */
+    virtual component_format get_red_format() const = 0;
 
-private:
-    /** File descriptor for the device framebuffer. */
-    int framebuf_fd;
+    /** Get packing information about the green pixel component. */
+    virtual component_format get_green_format() const = 0;
 
-    /** Variable screen information from the device framebuffer. */
-    fb_var_screeninfo framebuf_varinfo{};
-
-    /** Fixed screen information from the device framebuffer. */
-    fb_fix_screeninfo framebuf_fixinfo{};
-
-    /** Pointer to the memory-mapped framebuffer. */
-    std::uint8_t* framebuf_ptr = nullptr;
-
-    /**
-     * Send an update object to the framebuffer driver.
-     *
-     * @param update Update object to send.
-     * @param wait True to wait until update is complete.
-     */
-    void send_update(mxcfb::update_data& update, bool wait);
-
-    /** Next value to be used as an update marker. */
-    std::uint32_t next_update_marker = 1;
-
-    /** Maximum value to use for update markers. */
-    static constexpr std::uint32_t max_update_marker = 255;
+    /** Get packing information about the blue pixel component. */
+    virtual component_format get_blue_format() const = 0;
 }; // class screen
 
 } // namespace rmioc

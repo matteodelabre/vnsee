@@ -6,15 +6,22 @@
 namespace rmioc
 {
 
-pen::pen()
-: input("/dev/input/event0")
+pen::pen(const char* device_path)
+: input(device_path)
 , state{}
 {}
 
-auto pen::pen_state::ToolSet::pen() const -> bool    { return this->set[0]; }
-void pen::pen_state::ToolSet::pen(bool state)        { this->set[0] = state; }
-auto pen::pen_state::ToolSet::rubber() const -> bool { return this->set[1]; }
-void pen::pen_state::ToolSet::rubber(bool state)     { this->set[1] = state; }
+pen::pen(pen&& other) noexcept
+: input(std::move(other))
+, state(other.state)
+{}
+
+auto pen::operator=(pen&& other) noexcept -> pen&
+{
+    this->state = other.state;
+    input::operator=(std::move(other));
+    return *this;
+}
 
 auto pen::process_events() -> bool
 {
@@ -30,11 +37,11 @@ auto pen::process_events() -> bool
                 switch (event.code)
                 {
                 case BTN_TOOL_PEN:
-                    this->state.tool_set.pen(event.value != 0);
+                    this->state.tool_set.set_pen(event.value != 0);
                     break;
 
                 case BTN_TOOL_RUBBER:
-                    this->state.tool_set.rubber(event.value != 0);
+                    this->state.tool_set.set_rubber(event.value != 0);
                     break;
                 }
                 break;

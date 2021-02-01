@@ -2,6 +2,7 @@
 #include <cerrno>
 #include <string>
 #include <system_error>
+#include <utility>
 #include <fcntl.h>
 #include <linux/input-event-codes.h>
 #include <poll.h>
@@ -26,7 +27,27 @@ input::input(const char* device_path)
 
 input::~input()
 {
-    close(this->input_fd);
+    if (this->input_fd != -1)
+    {
+        close(this->input_fd);
+    }
+}
+
+input::input(input&& other) noexcept
+: input_fd(std::exchange(other.input_fd, -1))
+, queued_events(std::move(other.queued_events))
+{}
+
+auto input::operator=(input&& other) noexcept -> input&
+{
+    if (this->input_fd != -1)
+    {
+        close(this->input_fd);
+    }
+
+    this->input_fd = std::exchange(other.input_fd, -1);
+    this->queued_events = std::move(other.queued_events);
+    return *this;
 }
 
 void input::setup_poll(pollfd& in_pollfd) const

@@ -6,9 +6,19 @@
 namespace rmioc
 {
 
-touch::touch()
-: input("/dev/input/event1")
+touch::touch(const char* device_path)
+: input(device_path)
 {}
+
+touch::touch(touch&& other) noexcept
+: input(std::move(other))
+{}
+
+auto touch::operator=(touch&& other) noexcept -> touch&
+{
+    input::operator=(std::move(other));
+    return *this;
+}
 
 auto touch::process_events() -> bool
 {

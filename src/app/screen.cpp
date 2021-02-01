@@ -150,12 +150,12 @@ auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
     that->vnc_client->frameBuffer = that->device.get_data();
     that->vnc_client->format.bitsPerPixel = that->device.get_bits_per_pixel();
     that->vnc_client->format.depth = that->device.get_bits_per_pixel();
-    that->vnc_client->format.redShift = that->device.get_red_offset();
-    that->vnc_client->format.redMax = that->device.get_red_max();
-    that->vnc_client->format.greenShift = that->device.get_green_offset();
-    that->vnc_client->format.greenMax = that->device.get_green_max();
-    that->vnc_client->format.blueShift = that->device.get_blue_offset();
-    that->vnc_client->format.blueMax = that->device.get_blue_max();
+    that->vnc_client->format.redShift = that->device.get_red_format().offset;
+    that->vnc_client->format.redMax = that->device.get_red_format().max();
+    that->vnc_client->format.greenShift = that->device.get_green_format().offset;
+    that->vnc_client->format.greenMax = that->device.get_green_format().max();
+    that->vnc_client->format.blueShift = that->device.get_blue_format().offset;
+    that->vnc_client->format.blueMax = that->device.get_blue_format().max();
 
     return TRUE;
 }

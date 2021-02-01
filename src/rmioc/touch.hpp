@@ -16,7 +16,20 @@ namespace rmioc
 class touch : public input
 {
 public:
-    touch();
+    /**
+     * Open the touchscreen device.
+     *
+     * @param path Path to the device.
+     */
+    touch(const char* device_path);
+
+    // Disallow copying touch device handles
+    touch(const touch& other) = delete;
+    touch& operator=(const touch& other) = delete;
+
+    // Transfer handle ownership
+    touch(touch&& other) noexcept;
+    touch& operator=(touch&& other) noexcept;
 
     /**
      * Check for new events.

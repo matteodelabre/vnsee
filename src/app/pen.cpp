@@ -25,7 +25,7 @@ auto pen::process_events() -> event_loop_status
     {
         auto device_state = this->device.get_state();
 
-        if (device_state.tool_set.pen())
+        if (device_state.tool_set.has_pen())
         {
             // Convert to screen coordinates
             int xres = static_cast<int>(this->screen.get_xres());
@@ -71,7 +71,7 @@ auto pen::process_events() -> event_loop_status
 auto pen::is_inhibiting() const -> bool
 {
     // Inhibit other forms of inputs when the pen is active
-    return this->device.get_state().tool_set.pen();
+    return this->device.get_state().tool_set.has_pen();
 }
 
 } // namespace app

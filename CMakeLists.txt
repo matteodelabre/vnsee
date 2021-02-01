@@ -5,10 +5,17 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LibVNCClient libvncclient)
 
 if(NOT LibVNCClient_FOUND)
-    message(STATUS "LibVNCClient not installed - using built-in version")
+    message(STATUS "LibVNCClient not found - using built-in version")
     set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
     set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
     add_subdirectory(libvncserver)
+endif()
+
+find_package(Boost)
+
+if(NOT Boost_FOUND)
+    message(STATUS "Boost.Preprocessor not found - using built-in version")
+    add_subdirectory(boost-preprocessor)
 endif()
 
 # Options for building vnsee
@@ -47,12 +54,14 @@ add_executable(vnsee
     src/app/pen.cpp
     src/app/screen.cpp
     src/app/touch.cpp
+    src/main.cpp
+    src/network.cpp
     src/rmioc/buttons.cpp
+    src/rmioc/device.cpp
     src/rmioc/input.cpp
     src/rmioc/pen.cpp
-    src/rmioc/screen.cpp
+    src/rmioc/screen_mxcfb.cpp
     src/rmioc/touch.cpp
-    src/main.cpp
 )
 
 if(CMAKE_VERSION VERSION_LESS "3.8")
@@ -74,4 +83,10 @@ if(NOT LibVNCClient_FOUND)
 else()
     target_link_libraries(vnsee PUBLIC ${LibVNCClient_LDFLAGS})
     target_include_directories(vnsee PUBLIC ${LibVNCClient_INCLUDE_DIRS})
+endif()
+
+if(NOT Boost_FOUND)
+    target_link_libraries(vnsee PUBLIC Boost::preprocessor)
+else()
+    target_include_directories(vnsee PUBLIC ${Boost_INCLUDE_DIRS})
 endif()

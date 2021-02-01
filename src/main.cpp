@@ -1,10 +1,7 @@
 #include "options.hpp"
 #include "app/client.hpp"
 #include "config.hpp"
-#include "rmioc/buttons.hpp"
-#include "rmioc/pen.hpp"
-#include "rmioc/screen.hpp"
-#include "rmioc/touch.hpp"
+#include "rmioc/device.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -55,9 +52,7 @@ auto main(int argc, const char* argv[]) -> int
     // Read options from the command line
     std::string server_ip;
     int server_port = default_server_port;
-    bool enable_buttons = true;
-    bool enable_pen = true;
-    bool enable_touch = true;
+    rmioc::device_request request(rmioc::device_request::screen);
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     const char* const name = argv[0];
@@ -142,20 +137,29 @@ auto main(int argc, const char* argv[]) -> int
 
     if (opts.count("no-buttons") >= 1)
     {
-        enable_buttons = false;
         opts.erase("no-buttons");
+    }
+    else
+    {
+        request.set_buttons(true);
     }
 
     if (opts.count("no-pen") >= 1)
     {
-        enable_pen = false;
         opts.erase("no-pen");
+    }
+    else
+    {
+        request.set_pen(true);
     }
 
     if (opts.count("no-touch") >= 1)
     {
-        enable_touch = false;
         opts.erase("no-touch");
+    }
+    else
+    {
+        request.set_touch(true);
     }
 
     if (!opts.empty())
@@ -183,33 +187,12 @@ auto main(int argc, const char* argv[]) -> int
     // Start the client
     try
     {
-        rmioc::screen screen;
-        std::unique_ptr<rmioc::buttons> buttons;
-        std::unique_ptr<rmioc::pen> pen;
-        std::unique_ptr<rmioc::touch> touch;
-
-        if (enable_buttons)
-        {
-            buttons = std::make_unique<rmioc::buttons>();
-        }
-
-        if (enable_pen)
-        {
-            pen = std::make_unique<rmioc::pen>();
-        }
-
-        if (enable_touch)
-        {
-            touch = std::make_unique<rmioc::touch>();
-        }
+        rmioc::device device = rmioc::device::detect(request);
 
         std::cerr << "Connecting to "
             << server_ip << ":" << server_port << "...\n";
 
-        app::client client{
-            server_ip.data(), server_port,
-            screen, buttons.get(), pen.get(), touch.get()
-        };
+        app::client client{server_ip.data(), server_port, device};
 
         std::cerr << "\e[1A\e[KConnected to "
             << server_ip << ':' << server_port << "!\n";

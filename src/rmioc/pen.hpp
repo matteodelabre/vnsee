@@ -1,11 +1,18 @@
 #ifndef RMIOC_PEN_HPP
 #define RMIOC_PEN_HPP
 
+#include "flags.hpp"
 #include "input.hpp"
 #include <bitset>
 
 namespace rmioc
 {
+
+/** Recognized pen tools. */
+RMIOC_FLAGS_DEFINE(
+    pen_tools,
+    pen, rubber
+);
 
 /**
  * Access to the state of the device’s pen digitizer.
@@ -13,7 +20,20 @@ namespace rmioc
 class pen : public input
 {
 public:
-    pen();
+    /**
+     * Open the pen digitizer device.
+     *
+     * @param path Path to the device.
+     */
+    pen(const char* device_path);
+
+    // Disallow copying pen device handles
+    pen(const pen& other) = delete;
+    pen& operator=(const pen& other) = delete;
+
+    // Transfer handle ownership
+    pen(pen&& other) noexcept;
+    pen& operator=(pen&& other) noexcept;
 
     /**
      * Check for new events.
@@ -38,22 +58,7 @@ public:
     struct pen_state
     {
         /** Set of currently active tools. */
-        class ToolSet
-        {
-        public:
-            /** True if the pen is being used. */
-            bool pen() const;
-            void pen(bool state);
-
-            /** True if the eraser is being used. */
-            bool rubber() const;
-            void rubber(bool state);
-
-        private:
-            std::bitset<2> set;
-        };
-
-        ToolSet tool_set;
+        pen_tools tool_set;
 
         /** Horizontal position of the pen. */
         int x;

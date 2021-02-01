@@ -1,8 +1,9 @@
-#include "screen.hpp"
+#include "screen_mxcfb.hpp"
 #include "mxcfb.hpp"
 #include <cerrno>
 #include <cstdint>
 #include <system_error>
+#include <utility>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
@@ -11,16 +12,21 @@
 namespace rmioc
 {
 
-screen::screen()
+auto component_format::max() const -> std::uint32_t
+{
+    return (1U << this->length) - 1;
+}
+
+screen_mxcfb::screen_mxcfb(const char* device_path)
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
-: framebuf_fd(open("/dev/fb0", O_RDWR))
+: framebuf_fd(open(device_path, O_RDWR))
 {
     if (this->framebuf_fd == -1)
     {
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::screen) Open device framebuffer"
+            "(rmioc::screen_mxcfb) Open device framebuffer"
         );
     }
 
@@ -34,7 +40,7 @@ screen::screen()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::screen) Fetch framebuffer vscreeninfo"
+            "(rmioc::screen_mxcfb) Fetch framebuffer vscreeninfo"
         );
     }
 
@@ -48,7 +54,7 @@ screen::screen()
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::screen) Fetch framebuffer fscreeninfo"
+            "(rmioc::screen_mxcfb) Fetch framebuffer fscreeninfo"
         );
     }
 
@@ -65,16 +71,48 @@ screen::screen()
     ));
 }
 
-screen::~screen()
+screen_mxcfb::~screen_mxcfb()
 {
-    munmap(this->framebuf_ptr, this->framebuf_fixinfo.smem_len);
-    this->framebuf_ptr = nullptr;
+    if (this->framebuf_ptr != nullptr)
+    {
+        munmap(this->framebuf_ptr, this->framebuf_fixinfo.smem_len);
+    }
 
-    close(this->framebuf_fd);
-    this->framebuf_fd = -1;
+    if (this->framebuf_fd != -1)
+    {
+        close(this->framebuf_fd);
+    }
 }
 
-void screen::update(
+screen_mxcfb::screen_mxcfb(screen_mxcfb&& other) noexcept
+: framebuf_fd(std::exchange(other.framebuf_fd, -1))
+, framebuf_varinfo(other.framebuf_varinfo)
+, framebuf_fixinfo(other.framebuf_fixinfo)
+, framebuf_ptr(std::exchange(other.framebuf_ptr, nullptr))
+, next_update_marker(other.next_update_marker)
+{}
+
+auto screen_mxcfb::operator=(screen_mxcfb&& other) noexcept -> screen_mxcfb&
+{
+    if (this->framebuf_ptr != nullptr)
+    {
+        munmap(this->framebuf_ptr, this->framebuf_fixinfo.smem_len);
+    }
+
+    if (this->framebuf_fd != -1)
+    {
+        close(this->framebuf_fd);
+    }
+
+    this->framebuf_fd = std::exchange(other.framebuf_fd, -1);
+    this->framebuf_varinfo = other.framebuf_varinfo;
+    this->framebuf_fixinfo = other.framebuf_fixinfo;
+    this->framebuf_ptr = std::exchange(other.framebuf_ptr, nullptr);
+    this->next_update_marker = other.next_update_marker;
+    return *this;
+}
+
+void screen_mxcfb::update(
     int x, int y, int w, int h, mxcfb::waveform_modes mode, bool wait)
 {
     // Clip update region to screen bounds
@@ -122,7 +160,7 @@ void screen::update(
     this->send_update(update, wait);
 }
 
-void screen::update(mxcfb::waveform_modes mode, bool wait)
+void screen_mxcfb::update(mxcfb::waveform_modes mode, bool wait)
 {
     mxcfb::update_data update{};
     update.update_region.left = 0;
@@ -137,7 +175,7 @@ void screen::update(mxcfb::waveform_modes mode, bool wait)
     this->send_update(update, wait);
 }
 
-void screen::send_update(mxcfb::update_data& update, bool wait)
+void screen_mxcfb::send_update(mxcfb::update_data& update, bool wait)
 {
     update.update_marker = this->next_update_marker;
 
@@ -147,7 +185,7 @@ void screen::send_update(mxcfb::update_data& update, bool wait)
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::screen::send_update) Screen update"
+            "(rmioc::screen_mxcfb::send_update) Screen update"
         );
     }
 
@@ -166,11 +204,11 @@ void screen::send_update(mxcfb::update_data& update, bool wait)
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::screen::send_update) Wait for update completion"
+            "(rmioc::screen_mxcfb::send_update) Wait for update completion"
         );
     }
 
-    if (this->next_update_marker == rmioc::screen::max_update_marker)
+    if (this->next_update_marker == rmioc::screen_mxcfb::max_update_marker)
     {
         this->next_update_marker = 1;
     }
@@ -180,79 +218,58 @@ void screen::send_update(mxcfb::update_data& update, bool wait)
     }
 }
 
-auto screen::get_data() -> std::uint8_t*
+auto screen_mxcfb::get_data() -> std::uint8_t*
 {
     return this->framebuf_ptr;
 }
 
-auto screen::get_xres() const -> std::uint32_t
+auto screen_mxcfb::get_xres() const -> int
 {
     return this->framebuf_varinfo.xres;
 }
 
-auto screen::get_xres_memory() const -> std::uint32_t
+auto screen_mxcfb::get_xres_memory() const -> int
 {
     return this->framebuf_varinfo.xres_virtual;
 }
 
-auto screen::get_yres() const -> std::uint32_t
+auto screen_mxcfb::get_yres() const -> int
 {
     return this->framebuf_varinfo.yres;
 }
 
-auto screen::get_yres_memory() const -> std::uint32_t
+auto screen_mxcfb::get_yres_memory() const -> int
 {
     return this->framebuf_varinfo.yres_virtual;
 }
 
-auto screen::get_bits_per_pixel() const -> std::uint32_t
+auto screen_mxcfb::get_bits_per_pixel() const -> unsigned short
 {
     return this->framebuf_varinfo.bits_per_pixel;
 }
 
-auto screen::get_red_offset() const -> std::uint32_t
+auto screen_mxcfb::get_red_format() const -> component_format
 {
-    return this->framebuf_varinfo.red.offset;
+    return component_format{
+        static_cast<unsigned short>(this->framebuf_varinfo.red.offset),
+        static_cast<unsigned short>(this->framebuf_varinfo.red.length),
+    };
 }
 
-auto screen::get_red_length() const -> std::uint32_t
+auto screen_mxcfb::get_green_format() const -> component_format
 {
-    return this->framebuf_varinfo.red.length;
+    return component_format{
+        static_cast<unsigned short>(this->framebuf_varinfo.green.offset),
+        static_cast<unsigned short>(this->framebuf_varinfo.green.length),
+    };
 }
 
-auto screen::get_red_max() const -> std::uint32_t
+auto screen_mxcfb::get_blue_format() const -> component_format
 {
-    return (1U << this->framebuf_varinfo.red.length) - 1;
-}
-
-auto screen::get_green_offset() const -> std::uint32_t
-{
-    return this->framebuf_varinfo.green.offset;
-}
-
-auto screen::get_green_length() const -> std::uint32_t
-{
-    return this->framebuf_varinfo.green.length;
-}
-
-auto screen::get_green_max() const -> std::uint32_t
-{
-    return (1U << this->framebuf_varinfo.green.length) - 1;
-}
-
-auto screen::get_blue_offset() const -> std::uint32_t
-{
-    return this->framebuf_varinfo.blue.offset;
-}
-
-auto screen::get_blue_length() const -> std::uint32_t
-{
-    return this->framebuf_varinfo.blue.length;
-}
-
-auto screen::get_blue_max() const -> std::uint32_t
-{
-    return (1U << this->framebuf_varinfo.blue.length) - 1;
+    return component_format{
+        static_cast<unsigned short>(this->framebuf_varinfo.blue.offset),
+        static_cast<unsigned short>(this->framebuf_varinfo.blue.length),
+    };
 }
 
 } // namespace rmioc

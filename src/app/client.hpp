@@ -2,6 +2,7 @@
 #define APP_CLIENT_HPP
 
 #include "event_loop.hpp"
+#include "../rmioc/device.hpp"
 #include "buttons.hpp"
 // IWYU pragma: no_forward_declare app::buttons
 #include "pen.hpp"
@@ -18,10 +19,7 @@
 
 namespace rmioc
 {
-    class screen;
-    class buttons;
-    class pen;
-    class touch;
+    class device;
 }
 
 namespace app
@@ -38,22 +36,11 @@ public:
      *
      * @param ip IP address of the VNC server to connect to.
      * @param port Port of the VNC server to connect to.
-     * @param screen_device Screen to update with data from the VNC server.
-     * @param buttons_device Buttons device to read input events from, or
-     * nullptr to ignore input events from the buttons.
-     * @param pen_device Pen digitizer to read input events from, or
-     * nullptr to ignore input events from the pen.
-     * @param touch_device Touchscreen device to read input events from, or
-     * nullptr to ignore input events from the touchscreen.
+     * @param device Handle to opened devices.
      */
-    client(
-        const char* ip, int port,
-        rmioc::screen& screen_device,
-        rmioc::buttons* buttons_device,
-        rmioc::pen* pen_device,
-        rmioc::touch* touch_device
-    );
+    client(const char* ip, int port, rmioc::device& device);
 
+    /** Disconnect the VNC client. */
     ~client();
 
     /**
@@ -84,7 +71,7 @@ private:
     rfbClient* vnc_client;
 
     /** Event handler for the screen device. */
-    screen screen_handler;
+    std::optional<screen> screen_handler;
 
     /** Event handler for the buttons device. */
     std::optional<buttons> buttons_handler;

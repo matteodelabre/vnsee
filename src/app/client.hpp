@@ -56,8 +56,13 @@ public:
 
     ~client();
 
-    /** Start the client event loop.  */
-    void event_loop();
+    /**
+     * Start the client event loop.
+     *
+     * @return True if the loop was exited because of a user action, false if
+     * it was because the server closed the connection.
+     */
+    bool event_loop();
 
 private:
     /** List of file descriptors to watch in the event loop. */

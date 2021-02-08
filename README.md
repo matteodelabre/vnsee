@@ -1,5 +1,9 @@
 # VNSee
 
+[![Install from Toltec](https://img.shields.io/badge/Toltec-vnsee-blue)](https://toltec-dev.org)
+[![reMarkable 1 is supported](https://img.shields.io/badge/rM1-supported-green)](https://remarkable.com/store/remarkable)
+[![reMarkable 2 is supported](https://img.shields.io/badge/rM2-supported-green)](https://remarkable.com/store/remarkable-2)
+
 [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client for the [reMarkable tablet](https://remarkable.com) allowing you to use the device as a second screen.\
 (Previously called _rmvncclient_.)
 

@@ -1,6 +1,6 @@
 [submodule "libvncserver"]
-	path = libvncserver
+	path = vendor/libvncserver
 	url = https://github.com/LibVNC/libvncserver
 [submodule "boost-preprocessor"]
-	path = boost-preprocessor
+	path = vendor/boost-preprocessor
 	url = https://github.com/boostorg/preprocessor

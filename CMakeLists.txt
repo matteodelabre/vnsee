@@ -8,14 +8,14 @@ if(NOT LibVNCClient_FOUND)
     message(STATUS "LibVNCClient not found - using built-in version")
     set(BUILD_SHARED_LIBS OFF CACHE STRING "" FORCE)
     set(WITH_GNUTLS OFF CACHE STRING "" FORCE)
-    add_subdirectory(libvncserver)
+    add_subdirectory(vendor/libvncserver)
 endif()
 
 find_package(Boost)
 
 if(NOT Boost_FOUND)
     message(STATUS "Boost.Preprocessor not found - using built-in version")
-    add_subdirectory(boost-preprocessor)
+    add_subdirectory(vendor/boost-preprocessor)
 endif()
 
 # Options for building vnsee
@@ -79,7 +79,7 @@ target_include_directories(vnsee PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 if(NOT LibVNCClient_FOUND)
     target_link_libraries(vnsee PRIVATE vncclient)
-    target_include_directories(vnsee PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libvncserver libvncserver)
+    target_include_directories(vnsee PRIVATE ${LibVNCServer_BINARY_DIR} ${LibVNCServer_SOURCE_DIR})
 else()
     target_link_libraries(vnsee PUBLIC ${LibVNCClient_LDFLAGS})
     target_include_directories(vnsee PUBLIC ${LibVNCClient_INCLUDE_DIRS})

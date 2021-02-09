@@ -59,8 +59,11 @@ add_executable(vnsee
     src/rmioc/buttons.cpp
     src/rmioc/device.cpp
     src/rmioc/input.cpp
+    src/rmioc/mxcfb.cpp
     src/rmioc/pen.cpp
+    src/rmioc/screen.cpp
     src/rmioc/screen_mxcfb.cpp
+    src/rmioc/screen_rm2fb.cpp
     src/rmioc/touch.cpp
 )
 
@@ -75,6 +78,7 @@ else()
 endif()
 
 configure_file(src/config.hpp.in src/config.hpp)
+target_link_libraries(vnsee PUBLIC rt)
 target_include_directories(vnsee PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 if(NOT LibVNCClient_FOUND)

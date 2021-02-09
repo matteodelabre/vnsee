@@ -1,5 +1,6 @@
 #include "device.hpp"
 #include "screen_mxcfb.hpp"
+#include "screen_rm2fb.hpp"
 #include <fstream>
 #include <string>
 
@@ -75,10 +76,14 @@ auto device::detect(device_request request) -> device
             pen_device = std::make_unique<pen>("/dev/input/event1");
         }
 
-        /* if (request.has_screen()) */
-        /* { */
-            /* screen_device = std::make_unique<screen_rm2fb>("/swtfb.01"); */
-        /* } */
+        if (request.has_screen())
+        {
+            constexpr auto rm2fb_msgqueue_key = 0x2257c;
+            screen_device = std::make_unique<screen_rm2fb>(
+                /* framebuf_path = */ "/swtfb.01",
+                /* msgqueue_key = */ rm2fb_msgqueue_key
+            );
+        }
     }
     else
     {

@@ -12,11 +12,6 @@
 namespace rmioc
 {
 
-auto component_format::max() const -> std::uint32_t
-{
-    return (1U << this->length) - 1;
-}
-
 screen_mxcfb::screen_mxcfb(const char* device_path)
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library
 : framebuf_fd(open(device_path, O_RDWR))
@@ -58,9 +53,7 @@ screen_mxcfb::screen_mxcfb(const char* device_path)
         );
     }
 
-    // ↓ Use of C library
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    this->framebuf_ptr = reinterpret_cast<uint8_t*>(mmap(
+    void* mmap_res = mmap(
         /* addr = */ nullptr,
         /* len = */ this->framebuf_fixinfo.smem_len,
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
@@ -68,7 +61,20 @@ screen_mxcfb::screen_mxcfb(const char* device_path)
         /* flags = */ MAP_SHARED,
         /* fd = */ this->framebuf_fd,
         /* __offset = */ 0
-    ));
+    );
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast): Use of C library
+    if (mmap_res == MAP_FAILED)
+    {
+        throw std::system_error(
+            errno,
+            std::generic_category(),
+            "(rmioc::screen_rm2fb) Map framebuffer to memory"
+        );
+    }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast): Use of C library
+    this->framebuf_ptr = reinterpret_cast<uint8_t*>(mmap_res);
 }
 
 screen_mxcfb::~screen_mxcfb()
@@ -113,45 +119,13 @@ auto screen_mxcfb::operator=(screen_mxcfb&& other) noexcept -> screen_mxcfb&
 }
 
 void screen_mxcfb::update(
-    int x, int y, int w, int h, mxcfb::waveform_modes mode, bool wait)
+    int x, int y, int w, int h, waveform_modes mode, bool wait)
 {
-    // Clip update region to screen bounds
-    if (x < 0)
-    {
-        w += x;
-        x = 0;
-    }
-
-    if (y < 0)
-    {
-        h += y;
-        y = 0;
-    }
-
-    int xres = static_cast<int>(this->get_xres());
-    int yres = static_cast<int>(this->get_yres());
-
-    if (x + w > xres)
-    {
-        w = xres - x;
-    }
-
-    if (y + h > yres)
-    {
-        h = yres - y;
-    }
-
-    // Ignore out of bounds or null updates
-    if (x > xres || y > yres || w == 0 || h == 0)
-    {
-        return;
-    }
-
     mxcfb::update_data update{};
-    update.update_region.left = x;
-    update.update_region.top = y;
-    update.update_region.width = w;
-    update.update_region.height = h;
+    update.update_region = mxcfb::rect::clip(
+        x, y, w, h,
+        this->get_xres(), this->get_yres()
+    );
     update.waveform_mode = mode;
     update.temp = mxcfb::temps::normal;
     update.update_mode = mxcfb::update_modes::partial;
@@ -160,13 +134,13 @@ void screen_mxcfb::update(
     this->send_update(update, wait);
 }
 
-void screen_mxcfb::update(mxcfb::waveform_modes mode, bool wait)
+void screen_mxcfb::update(waveform_modes mode, bool wait)
 {
     mxcfb::update_data update{};
-    update.update_region.left = 0;
-    update.update_region.top = 0;
-    update.update_region.width = this->get_xres();
-    update.update_region.height = this->get_yres();
+    update.update_region = mxcfb::rect::clip(
+        0, 0, this->get_xres(), this->get_yres(),
+        this->get_xres(), this->get_yres()
+    );
     update.waveform_mode = mode;
     update.temp = mxcfb::temps::normal;
     update.update_mode = mxcfb::update_modes::full;
@@ -177,6 +151,11 @@ void screen_mxcfb::update(mxcfb::waveform_modes mode, bool wait)
 
 void screen_mxcfb::send_update(mxcfb::update_data& update, bool wait)
 {
+    if (!update.update_region)
+    {
+        return;
+    }
+
     update.update_marker = this->next_update_marker;
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): Use of C library

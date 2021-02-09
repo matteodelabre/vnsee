@@ -1,6 +1,7 @@
 #ifndef RMIOC_MXCFB_HPP
 #define RMIOC_MXCFB_HPP
 
+#include "screen.hpp"
 #include <cstdint>
 #include <linux/ioctl.h>
 
@@ -8,13 +9,13 @@ namespace mxcfb
 {
 
 /**
- * Adapted from the reMarkable kernel tree.
- * See:
+ * Interface to the MXC EPDC framebuffer available on reMarkable 1.
  *
+ * See also:
+ *
+ * - Section 6.2.6.1 of https://www.nxp.com/docs/en/reference-manual/i.MX_Reference_Manual_Linux.pdf
  * - https://github.com/reMarkable/linux/blob/zero-gravitas/include/uapi/linux/mxcfb.h
  * - https://github.com/reMarkable/linux/blob/zero-gravitas/drivers/video/fbdev/mxc/mxc_epdc_v2_fb.c
- *
- * Copyright (C) 2013-2016 Freescale Semiconductor, Inc. All Rights Reserved
  */
 
 struct rect
@@ -23,6 +24,30 @@ struct rect
     std::uint32_t left;
     std::uint32_t width;
     std::uint32_t height;
+
+    /**
+     * Clip a signed rectangle to fit in the screen bounds.
+     *
+     * @param left First horizontal pixel of the rectangle.
+     * @param top First vertical pixel of the rectangle.
+     * @param width Number of horizontal pixels in the rectangle.
+     * @param height Number of vertical pixels in the rectangle.
+     * @param xres Horizontal screen resolution.
+     * @param yres Vertical screen resolution.
+     * @return Clipped rectangle.
+     */
+    static rect clip(
+        int left, int top,
+        int width, int height,
+        int xres, int yres
+    );
+
+    /**
+     * Check if a screen rectangle is not empty.
+     *
+     * @return True if the rectangle is not empty.
+     */
+    operator bool() const;
 };
 
 struct alt_buffer_data
@@ -31,74 +56,6 @@ struct alt_buffer_data
     std::uint32_t width; /* width of entire buffer */
     std::uint32_t height; /* height of entire buffer */
     rect alt_update_region; /* region within buffer to update */
-};
-
-/**
- * Waveform modes.
- *
- * E-ink display update modes, which offer various tradeoffs between
- * fidelity and speed.
- *
- * See:
- *
- * - http://www.waveshare.net/w/upload/c/c4/E-paper-mode-declaration.pdf
- * - https://github.com/koreader/koreader-base/blob/master/ffi-cdecl/include/mxcfb-remarkable.h
- */
-enum class waveform_modes : std::uint32_t
-{
-    /**
-     * Initialization mode.
-     *
-     * Completely erase the display to white.
-     * Must be used with MXCFB_UPDATE_MODE_FULL.
-     *
-     * Update time: 2 s.
-     * Ghosting: None.
-     */
-    init = 0,
-
-    /**
-     * Direct update mode.
-     *
-     * For fast response to user input.
-     * Can only set cells to full black or full white (grays will be ignored).
-     *
-     * Update time: 260 ms.
-     * Ghosting: Low.
-     */
-    du = 1,
-
-    /**
-     * Grayscale clearing mode.
-     *
-     * For high quality images.
-     * Will flash the screen when used with MXCFB_UPDATE_MODE_FULL.
-     *
-     * Update time: 450 ms.
-     * Ghosting: Very low.
-     */
-    gc16 = 2,
-
-    /**
-     * Low-fidelity grayscale clearing mode.
-     *
-     * For text on white background.
-     *
-     * Update time: 450 ms.
-     * Ghosting: Medium.
-     */
-    gl16 = 3,
-
-    /**
-     * A2 mode.
-     *
-     * For page turning or simple black and white animation.
-     * Can only set cells from full black/white to full black/white.
-     *
-     * Update time: 120 ms.
-     * Ghosting: High.
-     */
-    a2 = 4,
 };
 
 /**
@@ -139,7 +96,7 @@ struct update_data
     rect update_region;
 
     /** E-ink display update mode. */
-    waveform_modes waveform_mode;
+    rmioc::waveform_modes waveform_mode;
 
     /** Choose between full or partial update. */
     update_modes update_mode;

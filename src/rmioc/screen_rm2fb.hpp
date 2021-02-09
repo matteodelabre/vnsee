@@ -1,5 +1,5 @@
-#ifndef RMIOC_SCREEN_MXCFB_HPP
-#define RMIOC_SCREEN_MXCFB_HPP
+#ifndef RMIOC_SCREEN_RM2FB_HPP
+#define RMIOC_SCREEN_RM2FB_HPP
 
 #include "screen.hpp"
 #include "mxcfb.hpp"
@@ -10,31 +10,35 @@ namespace rmioc
 {
 
 /**
- * Access the mxcfb screen (reMarkable 1 only).
+ * Connect to a rm2fb server to access the reMarkable 2 screen.
  *
- * On reMarkable 1, screen access is exposed through the mxcfb framebuffer
- * driver, usually available at `/dev/fb0`.
+ * On reMarkable 2, screen cannot be accessed through a kernel driver but
+ * must be controlled by software. This class connects to a running rm2fb
+ * server that handles the driver logic.
+ *
+ * See <https://github.com/ddvk/remarkable2-framebuffer>.
  */
-class screen_mxcfb : public screen
+class screen_rm2fb : public screen
 {
 public:
     /**
-     * Open the screen mxcfb device.
+     * Connect to the rm2fb server.
      *
-     * @param path Path to the device.
+     * @param framebuf_path Path to the shared memory framebuffer.
+     * @param msgqueue_key Unique key for the update message queue.
      */
-    screen_mxcfb(const char* device_path);
+    screen_rm2fb(const char* shm_path, int msgqueue_key);
 
     /** Close the screen device. */
-    ~screen_mxcfb();
+    ~screen_rm2fb();
 
     // Disallow copying screen device handles
-    screen_mxcfb(const screen_mxcfb& other) = delete;
-    screen_mxcfb& operator=(const screen_mxcfb& other) = delete;
+    screen_rm2fb(const screen_rm2fb& other) = delete;
+    screen_rm2fb& operator=(const screen_rm2fb& other) = delete;
 
     // Transfer handle ownership
-    screen_mxcfb(screen_mxcfb&& other) noexcept;
-    screen_mxcfb& operator=(screen_mxcfb&& other) noexcept;
+    screen_rm2fb(screen_rm2fb&& other) noexcept;
+    screen_rm2fb& operator=(screen_rm2fb&& other) noexcept;
 
     void update(
         int x, int y, int w, int h,
@@ -58,14 +62,11 @@ public:
     component_format get_blue_format() const override;
 
 private:
-    /** File descriptor for the device framebuffer. */
+    /** File descriptor for the shared memory framebuffer. */
     int framebuf_fd = -1;
 
-    /** Variable screen information from the device framebuffer. */
-    fb_var_screeninfo framebuf_varinfo{};
-
-    /** Fixed screen information from the device framebuffer. */
-    fb_fix_screeninfo framebuf_fixinfo{};
+    /** Identifier of the framebuffer message queue. */
+    int msgqueue_id = -1;
 
     /** Pointer to the memory-mapped framebuffer. */
     std::uint8_t* framebuf_ptr = nullptr;
@@ -76,15 +77,9 @@ private:
      * @param update Update object to send.
      * @param wait True to wait until update is complete.
      */
-    void send_update(mxcfb::update_data& update, bool wait);
-
-    /** Next value to be used as an update marker. */
-    std::uint32_t next_update_marker = 1;
-
-    /** Maximum value to use for update markers. */
-    static constexpr std::uint32_t max_update_marker = 255;
-}; // class screen_mxcfb
+    void send_update(mxcfb::update_data& update, bool wait) const;
+}; // class screen_rm2fb
 
 } // namespace rmioc
 
-#endif // RMIOC_SCREEN_MXCFB_HPP
+#endif // RMIOC_SCREEN_RM2FB_HPP

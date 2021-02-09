@@ -1,7 +1,6 @@
 #ifndef RMIOC_SCREEN_HPP
 #define RMIOC_SCREEN_HPP
 
-#include "mxcfb.hpp"
 #include <cstdint>
 #include <linux/fb.h>
 
@@ -24,6 +23,74 @@ struct component_format
 }; // struct component_format
 
 /**
+ * E-ink waveform modes.
+ *
+ * E-ink display update modes, which offer various trade-offs between
+ * fidelity, ghosting and speed.
+ *
+ * See:
+ *
+ * - http://www.waveshare.net/w/upload/c/c4/E-paper-mode-declaration.pdf
+ * - https://github.com/koreader/koreader-base/blob/master/ffi-cdecl/include/mxcfb-remarkable.h
+ */
+enum class waveform_modes : std::uint32_t
+{
+    /**
+     * Initialization mode.
+     *
+     * Completely erase the display to white.
+     * Must be used with MXCFB_UPDATE_MODE_FULL.
+     *
+     * Update time: 2 s.
+     * Ghosting: None.
+     */
+    init = 0,
+
+    /**
+     * Direct update mode.
+     *
+     * For fast response to user input.
+     * Can only set cells to full black or full white (grays will be ignored).
+     *
+     * Update time: 260 ms.
+     * Ghosting: Low.
+     */
+    du = 1,
+
+    /**
+     * Grayscale clearing mode.
+     *
+     * For high quality images.
+     * Will flash the screen when used with MXCFB_UPDATE_MODE_FULL.
+     *
+     * Update time: 450 ms.
+     * Ghosting: Very low.
+     */
+    gc16 = 2,
+
+    /**
+     * Low-fidelity grayscale clearing mode.
+     *
+     * For text on white background.
+     *
+     * Update time: 450 ms.
+     * Ghosting: Medium.
+     */
+    gl16 = 3,
+
+    /**
+     * A2 mode.
+     *
+     * For page turning or simple black and white animation.
+     * Can only set cells from full black/white to full black/white.
+     *
+     * Update time: 120 ms.
+     * Ghosting: High.
+     */
+    a2 = 4,
+};
+
+/**
  * Abstract class for accessing the device screen.
  */
 class screen
@@ -43,7 +110,7 @@ public:
      */
     virtual void update(
         int x, int y, int w, int h,
-        mxcfb::waveform_modes mode = mxcfb::waveform_modes::gc16,
+        waveform_modes mode = waveform_modes::gc16,
         bool wait = false) = 0;
 
     /**
@@ -53,7 +120,7 @@ public:
      * @param wait True to block until the update is complete.
      */
     virtual void update(
-        mxcfb::waveform_modes mode = mxcfb::waveform_modes::gc16,
+        waveform_modes mode = waveform_modes::gc16,
         bool wait = true) = 0;
 
     /**

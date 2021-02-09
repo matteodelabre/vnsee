@@ -2,7 +2,6 @@
 #include "event_loop.hpp"
 #include "../log.hpp"
 #include "../rmioc/screen.hpp"
-#include "../rmioc/mxcfb.hpp"
 #include <algorithm>
 #include <chrono>
 #include <ostream>
@@ -60,8 +59,8 @@ void screen::repaint()
         this->update_info.x, this->update_info.y,
         this->update_info.w, this->update_info.h,
         this->repaint_mode == repaint_modes::standard
-            ? mxcfb::waveform_modes::gc16
-            : mxcfb::waveform_modes::du
+            ? rmioc::waveform_modes::gc16
+            : rmioc::waveform_modes::du
     );
 }
 

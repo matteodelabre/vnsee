@@ -55,6 +55,14 @@ protected:
      */
     std::vector<input_event> fetch_events();
 
+    /**
+     * Get the minimum and maximum value of an absolute axis of the device.
+     *
+     * @param type Type of axis to query (see <linux/input.h> for a list)
+     * @return Axis limits.
+     */
+    std::pair<int, int> get_axis_limits(unsigned int type) const;
+
 private:
     /** File descriptor for the input device. */
     int input_fd;

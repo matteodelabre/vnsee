@@ -84,4 +84,21 @@ auto input::fetch_events() -> std::vector<input_event>
     return result;
 }
 
+auto input::get_axis_limits(unsigned int type) const -> std::pair<int, int>
+{
+    input_absinfo result{};
+
+    // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
+    if (ioctl(this->input_fd, EVIOCGABS(type), &result) == -1)
+    {
+        throw std::system_error(
+            errno,
+            std::generic_category(),
+            "(rmioc::input) Get axis state"
+        );
+    }
+
+    return std::make_pair(result.minimum, result.maximum);
+}
+
 } // namespace rmioc

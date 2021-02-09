@@ -3,7 +3,7 @@
 
 #include "screen.hpp"
 #include <cstdint>
-#include <linux/ioctl.h>
+#include <sys/ioctl.h>
 
 namespace mxcfb
 {

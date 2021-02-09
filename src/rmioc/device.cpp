@@ -44,7 +44,11 @@ auto device::detect(device_request request) -> device
 
         if (request.has_touch())
         {
-            touch_device = std::make_unique<touch>("/dev/input/event1");
+            touch_device = std::make_unique<touch>(
+                "/dev/input/event1",
+                /* flip_x = */ true,
+                /* flip_y = */ true
+            );
         }
 
         if (request.has_pen())
@@ -68,7 +72,11 @@ auto device::detect(device_request request) -> device
 
         if (request.has_touch())
         {
-            touch_device = std::make_unique<touch>("/dev/input/event2");
+            touch_device = std::make_unique<touch>(
+                "/dev/input/event2",
+                /* flip_x = */ false,
+                /* flip_y = */ true
+            );
         }
 
         if (request.has_pen())

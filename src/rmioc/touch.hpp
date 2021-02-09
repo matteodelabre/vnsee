@@ -20,8 +20,10 @@ public:
      * Open the touchscreen device.
      *
      * @param path Path to the device.
+     * @param flip_x True to flip coordinates horizontally.
+     * @param flip_y True to flip coordinates vertically.
      */
-    touch(const char* device_path);
+    touch(const char* device_path, bool flip_x = false, bool flip_y = false);
 
     // Disallow copying touch device handles
     touch(const touch& other) = delete;
@@ -40,48 +42,39 @@ public:
 
     /**
      * Information about a touch point on the screen.
-     *
-     * Coordinates are in the touch sensor’s frame, which has its origin on
-     * the bottom right of the screen with the X axis increasing in the left
-     * direction and the Y axis increasing in the upper direction.
-     *
-     *     (767, 1023) ← (0, 1023)
-     *     |                     |
-     *     ↑                     ↑
-     *     |                     |
-     *     (767, 0) ———←——— (0, 0)
      */
     struct touchpoint_state
     {
-        /** Horizontal position of the touch point. */
+        /**
+         * Horizontal position of the touch point.
+         *
+         * Integer between 0 and `get_xres()`.
+         */
         int x;
 
-        static constexpr int x_min = 0;
-        static constexpr int x_max = 767;
-
-        /** Vertical position of the touch point. */
+        /**
+         * Vertical position of the touch point.
+         *
+         * Integer between 0 and `get_yres()`.
+         */
         int y;
 
-        static constexpr int y_min = 0;
-        static constexpr int y_max = 1023;
-
-        /** Amount of pressure applied on the touch point. */
+        /**
+         * Amount of pressure applied on the touch point.
+         *
+         * Integer between 0 and `get_pressure_res()`.
+         */
         int pressure;
-
-        static constexpr int pressure_min = 0;
-        static constexpr int pressure_max = 255;
 
         /**
          * Orientation of the touch point.
          *
+         * Integer within the range indicated by `get_orientation_limits()`.
          * A positive value indicates clockwise rotation from the
          * Y-axis-aligned default position, a negative one indicates
          * counter-clockwise rotation.
          */
         int orientation;
-
-        static constexpr int orientation_min = -127;
-        static constexpr int orientation_max = 127;
     };
 
     using touchpoints_state = std::map<int, touchpoint_state>;
@@ -91,11 +84,40 @@ public:
      */
     const touchpoints_state& get_state() const;
 
+    /** Get the maximum possible value on the X axis. */
+    int get_xres() const;
+
+    /** Get the maximum possible value on the Y axis. */
+    int get_yres() const;
+
+    /** Get the maximum pressure value. */
+    int get_pressure_res() const;
+
+    /** Get the minimum and maximum possible values of the orientation axis. */
+    const std::pair<int, int>& get_orientation_limits() const;
+
 private:
+    /** Coordinate flipping state. */
+    bool flip_x;
+    bool flip_y;
+
+    /** Currently active touch points by ID. */
     touchpoints_state state;
 
     /** Currently active touch point ID. */
     int current_id = 0;
+
+    /** Minimum and maximum value of the X axis. */
+    std::pair<int, int> x_limits;
+
+    /** Minimum and maximum value of the Y axis. */
+    std::pair<int, int> y_limits;
+
+    /** Minimum and maximum value of the pressure axis. */
+    std::pair<int, int> pressure_limits;
+
+    /** Minimum and maximum value of the orientation axis. */
+    std::pair<int, int> orientation_limits;
 }; // class touch
 
 } // namespace rmioc

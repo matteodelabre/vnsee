@@ -66,19 +66,14 @@ auto touch::process_events(bool inhibit) -> event_loop_status
                 summed_y /= total_points;
 
                 // Convert to screen coordinates
-                int xres = static_cast<int>(this->screen_device.get_xres());
-                int yres = static_cast<int>(this->screen_device.get_yres());
+                int screen_xres = this->screen_device.get_xres();
+                int screen_yres = this->screen_device.get_yres();
 
-                int screen_x = (
-                    xres - xres * summed_x
-                    / rmioc::touch::touchpoint_state::x_max
-                );
+                int touch_xres = this->device.get_xres();
+                int touch_yres = this->device.get_yres();
 
-                int screen_y = (
-                    yres - yres * summed_y
-                    / rmioc::touch::touchpoint_state::y_max
-                );
-
+                int screen_x = summed_x * screen_xres / touch_xres;
+                int screen_y = summed_y * screen_yres / touch_yres;
                 this->on_update(screen_x, screen_y);
             }
             else
@@ -129,7 +124,7 @@ void touch::on_update(int x, int y)
         {
             this->send_button_press(
                 this->x_initial, this->y_initial,
-                MouseButton::ScrollRight
+                MouseButton::ScrollLeft
             );
 
             this->send_button_press(
@@ -142,7 +137,7 @@ void touch::on_update(int x, int y)
         {
             this->send_button_press(
                 this->x_initial, this->y_initial,
-                MouseButton::ScrollLeft
+                MouseButton::ScrollRight
             );
 
             this->send_button_press(

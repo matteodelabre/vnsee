@@ -1,4 +1,5 @@
 #include "input.hpp"
+#include <array>
 #include <cerrno>
 #include <string>
 #include <system_error>
@@ -56,20 +57,47 @@ void input::setup_poll(pollfd& in_pollfd) const
     in_pollfd.events = POLLIN;
 }
 
+constexpr std::size_t read_events_batch_size = 64;
+
 auto input::fetch_events() -> std::vector<input_event>
 {
     std::vector<input_event> result;
-    input_event current_event{};
+    std::array<input_event, read_events_batch_size> read_events{};
 
-    while (read(this->input_fd, &current_event, sizeof(current_event)) != -1)
+    constexpr auto one_bytes = sizeof(input_event);
+    constexpr auto max_bytes = read_events_batch_size * one_bytes;
+    ssize_t maybe_read_bytes = 0;
+
+    while ((maybe_read_bytes = read(
+        this->input_fd,
+        read_events.data(),
+        max_bytes
+    )) != -1)
     {
-        if (current_event.type == EV_SYN)
+        auto read_bytes = static_cast<std::size_t>(maybe_read_bytes);
+
+        if (read_bytes < one_bytes)
         {
-            std::swap(this->queued_events, result);
-            return result;
+            throw std::runtime_error(
+                "Invalid read of " + std::to_string(read_bytes) + " bytes, "
+                "less than the size of an input struct (expected at least "
+                + std::to_string(one_bytes) + " bytes)"
+            );
         }
 
-        this->queued_events.push_back(current_event);
+        std::size_t read_size = read_bytes / one_bytes;
+        this->queued_events.reserve(this->queued_events.size() + read_size);
+
+        for (std::size_t i = 0; i < read_size; ++i)
+        {
+            if (read_events.at(i).type == EV_SYN)
+            {
+                std::swap(this->queued_events, result);
+                return result;
+            }
+
+            this->queued_events.emplace_back(read_events.at(i));
+        }
     }
 
     if (errno != EAGAIN)

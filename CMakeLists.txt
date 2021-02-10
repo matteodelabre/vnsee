@@ -55,7 +55,6 @@ add_executable(vnsee
     src/app/screen.cpp
     src/app/touch.cpp
     src/main.cpp
-    src/network.cpp
     src/rmioc/buttons.cpp
     src/rmioc/device.cpp
     src/rmioc/input.cpp

@@ -5,7 +5,7 @@
 #include <chrono>
 #include <iosfwd>
 #include <rfb/rfbclient.h>
-// IWYU pragma: no_include "rfb/rfbproto.h"
+#include <rfb/rfbproto.h>
 
 namespace rmioc
 {

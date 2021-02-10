@@ -10,7 +10,6 @@
 #include <optional>
 #include <poll.h> // IWYU pragma: keep
 #include <rfb/rfbclient.h>
-// IWYU pragma: no_include "rfb/rfbproto.h"
 #include <vector>
 
 namespace rmioc

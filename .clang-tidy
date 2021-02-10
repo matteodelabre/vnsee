@@ -9,6 +9,7 @@ Checks:
     cert-*,
     cppcoreguidelines-*,
     -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    -cppcoreguidelines-pro-type-vararg,
     hicpp-*,
     -hicpp-vararg,
     -hicpp-no-malloc,
@@ -16,5 +17,6 @@ Checks:
     modernize-*,
     performance-*,
     readability-*,
+    -readability-magic-numbers,
 WarningsAsErrors: '*'
 ...

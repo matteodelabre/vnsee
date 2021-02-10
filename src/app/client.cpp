@@ -23,7 +23,6 @@
 #include <rfb/rfbclient.h>
 #include <unistd.h>
 // IWYU pragma: no_include <type_traits>
-// IWYU pragma: no_include <rfb/rfbproto.h>
 
 /** Custom log printer for the VNC client library.  */
 // NOLINTNEXTLINE(cert-dcl50-cpp): Need to use a vararg function for C compat

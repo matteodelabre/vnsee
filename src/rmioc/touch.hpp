@@ -3,6 +3,7 @@
 
 #include "input.hpp"
 #include <map>
+#include <utility>
 
 namespace rmioc
 {

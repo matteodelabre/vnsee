@@ -2,14 +2,10 @@
 #define APP_CLIENT_HPP
 
 #include "event_loop.hpp"
-#include "../rmioc/device.hpp"
 #include "buttons.hpp"
-// IWYU pragma: no_forward_declare app::buttons
 #include "pen.hpp"
-// IWYU pragma: no_forward_declare app::pen
 #include "screen.hpp"
 #include "touch.hpp"
-// IWYU pragma: no_forward_declare app::touch
 #include <iosfwd>
 #include <optional>
 #include <poll.h> // IWYU pragma: keep

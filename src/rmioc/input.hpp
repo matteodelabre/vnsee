@@ -1,6 +1,7 @@
 #ifndef RMIOC_INPUT_HPP
 #define RMIOC_INPUT_HPP
 
+#include <utility>
 #include <vector>
 #include <linux/input.h>
 

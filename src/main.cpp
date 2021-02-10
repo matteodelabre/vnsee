@@ -8,7 +8,6 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <memory>
 #include <stdexcept> // IWYU pragma: keep
 // IWYU pragma: no_include <bits/exception.h>
 #include <string>

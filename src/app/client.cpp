@@ -1,6 +1,7 @@
 #include "client.hpp"
 #include "../log.hpp"
 #include "../rmioc/buttons.hpp"
+#include "../rmioc/device.hpp"
 #include "../rmioc/pen.hpp"
 #include "../rmioc/touch.hpp"
 #include <algorithm>

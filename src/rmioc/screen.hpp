@@ -2,7 +2,6 @@
 #define RMIOC_SCREEN_HPP
 
 #include <cstdint>
-#include <linux/fb.h>
 
 namespace rmioc
 {

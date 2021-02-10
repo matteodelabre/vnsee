@@ -1,12 +1,15 @@
 #include "input.hpp"
 #include <array>
 #include <cerrno>
+#include <iosfwd>
 #include <string>
+#include <stdexcept>
 #include <system_error>
 #include <utility>
 #include <fcntl.h>
 #include <linux/input-event-codes.h>
 #include <poll.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 namespace rmioc

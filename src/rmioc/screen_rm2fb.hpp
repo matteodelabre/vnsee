@@ -2,9 +2,12 @@
 #define RMIOC_SCREEN_RM2FB_HPP
 
 #include "screen.hpp"
-#include "mxcfb.hpp"
 #include <cstdint>
-#include <linux/fb.h>
+
+namespace mxcfb
+{
+    struct update_data;
+}
 
 namespace rmioc
 {

@@ -7,8 +7,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/msg.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace rm2fb

@@ -2,7 +2,9 @@
 #include "screen_mxcfb.hpp"
 #include "screen_rm2fb.hpp"
 #include <fstream>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace rmioc
 {

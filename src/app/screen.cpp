@@ -68,7 +68,7 @@ void screen::repaint()
         this->update_info.x, this->update_info.y,
         this->update_info.w, this->update_info.h,
         this->repaint_mode == repaint_modes::standard
-            ? rmioc::waveform_modes::gc16
+            ? rmioc::waveform_modes::gl16
             : rmioc::waveform_modes::du
     );
 }

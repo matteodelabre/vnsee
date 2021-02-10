@@ -2,6 +2,8 @@
 #define RMIOC_FLAGS_HPP
 
 #include <boost/preprocessor.hpp>
+#include <bitset>
+#include <ostream>
 
 #define RMIOC_FLAGS_DEFINE_ENTRY(r, data, i, name) \
     static constexpr auto name = 1U << i; \
@@ -21,6 +23,10 @@
         name() = default; \
         name(unsigned long val) : bits(val) {} \
         BOOST_PP_SEQ_FOR_EACH_I(RMIOC_FLAGS_DEFINE_ENTRY,, entries) \
+        friend std::ostream& operator<<(std::ostream& out, const name& inst) \
+        { \
+            return out << inst.bits; \
+        } \
     private: \
         std::bitset<BOOST_PP_SEQ_SIZE(entries)> bits; \
     }
@@ -49,6 +55,11 @@
  *     static constexpr auto c = 1U << 2;
  *     auto has_c () const -> bool { return this->bits[2]; }
  *     void set_c (bool flag) { this->bits[2] = flag; }
+ *
+ *     friend std::ostream& operator<<(
+ *         std::ostream& out,
+ *         const flags& inst
+ *     ) { return out << inst.bits; }
  *
  * private:
  *     std::bitset<3> bits;

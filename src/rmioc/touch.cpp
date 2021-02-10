@@ -16,32 +16,6 @@ touch::touch(const char* device_path, bool flip_x, bool flip_y)
 , orientation_limits(this->get_axis_limits(ABS_MT_ORIENTATION))
 {}
 
-touch::touch(touch&& other) noexcept
-: input(std::move(other))
-, flip_x(other.flip_x)
-, flip_y(other.flip_y)
-, state(std::move(other.state))
-, current_id(other.current_id)
-, x_limits(std::move(other.x_limits))
-, y_limits(std::move(other.y_limits))
-, pressure_limits(std::move(other.pressure_limits))
-, orientation_limits(std::move(other.orientation_limits))
-{}
-
-auto touch::operator=(touch&& other) noexcept -> touch&
-{
-    this->flip_x = other.flip_x;
-    this->flip_y = other.flip_y;
-    this->state = std::move(other.state);
-    this->current_id = other.current_id;
-    this->x_limits = std::move(other.x_limits);
-    this->y_limits = std::move(other.y_limits);
-    this->pressure_limits = std::move(other.pressure_limits);
-    this->orientation_limits = std::move(other.orientation_limits);
-    input::operator=(std::move(other));
-    return *this;
-}
-
 auto touch::process_events() -> bool
 {
     auto events = this->fetch_events();

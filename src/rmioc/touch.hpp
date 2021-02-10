@@ -25,14 +25,6 @@ public:
      */
     touch(const char* device_path, bool flip_x = false, bool flip_y = false);
 
-    // Disallow copying touch device handles
-    touch(const touch& other) = delete;
-    touch& operator=(const touch& other) = delete;
-
-    // Transfer handle ownership
-    touch(touch&& other) noexcept;
-    touch& operator=(touch&& other) noexcept;
-
     /**
      * Check for new events.
      *

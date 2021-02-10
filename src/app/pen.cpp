@@ -28,14 +28,14 @@ auto pen::process_events() -> event_loop_status
         if (device_state.tool_set.has_pen())
         {
             // Convert to screen coordinates
-            int xres = static_cast<int>(this->screen.get_xres());
-            int yres = static_cast<int>(this->screen.get_yres());
+            int screen_xres = static_cast<int>(this->screen.get_xres());
+            int screen_yres = static_cast<int>(this->screen.get_yres());
 
-            int screen_x = device_state.y * xres
-                / rmioc::pen::pen_state::y_max;
+            int pen_xres = this->device.get_xres();
+            int pen_yres = this->device.get_yres();
 
-            int screen_y = yres - yres * device_state.x
-                / rmioc::pen::pen_state::x_max;
+            int screen_x = device_state.x * screen_xres / pen_xres;
+            int screen_y = device_state.y * screen_yres / pen_yres;
 
             // Move the mouse cursor to the pen position and generate a click
             // if the pen is touching the screen

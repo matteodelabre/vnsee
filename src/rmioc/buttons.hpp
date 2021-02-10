@@ -19,14 +19,6 @@ public:
      */
     buttons(const char* device_path);
 
-    // Disallow copying buttons device handles
-    buttons(const buttons& other) = delete;
-    buttons& operator=(const buttons& other) = delete;
-
-    // Transfer handle ownership
-    buttons(buttons&& other) noexcept;
-    buttons& operator=(buttons&& other) noexcept;
-
     /**
      * Fetch new events from the buttons and process them.
      *

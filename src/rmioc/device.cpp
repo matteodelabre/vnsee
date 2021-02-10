@@ -53,7 +53,11 @@ auto device::detect(device_request request) -> device
 
         if (request.has_pen())
         {
-            pen_device = std::make_unique<pen>("/dev/input/event0");
+            pen_device = std::make_unique<pen>(
+                "/dev/input/event0",
+                /* flip_x = */ false,
+                /* flip_y = */ true
+            );
         }
 
         if (request.has_screen())
@@ -81,7 +85,11 @@ auto device::detect(device_request request) -> device
 
         if (request.has_pen())
         {
-            pen_device = std::make_unique<pen>("/dev/input/event1");
+            pen_device = std::make_unique<pen>(
+                "/dev/input/event1",
+                /* flip_x = */ false,
+                /* flip_y = */ true
+            );
         }
 
         if (request.has_screen())

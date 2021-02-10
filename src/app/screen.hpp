@@ -111,8 +111,8 @@ private:
         bool has_update = false;
     } update_info;
 
-    /** Last time the reMarkable screen was repainted. */
-    std::chrono::steady_clock::time_point last_repaint_time;
+    /** Last time a repaint was performed. */
+    std::chrono::steady_clock::time_point last_repaint;
 
     /** Tag used for accessing the instance from C callbacks. */
     static constexpr std::size_t instance_tag = 6803;

@@ -13,12 +13,21 @@
 namespace chrono = std::chrono;
 
 /**
- * Time to wait between two repaints.
+ * Time to wait between two standard repaints.
  *
  * VNC servers tend to send a lot of small updates in a short period of time.
  * This delay allows grouping those small updates into a larger screen update.
  */
-constexpr chrono::milliseconds repaint_delay{400};
+constexpr chrono::milliseconds standard_repaint_delay{400};
+
+/**
+ * Time to wait between two fast repaints.
+ *
+ * This mode is used when the pen is active so that the user can have a quicker
+ * feedback on what they are drawing. When the pen is lifted, a high fidelity
+ * update is performed.
+ */
+constexpr chrono::milliseconds fast_repaint_delay{50};
 
 namespace app
 {
@@ -49,7 +58,7 @@ void screen::repaint()
         this->update_info.has_update = false;
     }
 
-    this->last_repaint_time = chrono::steady_clock::now();
+    this->last_repaint = chrono::steady_clock::now();
 
     log::print("Screen update")
         << this->update_info.w << 'x' << this->update_info.h << '+'
@@ -87,30 +96,28 @@ auto screen::event_loop() -> event_loop_status
 {
     if (this->update_info.has_update)
     {
-        if (this->repaint_mode == repaint_modes::fast)
+        auto next_update_time = this->last_repaint + (
+            this->repaint_mode == repaint_modes::standard
+            ? standard_repaint_delay
+            : fast_repaint_delay
+        );
+
+        auto now = chrono::steady_clock::now();
+        int wait_time = chrono::duration_cast<chrono::milliseconds>(
+            next_update_time - now
+        ).count();
+
+        if (wait_time <= 0)
         {
             this->repaint();
         }
         else
         {
-            auto now = chrono::steady_clock::now();
-            int remaining_wait_time =
-                chrono::duration_cast<chrono::milliseconds>(
-                    this->last_repaint_time + repaint_delay - now
-                ).count();
-
-            if (remaining_wait_time <= 0)
-            {
-                this->repaint();
-            }
-            else
-            {
-                // Wait until the next update is due
-                return {
-                    /* quit = */ false,
-                    /* timeout = */ remaining_wait_time
-                };
-            }
+            // Wait until the next update is due
+            return {
+                /* quit = */ false,
+                /* timeout = */ wait_time
+            };
         }
     }
 

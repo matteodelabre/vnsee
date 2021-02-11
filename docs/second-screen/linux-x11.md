@@ -53,7 +53,7 @@ Here, you may use either of the `DP-3` or `HDMI-1` outputs for the following ins
 Create a new mode compatible with the tablet’s resolution:
 
 ```sh
-$ xrandr --newmode 1408x1872 $(gtf 1408 1872 60 | tail -n2 | head -n1 | tr -s ' ' | cut -d' ' -f4-)
+$ xrandr --newmode 1408x1872 0 1408 1408 1408 1408 1872 1872 1872 1872
 ```
 
 ## Setup the output

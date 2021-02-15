@@ -1,0 +1,18 @@
+\documentclass[crop, tikz, border=.1cm]{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\input{remarkable}
+
+\begin{document}
+\begin{tikzpicture}
+    \pic (rM-pen) {rM1};
+
+    \draw[rM border, line cap=round]
+        ($(rM-pen-screen-center)+(0,-.2)$)
+        to [out=40, in=-170] ++(.2, .08)
+        to [out=10, out distance=.4cm, in=10] ++(-.1, .2);
+
+    \pic[rotate=15] at ($(rM-pen-screen-center)+(0,-.2)$) {rM pen};
+\end{tikzpicture}
+\end{document}

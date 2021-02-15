@@ -1,27 +1,12 @@
 \documentclass[crop, tikz, border=.1cm]{standalone}
 
-\usetikzlibrary{positioning}
-\usetikzlibrary{calc}
-
-\input{common}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\input{remarkable}
 
 \begin{document}
 \begin{tikzpicture}
-    \input{remarkable}
-    \newcommand\innerradius{.15}
-    \newcommand\outerradius{.22}
-    \newcommand\partialangle{50}
-
-    \draw[annotation, semithick] (screen-c) circle (\innerradius);
-
-    \draw[annotation] ($(screen-c)+(\outerradius, 0)$)
-         arc[radius=\outerradius, start angle=0, delta angle=\partialangle]
-         ($(screen-c)+(\outerradius, 0)$)
-         arc[radius=\outerradius, start angle=0, delta angle=-\partialangle];
-
-    \draw[annotation] ($(screen-c)-(\outerradius, 0)$)
-         arc[radius=\outerradius, start angle=180, delta angle=\partialangle]
-         ($(screen-c)-(\outerradius, 0)$)
-         arc[radius=\outerradius, start angle=180, delta angle=-\partialangle];
+    \pic (rM-tap) {rM1};
+    \pic at (rM-tap-screen-center) {tap};
 \end{tikzpicture}
 \end{document}

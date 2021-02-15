@@ -6,7 +6,9 @@
 
 \begin{document}
 \begin{tikzpicture}
-    \pic (rM-scroll-x) {rM1};
-    \pic at (rM-scroll-x-screen-center) {scroll x};
+    \pic (rM-power) {rM1};
+    \draw[rM annotation, ultra thick, {Latex[length=2.2mm]}-]
+        ($(rM-power-key-power.south)+(0, -.05)$)
+        to ++(0, -.6);
 \end{tikzpicture}
 \end{document}

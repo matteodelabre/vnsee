@@ -1,21 +1,12 @@
 \documentclass[crop, tikz, border=.1cm]{standalone}
 
-\usetikzlibrary{positioning}
-\usetikzlibrary{calc}
+\usepackage{tikz}
 \usetikzlibrary{arrows.meta}
-
-\input{common}
+\input{remarkable}
 
 \begin{document}
 \begin{tikzpicture}
-    \input{remarkable}
-    \newcommand\radius{.15}
-
-    \draw[annotation, semithick] (screen-c) circle (\radius);
-    \draw[annotation, ultra thick, -{Latex[length=2.2mm]}]
-        ($(screen-c)+(0,\radius)$) -- ++(0, .4);
-
-    \draw[annotation, ultra thick, -{Latex[length=2.2mm]}]
-        ($(screen-c)-(0,\radius)$) -- ++(0, -.4);
+    \pic (rM-scroll-y) {rM1};
+    \pic at (rM-scroll-y-screen-center) {scroll y};
 \end{tikzpicture}
 \end{document}

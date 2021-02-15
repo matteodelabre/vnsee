@@ -4,12 +4,84 @@
 \usetikzlibrary{calc}
 \usetikzlibrary{svg.path}
 
-\input{common}
+\usepackage{fontspec}
+\setmainfont{Fira Sans}
+\setmonofont{Fira Mono}
+
+\colorlet{border}{black!60}
+\colorlet{screen}{black!6}
+\colorlet{overscreen}{black!10}
+\colorlet{annotation}{black!80}
+
+\newcommand\width{1.75}
+\newcommand\height{2.55}
+\newcommand\outborder{.1}
+\newcommand\button{2 * \outborder}
+
+\newcommand\definehighlightoption[3]{
+    \ifcsname Highlight#1\endcsname
+        \expandafter\newcommand\csname #1FillColor\endcsname{annotation}
+        \expandafter\newcommand\csname #1DrawColor\endcsname{annotation}
+    \else
+        \expandafter\newcommand\csname #1FillColor\endcsname{#2}
+        \expandafter\newcommand\csname #1DrawColor\endcsname{#3}
+    \fi
+}
+
+\tikzset{
+    secondary/.style={line width=.3},
+}
 
 \begin{document}
 \fontsize{3pt}{4pt}\selectfont
 \newcommand\setupdrawing[1]{
-    \input{remarkable}
+    \definehighlightoption{UpperKey}{border}{}
+    \definehighlightoption{HomeKey}{none}{border}
+
+    \tikzset{
+        back slate/.style={
+            border, fill=white,
+            rounded corners=1,
+        },
+        lower key/.style={
+            draw=border, secondary, rectangle,
+            rounded corners=0.25,
+            minimum width={2 * \outborder cm},
+            minimum height={2 * \outborder cm},
+            inner sep=0pt,
+        },
+        upper key/.style={
+            fill=\UpperKeyFillColor, rectangle,
+            rounded corners=0.25,
+            minimum width={2 * \outborder cm},
+            minimum height=2pt,
+            yshift=-.25pt,
+            inner sep=0pt,
+        },
+    }
+
+    \begin{scope}
+        \clip (0, \height) rectangle ++(\width, 1);
+        \node[upper key] at (.5 * \width, \height) (key-t) {};
+    \end{scope}
+
+    \draw[back slate] (0, 0) rectangle (\width, \height);
+
+    \fill[screen]
+        (\outborder, 4 * \outborder)
+        coordinate (screen-bl)
+        rectangle (\width - \outborder, \height - 2 * \outborder)
+        coordinate (screen-tr);
+
+    \coordinate (screen-c) at ($(screen-bl)!.5!(screen-tr)$);
+
+    \node[lower key] at (2 * \outborder, 2 * \outborder) (key-l) {};
+    \node[
+        lower key,
+        fill=\HomeKeyFillColor,
+        draw=\HomeKeyDrawColor
+    ] at (.5 * \width, 2 * \outborder) (key-c) {};
+    \node[lower key] at (\width - 2 * \outborder, 2 * \outborder) (key-r) {};
 
     % Monitor
     \newcommand\monitorwidth{5}

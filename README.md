@@ -29,7 +29,7 @@ This VNC client is compatible with VNC servers that are capable of sending pixel
 It has successfully been tested with [x11vnc](https://github.com/LibVNC/x11vnc).
 When trying to connect to an incompatible server, the program will report details of the problem then exit.
 
-## Setup as a second screen
+## Setup as a Second Screen
 
 Although this client can connect to any compatible VNC server, the most common scenario is using the tablet as a second screen for the computer it is attached to.
 For this scenario, you will need to configure your system to create a virtual second screen and then start a VNC server on your computer that the tablet can connect to.
@@ -41,7 +41,7 @@ The details are specific to the operating system you’re using:
 * macOS (Help wanted!)
 * Windows (Help wanted!)
 
-## Using the client
+## Using the Client
 
 You can quit VNSee at any time using the “Power” button (the one above the screen).
 Activity on the touchscreen will be translated to mouse interactions following the mapping in the table below.
@@ -106,6 +106,7 @@ Many thanks to:
 - [Florian Magin](https://github.com/fmagin) for contributing a driver-generic way of setting up Linux/X11 systems.
 - [@asmanur](https://github.com/asmanur) for improving the repaint latency.
 - [@mhhf](https://github.com/mhhf) for helping with TigerVNC compatibility.
+- [@rowancallahan](https://github.com/rowancallahan) and [@Axenntio](https://github.com/Axenntio) for contributing a guide for setting up second-screen on Sway.
 
 [Martin Sandsmark](https://github.com/sandsmark) also built [a VNC client for the reMarkable](https://github.com/sandsmark/revncable) which only depends on Qt.
 

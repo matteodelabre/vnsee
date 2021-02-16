@@ -52,7 +52,7 @@ This binds the server to the ip on which the remarkable is connected via usb to 
 Finally log on to the remarkable and run the `vnsee` command
 
 
-**Connecting With Remarkable**
+**Connecting with reMarkable**
 ```
 ssh root@10.11.99.1
 systemctl stop xochitl && ./vnsee; systemctl start xochitl

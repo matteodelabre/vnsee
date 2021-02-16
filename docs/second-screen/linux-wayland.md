@@ -2,7 +2,7 @@
 
 First you need to ensure that `wayvnc` is installed.
 This requires installation of both the package `aml` and `neatvnc` from the arch user repository or wherever you get your packages.
-After installing these packages wayvnc should install successfuly.
+After installing these packages `wayvnc` should install successfuly.
 
 **Create A Suitable Output**
 First up create a mode called `HEADLESS-1` The output must be named this in order to work successfuly under Sway

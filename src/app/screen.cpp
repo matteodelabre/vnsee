@@ -149,6 +149,7 @@ auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
     // Configure connection with device framebuffer settings
     that->vnc_client->frameBuffer = that->device.get_data();
     that->vnc_client->format.bitsPerPixel = that->device.get_bits_per_pixel();
+    that->vnc_client->format.depth = that->device.get_bits_per_pixel();
     that->vnc_client->format.redShift = that->device.get_red_offset();
     that->vnc_client->format.redMax = that->device.get_red_max();
     that->vnc_client->format.greenShift = that->device.get_green_offset();

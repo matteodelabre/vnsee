@@ -1,47 +1,128 @@
-\definehighlightoption{UpperKey}{border}{}
-\definehighlightoption{HomeKey}{none}{border}
+% Copyright (c) 2021 The Toltec Contributors
+% SPDX-License-Identifier: MIT
+%
+% Library of reMarkable-related TikZ shapes for illustrating the documentation
+% of community projects
+\usetikzlibrary{calc}
+
+\colorlet{rM border}{black!60}
+\colorlet{rM screen}{black!6}
+\colorlet{rM overscreen}{black!10}
+\colorlet{rM annotation}{black!70}
 
 \tikzset{
-    back slate/.style={
-        border, fill=white,
-        rounded corners=1,
+    % Shape of a reMarkable 1 tablet
+    % Arguments: <width> by <height> border <border thickness>
+    rM1 left fill/.initial={white},
+    rM1 home fill/.initial={white},
+    rM1 right fill/.initial={white},
+    pics/rM1/.style args={#1 by #2 border #3}{
+        code={
+            \node[
+                fill=rM border,
+                rounded corners=0.25,
+                minimum width={2 * #3 cm},
+                minimum height=2pt,
+                yshift=-.25pt,
+                inner sep=0pt,
+            ] at (.5 * #1, #2) (-key-power) {};
+
+            \draw[
+                draw=rM border, fill=white,
+                rounded corners=1,
+            ] (0, 0) rectangle (#1, #2);
+
+            \fill[rM screen]
+                (#3, 4 * #3)
+                coordinate (-screen-bottom-left)
+                rectangle (#1 - #3, #2 - 2 * #3)
+                coordinate (-screen-top-right);
+
+            \coordinate (-screen-center)
+                at ($(-screen-bottom-left)!.5!(-screen-top-right)$);
+
+            \tikzset{
+                lower key/.style={
+                    draw=rM border, rectangle,
+                    line width=.3,
+                    rounded corners=0.25,
+                    minimum width={2 * #3 cm},
+                    minimum height={2 * #3 cm},
+                    inner sep=0pt,
+                },
+            }
+
+            \node[
+                lower key,
+                fill=\pgfkeysvalueof{/tikz/rM1 left fill},
+            ] at (2 * #3, 2 * #3) (-key-left) {};
+            \node[
+                lower key,
+                fill=\pgfkeysvalueof{/tikz/rM1 home fill},
+            ] at (.5 * #1, 2 * #3) (-key-home) {};
+            \node[
+                lower key,
+                fill=\pgfkeysvalueof{/tikz/rM1 right fill},
+            ] at (#1 - 2 * #3, 2 * #3) (-key-right) {};
+        }
     },
-    lower key/.style={
-        draw=border, secondary, rectangle,
-        rounded corners=0.25,
-        minimum width={2 * \outborder cm},
-        minimum height={2 * \outborder cm},
-        inner sep=0pt,
+    %
+    % Shape of a reMarkable pen
+    % Arguments: <pen width> by <pen length>
+    pics/rM pen/.style args={#1 by #2}{
+        code={
+            \draw[rM annotation, fill=white] (0, 0)
+                to [out=135, in=-90] ++(-.5 * #1, #1)
+                to ++(0, #2) to ++(#1, 0)
+                to ++(0, -#2)
+                to [out=-90, in=45] ++(-.5 * #1, -#1);
+        }
     },
-    upper key/.style={
-        fill=\UpperKeyFillColor, rectangle,
-        rounded corners=0.25,
-        minimum width={2 * \outborder cm},
-        minimum height=2pt,
-        yshift=-.25pt,
-        inner sep=0pt,
+    pics/rM pen/.default={.12 by .8},
+    pics/rM1/.default={1.75 by 2.55 border .1},
+    %
+    % Symbol representing a tap on a touch screen
+    % Arguments: <inner radius>/<outer radius>/<cut angle>
+    pics/tap/.style args={#1/#2/#3}{
+        code={
+            \draw[rM annotation, semithick] (0, 0) circle (#1);
+
+            \draw[rM annotation] (#2, 0)
+                arc[radius=#2, start angle=0, delta angle=#3]
+                (#2, 0)
+                arc[radius=#2, start angle=0, delta angle=-#3];
+
+            \draw[rM annotation] (-#2, 0)
+                arc[radius=#2, start angle=180, delta angle=#3]
+                (-#2, 0)
+                arc[radius=#2, start angle=180, delta angle=-#3];
+        }
     },
+    pics/tap/.default={.15/.22/50},
+    %
+    % Symbol representing a horizontal swipe in any direction
+    % Arguments: none
+    pics/scroll x/.style={
+        code={
+            \draw[rM annotation, semithick] (0, 0) circle (#1);
+            \draw[rM annotation, ultra thick, -{Latex[length=2.2mm]}]
+                (-#1, 0) -- ++(-.4, 0);
+            \draw[rM annotation, ultra thick, -{Latex[length=2.2mm]}]
+                (#1, 0) -- ++(.4, 0);
+        }
+    },
+    pics/scroll x/.default={.15},
+    %
+    % Symbol representing a vertical swipe in any direction
+    % Arguments: none
+    pics/scroll y/.style={
+        code={
+            \draw[rM annotation, semithick] (0, 0) circle (#1);
+            \draw[rM annotation, ultra thick, -{Latex[length=2.2mm]}]
+                (0, -#1) -- ++(0, -.4);
+            \draw[rM annotation, ultra thick, -{Latex[length=2.2mm]}]
+                (0, #1) -- ++(0, .4);
+        }
+    },
+    pics/scroll y/.default={.15},
 }
-
-\begin{scope}
-    \clip (0, \height) rectangle ++(\width, 1);
-    \node[upper key] at (.5 * \width, \height) (key-t) {};
-\end{scope}
-
-\draw[back slate] (0, 0) rectangle (\width, \height);
-
-\fill[screen]
-    (\outborder, 4 * \outborder)
-    coordinate (screen-bl)
-    rectangle (\width - \outborder, \height - 2 * \outborder)
-    coordinate (screen-tr);
-
-\coordinate (screen-c) at ($(screen-bl)!.5!(screen-tr)$);
-
-\node[lower key] at (2 * \outborder, 2 * \outborder) (key-l) {};
-\node[
-    lower key,
-    fill=\HomeKeyFillColor,
-    draw=\HomeKeyDrawColor
-] at (.5 * \width, 2 * \outborder) (key-c) {};
-\node[lower key] at (\width - 2 * \outborder, 2 * \outborder) (key-r) {};

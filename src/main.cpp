@@ -214,7 +214,11 @@ auto main(int argc, const char* argv[]) -> int
         std::cerr << "\e[1A\e[KConnected to "
             << server_ip << ':' << server_port << "!\n";
 
-        client.event_loop();
+        if (!client.event_loop())
+        {
+            std::cerr << "Connection closed by the server.\n";
+            return EXIT_FAILURE;
+        }
     }
     catch (const std::exception& err)
     {

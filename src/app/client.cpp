@@ -121,7 +121,7 @@ client::~client()
     rfbClientCleanup(this->vnc_client);
 }
 
-void client::event_loop()
+bool client::event_loop()
 {
     // Maximum time to wait before timeout in the next poll
     int timeout = -1;
@@ -173,7 +173,7 @@ void client::event_loop()
         {
             if (HandleRFBServerMessage(this->vnc_client) == 0)
             {
-                break;
+                return false;
             }
         }
 
@@ -202,6 +202,8 @@ void client::event_loop()
             handle_status(this->touch_handler->process_events(inhibit));
         }
     }
+
+    return true;
 }
 
 void client::send_button_press(

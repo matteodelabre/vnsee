@@ -2,10 +2,10 @@
 
 **This build guide assumes you’re using a Linux system.**
 
-Download the [reMarkable toolchain](https://remarkable.engineering/), install it and source it.
+Download the [reMarkable toolchain](https://web.archive.org/web/20201129102245/https://remarkable.engineering/oecore-x86_64-cortexa9hf-neon-toolchain-zero-gravitas-1.8-23.9.2019.sh), install it and source it.
 
 ```sh
-curl https://remarkable.engineering/oecore-x86_64-cortexa9hf-neon-toolchain-zero-gravitas-1.8-23.9.2019.sh -o install-toolchain.sh
+curl https://web.archive.org/web/20201129102245/https://remarkable.engineering/oecore-x86_64-cortexa9hf-neon-toolchain-zero-gravitas-1.8-23.9.2019.sh -o install-toolchain.sh
 chmod u+x install-toolchain.sh
 ./install-toolchain.sh
 source /usr/local/oecore-x86_64/environment-setup-cortexa9hf-neon-oe-linux-gnueabi

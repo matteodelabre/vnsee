@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.1
+
+- Fix compatibility with TigerVNC.
+    - Fill-in the `depth` PixelFormat flag appropriately.
+
 ## v0.3.0
 
 - Rename from rmvncclient to VNSee.

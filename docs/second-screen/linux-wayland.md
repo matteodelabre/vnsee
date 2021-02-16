@@ -1,7 +1,7 @@
 **Required Package Installation**
 
 First you need to ensure that `wayvnc` is installed.
-This requires installation of both the package aml and neatvnc from the arch user repository or wherever you get your packages.
+This requires installation of both the package `aml` and `neatvnc` from the arch user repository or wherever you get your packages.
 After installing these packages wayvnc should install successfuly.
 
 **Create A Suitable Output**

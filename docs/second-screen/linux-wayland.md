@@ -18,7 +18,7 @@ output HEADLESS-1 {
 	bg COLOR solid_color
 }
 ```
-This creates a new headless output name at position x,y if you have multiple monitors take the position of the rightmost one and add its width to get the rightmost position where I should position my new display.
+This creates a new headless output name at position [RIGHTMOST, 0] if you have multiple monitors take the position of the rightmost one and add its width to get the rightmost position where you should position your new display.
 Replace RIGHTMOST with this calculated rightmost point.
 Replace COLOR with the 9 digit color code for a color.
 

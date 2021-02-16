@@ -37,7 +37,7 @@ For this scenario, you will need to configure your system to create a virtual se
 The details are specific to the operating system you’re using:
 
 * [Linux with X11](docs/second-screen/linux-x11.md)
-* Linux with Wayland (Help wanted!)
+* [Linux with Sway](docs/second-screen/linux-sway.md)
 * macOS (Help wanted!)
 * Windows (Help wanted!)
 

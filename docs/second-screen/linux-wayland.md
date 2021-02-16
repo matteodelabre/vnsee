@@ -9,7 +9,7 @@ First up create a mode called `HEADLESS-1` The output must be named this in orde
 
 Add the following code to the config file for sway at the very bottom. 
 
-This config file can be found at ~/.config/sway/config
+This config file can be found at `~/.config/sway/config`
 
 ```
 output HEADLESS-1 {

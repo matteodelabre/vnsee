@@ -49,7 +49,7 @@ wayvnc --output=HEADLESS-1 --max-fps=10 10.11.99.2 5900 &
 ```
 This binds the server to the ip on which the remarkable is connected via usb to the normal port that is used for VNC connections.
 
-Finally log on to the remarkable and run the vnsee command
+Finally log on to the remarkable and run the `vnsee` command
 
 
 **Connecting With Remarkable**

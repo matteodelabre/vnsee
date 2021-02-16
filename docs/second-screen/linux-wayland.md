@@ -29,7 +29,7 @@ Output eDP-1 'Unknown 0x0791 0x00000000' (focused)
   Current mode: 1920x1080 @ 60.012001 Hz
   Position: 0,0
 ```
-In this example I would replace RIGHTMOST with 0 + 1920 because this screen starts at 0 and has a width of 1920 meaning that our RIGHTMOST point would be 1920,0 to place the screen directly alongside.
+In this example I would replace RIGHTMOST with 0 + 1920 because this screen starts at 0 and has a width of 1920 meaning that our RIGHTMOST point would be [1920, 0] to place the screen directly alongside.
 
 Next restart Sway and run the command
 

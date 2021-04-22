@@ -107,6 +107,7 @@ Many thanks to:
 - [@asmanur](https://github.com/asmanur) for improving the repaint latency.
 - [@mhhf](https://github.com/mhhf) for helping with TigerVNC compatibility.
 - [@rowancallahan](https://github.com/rowancallahan) and [@Axenntio](https://github.com/Axenntio) for contributing a guide for setting up second-screen on Sway.
+- [@torwag](https://github.com/torwag) for writing the initial version of the `vnsee-gui` script.
 
 [Martin Sandsmark](https://github.com/sandsmark) also built [a VNC client for the reMarkable](https://github.com/sandsmark/revncable) which only depends on Qt.
 

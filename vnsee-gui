@@ -1,0 +1,326 @@
+#!/usr/bin/env bash
+#
+# vnsee-gui
+#
+# A simple GUI that allows the user to choose from available VNC servers
+# and starts VNSee with the right arguments
+
+set -euo pipefail
+
+if ! command -v simple > /dev/null; then
+    echo "Error: $0 needs the 'simple' program to work"
+    echo "Please install it and try again"
+    exit 1
+fi
+
+if ! command -v vnsee > /dev/null; then
+    echo "Error: $0 needs the 'vnsee' program to work"
+    echo "Please install it and try again"
+    exit 1
+fi
+
+has_nmap=1
+
+if ! command -v nmap > /dev/null; then
+    has_nmap=0
+    echo "Warning: The 'nmap' program is not installed"
+    echo "Auto-detection of available servers will not work"
+    echo
+fi
+
+# Awk script for extracting host/port pairs from Nmap
+open_port_suffix="\/open\/tcp"
+read -r -d '' nmap_open_port_awk << AWK || true
+    /Host:.*Ports:/{
+        host = \$2;
+        while (match(\$0, /[0-9]+$open_port_suffix/)) {
+            port = substr(\$0, RSTART, RLENGTH);
+            sub(/$open_port_suffix/, "", port);
+            print host " " port;
+            \$0 = substr(\$0, RSTART + RLENGTH);
+        }
+    }
+AWK
+
+# Scan for VNC servers listening over the USB network
+#
+# Output:
+#
+# Lines in the `IP PORT` format where, each line corresponds
+# to a server that was found.
+scan-servers-usb() {
+    if [[ $has_nmap = 0 ]]; then
+        return
+    fi
+    local usb_subnet
+    usb_subnet="$(ip -f inet addr show usb0 | awk '/inet/{print $2}')"
+    nmap "$usb_subnet" -p5900-5905 -oG - | awk "$nmap_open_port_awk"
+}
+
+# Helpers for building a UI scene
+reset() {
+    scene=("@fontsize 42")
+}
+
+add() {
+    scene+=("@$*")
+}
+
+ui() {
+    scene+=("[$*]")
+}
+
+# Update interface and wait for user input
+wait-for-input() {
+    (
+        for line in "${scene[@]}"; do
+            echo "$line"
+        done
+    ) | simple
+}
+
+# Display a selectable list of options
+#
+# Params:
+#
+#   $1 - Identifier prefix for each option
+#   $2 - Starting X coordinate
+#   $3 - Starting Y coordinate
+#   $… - Options to display
+#
+# Output:
+#
+# Sets the next_y variable to the next available Y coordinate.
+display-options() {
+    local id="$1"
+    local x_start="$2"
+    local y_start="$3"
+
+    if [[ $# -lt 4 ]]; then
+        ui label "$x_start" "$y_start" 450 50 "(None)"
+        ((y_start += 60))
+    else
+        for ((i = 4; i <= "$#"; i++)); do
+            ui "button:$id-$((i - 4))" "$x_start" "$y_start" 450 50 "> ${!i}"
+            ((y_start += 60))
+        done
+    fi
+
+    y_next="$y_start"
+}
+
+# History of last used servers
+server_history_file="$HOME/.cache/vnsee-gui/history"
+
+if [[ ! -f $server_history_file ]]; then
+    mkdir -p "$(dirname "$server_history_file")"
+    touch "$server_history_file"
+fi
+
+# Add an entry to the history of last used servers (or move it up in the list)
+#
+# Params:
+#
+#   $1 - IP address of the server to add to the list
+#   $1 - Port of the server
+save-history() {
+    mapfile -t histsrvs < "$server_history_file"
+    output=("$1 $2")
+
+    for srv in "${histsrvs[@]}"; do
+        if [[ $srv != "$1 $2" ]]; then
+            output+=("$srv")
+        fi
+    done
+
+    (
+        for line in "${output[@]:0:5}"; do
+            echo "$line"
+        done
+    ) > "$server_history_file"
+}
+
+read -r -d '' help_message << MSG || true
+Please choose a server to connect to.
+If you’re connected via USB to a computer running a VNC server, it should show up below. You can also input the address of a specific server.
+MSG
+
+# Initial scene for configuring VNSee
+#
+# Output:
+#
+#   - First line: Chosen IP address and port number
+#   - Second line: Flags to pass to VNSee
+#
+# Exit code:
+#
+# 0 if the user chose a server, 1 to quit
+configure-vnsee() {
+    # Scan for VNC servers over USB
+    mapfile -t usbsrvs < <(scan-servers-usb)
+
+    # Read history of last used servers
+    mapfile -t histsrvs < "$server_history_file"
+
+    # Manual address entry
+    manual_ip=10.11.99.2
+    manual_port=5900
+
+    # Set to the user-selected server
+    selected_server=
+
+    # Input flags
+    declare -A input_state=()
+    input_state[buttons]=1
+    input_state[pen]=1
+    input_state[touch]=1
+
+    while true; do
+        reset
+
+        add justify center
+        y_next=80
+        ui label 80 "$y_next" 1248 50 "VNSee"
+
+        add justify left
+        ui button:quit 80 "$y_next" 200 50 "Quit"
+        ((y_next += 150))
+        ui paragraph 80 "$y_next" 1248 200 "$help_message"
+
+        ((y_next += 300))
+        ui label 80 "$y_next" 200 50 Servers listening over USB:
+        ((y_next += 50))
+        display-options usbsrv 80 "$y_next" "${usbsrvs[@]}"
+
+        ((y_next += 100))
+        ui label 80 "$y_next" 200 50 Last used servers:
+        ((y_next += 50))
+        display-options histsrv 80 "$y_next" "${histsrvs[@]}"
+
+        ((y_next += 100))
+        ui label 80 "$y_next" 200 50 Enter new address:
+        ((y_next += 50))
+        ui textinput:manualip 80 "$y_next" 450 50 "$manual_ip"
+        ui textinput:manualport 580 "$y_next" 200 50 "$manual_port"
+        ui button:manualsrv 830 "$y_next" 200 50 Connect
+
+        ((y_next += 150))
+        ui label 80 "$y_next" 200 50 Input settings:
+
+        for kind in buttons pen touch; do
+            ((y_next += 60))
+
+            if ((${input_state[$kind]})); then
+                state="enabled"
+                action="Disable"
+            else
+                state="disabled"
+                action="Enable"
+            fi
+
+            ui label 80 "$y_next" 450 50 "$kind $state"
+            ui "button:toggle$kind" 530 "$y_next" 200 50 "$action"
+        done
+
+        result="$(wait-for-input)"
+
+        if [[ $result =~ ^input: ]]; then
+            input="${result#input: }"
+
+            if [[ $input =~ ^manualip\ : ]]; then
+                manual_ip="${input#manualip : }"
+            elif [[ $input =~ ^manualport\ : ]]; then
+                manual_port="${input#manualport : }"
+            fi
+        elif [[ $result =~ ^selected: ]]; then
+            button="${result#selected: }"
+
+            if [[ $button =~ ^usbsrv- ]]; then
+                index="${button#usbsrv-}"
+                selected_server="${usbsrvs[index]}"
+                break
+            elif [[ $button =~ ^histsrv- ]]; then
+                index="${button#histsrv-}"
+                selected_server="${histsrvs[index]}"
+                break
+            elif [[ $button = manualsrv ]]; then
+                selected_server="$manual_ip $manual_port"
+                break
+            elif [[ $button =~ ^toggle ]]; then
+                kind="${button#toggle}"
+                input_state[$kind]=$((1 - ${input_state[$kind]}))
+            elif [[ $button == quit ]]; then
+                return 1
+            fi
+        fi
+    done
+
+    echo "$selected_server"
+
+    for kind in buttons pen touch; do
+        if ! ((${input_state[$kind]})); then
+            echo -n "--no-$kind"
+        fi
+    done
+
+    echo
+    return 0
+}
+
+# Show a waiting screen while VNSee connects to a server
+#
+# Params:
+#
+#   $1 - IP address of the server we’re connecting to
+#   $1 - Port of the server
+please-wait() {
+    reset
+    add timeout 1
+    add padding_x 15%
+    add padding_y 15%
+
+    ui label 0 0 200 50 Please wait
+    ui label 0 50 200 100 Connecting to "$1":"$2"…
+    wait-for-input
+}
+
+# Show error logs after VNSee exits
+#
+# Params:
+#
+#   $1 - Path to the file containing the VNSee error log
+show-errors() {
+    reset
+    add padding_x 15%
+    add padding_y 15%
+
+    y_next=0
+    ui label 0 0 200 50 VNSee error:
+
+    ((y_next += 100))
+    while IFS="" read -r line; do
+        ui label 0 "$y_next" 450 50 "$line"
+        ((y_next += 50))
+    done < "$1"
+
+    add justify center
+    ((y_next += 50))
+    ui button 0 "$y_next" 985 50 Back
+    wait-for-input
+}
+
+session_log_file=/tmp/vnsee.log
+
+while true; do
+    {
+        read -ra server_address
+        read -ra flags
+    } < <(configure-vnsee)
+    save-history "${server_address[0]}" "${server_address[1]}"
+    please-wait "${server_address[0]}" "${server_address[1]}"
+    set -x
+    vnsee "${flags[@]}" "${server_address[0]}" "${server_address[1]}" \
+        2> "$session_log_file" \
+        || show-errors "$session_log_file"
+    set +x
+done

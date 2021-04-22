@@ -189,12 +189,11 @@ auto main(int argc, const char* argv[]) -> int
         rmioc::device device = rmioc::device::detect(request);
 
         std::cerr << "Connecting to "
-            << server_ip << ":" << server_port << "...\n";
+            << server_ip << ":" << server_port << "\n";
 
         app::client client{server_ip.data(), server_port, device};
 
-        std::cerr << "\e[1A\e[KConnected to "
-            << server_ip << ':' << server_port << "!\n";
+        std::cerr << "Connection established\n";
 
         if (!client.event_loop())
         {

@@ -79,7 +79,24 @@ private:
     static rfbBool create_framebuf(rfbClient* client);
 
     /**
-     * Called by the VNC client library to register an update from the server.
+     * Called by the VNC client library when a bitmap rectangle is received
+     * from the server.
+     *
+     * @param client Handle to the VNC client.
+     * @param buffer Buffer containing the received update.
+     * @param x Left bound of the updated rectangle (in pixels).
+     * @param y Top bound of the updated rectangle (in pixels).
+     * @param w Width of the updated rectangle (in pixels).
+     * @param h Height of the updated rectangle (in pixels).
+     */
+    static void recv_update(
+        rfbClient* client,
+        const uint8_t* buffer,
+        int x, int y, int w, int h
+    );
+
+    /**
+     * Called by the VNC client library when a server update is completed.
      *
      * @param client Handle to the VNC client.
      * @param x Left bound of the updated rectangle (in pixels).
@@ -87,7 +104,7 @@ private:
      * @param w Width of the updated rectangle (in pixels).
      * @param h Height of the updated rectangle (in pixels).
      */
-    static void recv_framebuf(
+    static void commit_updates(
         rfbClient* client,
         int x, int y, int w, int h
     );

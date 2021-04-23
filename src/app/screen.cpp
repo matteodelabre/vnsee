@@ -4,6 +4,7 @@
 #include "../rmioc/screen.hpp"
 #include <algorithm>
 #include <chrono>
+#include <climits>
 #include <cstring>
 #include <ostream>
 #include <stdexcept>
@@ -189,17 +190,20 @@ void screen::recv_update(
         return;
     }
 
-    std::size_t pixel_size = that->device.get_bits_per_pixel() / 8;
+    std::size_t pixel_size = that->device.get_bits_per_pixel() / CHAR_BIT;
 
     std::size_t dest_stride = that->device.get_xres_memory() * pixel_size;
     std::size_t dest_size = dest_stride * that->device.get_yres_memory();
     uint8_t* const dest = that->device.get_data();
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     uint8_t* dest_line = dest + y * dest_stride + x * pixel_size;
 
     std::size_t buffer_stride = w * pixel_size;
     std::size_t buffer_size = buffer_stride * h;
     const uint8_t* buffer_line = buffer;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     while (dest_line < dest + dest_size && buffer_line < buffer + buffer_size)
     {
         std::memcpy(
@@ -208,7 +212,10 @@ void screen::recv_update(
             std::min(dest_stride - x * pixel_size, buffer_stride)
         );
 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         dest_line += dest_stride;
+
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         buffer_line += buffer_stride;
     }
 }

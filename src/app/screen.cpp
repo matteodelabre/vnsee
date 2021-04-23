@@ -182,33 +182,34 @@ void screen::recv_update(
             reinterpret_cast<void*>(screen::instance_tag)
         ));
 
+    if (x < 0 || y < 0
+        || x >= that->device.get_xres_memory()
+        || y >= that->device.get_yres_memory())
+    {
+        return;
+    }
+
     std::size_t pixel_size = that->device.get_bits_per_pixel() / 8;
 
-    uint8_t* dest = that->device.get_data();
     std::size_t dest_stride = that->device.get_xres_memory() * pixel_size;
     std::size_t dest_size = dest_stride * that->device.get_yres_memory();
-    std::size_t dest_offset = dest_stride * y + x * pixel_size;
+    uint8_t* const dest = that->device.get_data();
+    uint8_t* dest_line = dest + y * dest_stride + x * pixel_size;
 
     std::size_t buffer_stride = w * pixel_size;
     std::size_t buffer_size = buffer_stride * h;
-    std::size_t buffer_offset = 0;
+    const uint8_t* buffer_line = buffer;
 
-    for (int y = 0; y < h; ++y)
+    while (dest_line < dest + dest_size && buffer_line < buffer + buffer_size)
     {
-        if (dest_offset + buffer_stride > dest_size
-                || buffer_offset + buffer_stride > buffer_size)
-        {
-            break;
-        }
-
         std::memcpy(
-            dest + dest_offset,
-            buffer + buffer_offset,
-            buffer_stride
+            dest_line,
+            buffer_line,
+            std::min(dest_stride - x * pixel_size, buffer_stride)
         );
 
-        dest_offset += dest_stride;
-        buffer_offset += buffer_stride;
+        dest_line += dest_stride;
+        buffer_line += buffer_stride;
     }
 }
 

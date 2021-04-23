@@ -34,7 +34,8 @@ To remove VNSee, run `opkg remove vnsee`.
 
 You can also install this program manually.
 Download the latest build from the [releases page](https://github.com/matteodelabre/vnsee/releases) (or build the software yourself by following the [build guide](docs/build.md)), then copy the `vnsee` and `vnsee-gui` executables to the tablet [using SSH](https://remarkablewiki.com/tech/ssh).
-To run `vnsee-gui`, you’ll also need to install [simple](https://github.com/rmkit-dev/rmkit/tree/master/src/simple) and, optionally, [nmap](https://nmap.org/book/install.html).
+If you’re using a reMarkable 2, you’ll need to setup the [remarkable2-framebuffer](https://github.com/ddvk/remarkable2-framebuffer) before proceeding.
+To run `vnsee-gui`, you’ll also need to install [simple](https://rmkit.dev/apps/sas) and, optionally, [nmap](https://nmap.org/book/install.html).
 
 This VNC client is compatible with all VNC servers that are capable of sending pixels in the RGB565 format.
 It has been successfully tested with [x11vnc](https://github.com/LibVNC/x11vnc) and [TigerVNC](https://github.com/TigerVNC/tigervnc).
@@ -84,7 +85,7 @@ Activity on the touchscreen will be translated to mouse interactions following t
     <td align="center">
         <img src="media/button-home.svg" width="200" alt=""><br>
         <strong>Home button</strong><br>
-        Force refresh
+        Force refresh (rM1 only)
     </td>
     <td align="center">
         <img src="media/button-power.svg" width="200" alt=""><br>

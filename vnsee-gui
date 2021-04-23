@@ -318,7 +318,7 @@ while true; do
     } < <(configure-vnsee)
     save-history "${server_address[0]}" "${server_address[1]}"
     please-wait "${server_address[0]}" "${server_address[1]}"
-    vnsee "${flags[@]}" "${server_address[0]}" "${server_address[1]}" \
+    vnsee "${server_address[0]}" "${server_address[1]}" "${flags[@]}" \
         2> "$session_log_file" \
         || show-errors "$session_log_file"
 done

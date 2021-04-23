@@ -53,7 +53,7 @@ Here, you may use either of the `DP-3` or `HDMI-1` outputs for the following ins
 Create a new mode compatible with the tablet’s resolution:
 
 ```console
-$ xrandr --newmode 1408x1872 0 1408 1408 1408 1408 1872 1872 1872 1872
+$ xrandr --newmode 1404x1872 0 1404 1404 1404 1404 1872 1872 1872 1872
 ```
 
 ## Setup the Output
@@ -63,14 +63,14 @@ _In the following, replace `OUTPUTNAME` by the name of the output you want to mi
 First add the display mode to the set output:
 
 ```console
-$ xrandr --addmode OUTPUTNAME 1408x1872
+$ xrandr --addmode OUTPUTNAME 1404x1872
 ```
 
 Enable and place the set output through your usual dual screen configuration program such as arandr, GNOME’s settings panel or KDE settings.
 When using the generic workaround, the output you chose will not appear in those programs, and you need to use `xrandr` as follows:
 
 ```console
-$ xrandr --output OUTPUTNAME --mode 1408x1872 --right-of MAINOUTPUT
+$ xrandr --output OUTPUTNAME --mode 1404x1872 --right-of MAINOUTPUT
 ```
 
 Where `MAINOUTPUT` is the name of your main screen to the right of which you want to place the second screen.
@@ -107,11 +107,8 @@ Flag         | Description
 
 ## Start VNSee
 
-Finally, start VNSee using SSH.
+If you installed VNSee through [Toltec](https://toltec-dev.org) and you’re using a launcher such as [Oxide](https://github.com/Eeems/oxide) or [remux](https://github.com/rmkit-dev/rmkit/tree/master/src/remux) (which is the recommended setup), VNSee should show up in the list of available apps on the tablet.
+Starting the VNSee app will bring up a screen listing the available VNC servers, in which you should see a server listening on `10.11.99.2:5900`.
+Tap on that server and you should see your computer’s screen appear on the reMarkable after a few seconds.
 
-```console
-$ ssh root@10.11.99.1 "systemctl stop xochitl && ./vnsee; systemctl start xochitl"
-```
-
-**Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not configure your screen correctly.
-Please make sure that the chosen output is enabled.
+Otherwise, you can also start VNSee manually through SSH. Don’t forget to stop the main UI app first (`systemctl stop xochitl`) and start it again afterwards (`systemctl start xochitl`).

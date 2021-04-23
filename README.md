@@ -27,11 +27,18 @@ Applications include reading web-based content, typing documents, drawing, or pr
 
 ## Install on the reMarkable
 
-Grab the latest build from the [releases page](https://github.com/matteodelabre/vnsee/releases) (or build the software yourself by following the [build guide](docs/build.md)), then copy the `vnsee` executable to the tablet [using SSH](https://remarkablewiki.com/tech/ssh).
+**The recommended way of installing VNSee is through the [Toltec package manager](https://toltec-dev.org).**
+This will automatically take care of installing the required dependencies and will allow you to cleanly uninstall VNSee if needed.
+After installing Toltec, simply run `opkg install vnsee` and you should be all set.
+To remove VNSee, run `opkg remove vnsee`.
 
-This VNC client is compatible with VNC servers that are capable of sending pixels in the RGB565 format and that use a resolution compatible with reMarkable’s screen size (1408 × 1872 pixels).
-It has successfully been tested with [x11vnc](https://github.com/LibVNC/x11vnc).
-When trying to connect to an incompatible server, the program will report details of the problem then exit.
+You can also install this program manually.
+Download the latest build from the [releases page](https://github.com/matteodelabre/vnsee/releases) (or build the software yourself by following the [build guide](docs/build.md)), then copy the `vnsee` and `vnsee-gui` executables to the tablet [using SSH](https://remarkablewiki.com/tech/ssh).
+To run `vnsee-gui`, you’ll also need to install [simple](https://github.com/rmkit-dev/rmkit/tree/master/src/simple) and, optionally, [nmap](https://nmap.org/book/install.html).
+
+This VNC client is compatible with all VNC servers that are capable of sending pixels in the RGB565 format.
+It has been successfully tested with [x11vnc](https://github.com/LibVNC/x11vnc) and [TigerVNC](https://github.com/TigerVNC/tigervnc).
+If your server’s resolution is higher than the one on the reMarkable (1404x1872 pixels), the screen will be cropped to fit, so make sure to adjust the server size beforehand.
 
 ## Setup as a Second Screen
 

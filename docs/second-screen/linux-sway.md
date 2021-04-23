@@ -8,7 +8,7 @@ This output will need to be recreated each time you start Sway, so you might wan
 
 ## Setup the Output
 
-Set the size of the new output to exactly 1408x1872 and place it where you’d like relative to your other (real) screens.
+Set the size of the new output to exactly 1404x1872 and place it where you’d like relative to your other (real) screens.
 This can be done interactively with [wdisplays](https://github.com/cyclopsian/wdisplays) or using the [command line](https://man.archlinux.org/man/sway-output.5).
 You can make the output configuration permanent by editing your Sway config file (located in `~/.config/sway/config`).
 
@@ -25,10 +25,8 @@ It may happen that your computer isn’t assigned the 10.11.99.2 IP by the reMar
 
 ## Start VNSee
 
-Finally, start VNSee using SSH.
+If you installed VNSee through [Toltec](https://toltec-dev.org) and you’re using a launcher such as [Oxide](https://github.com/Eeems/oxide) or [remux](https://github.com/rmkit-dev/rmkit/tree/master/src/remux) (which is the recommended setup), VNSee should show up in the list of available apps on the tablet.
+Starting the VNSee app will bring up a screen listing the available VNC servers, in which you should see a server listening on `10.11.99.2:5900`.
+Tap on that server and you should see your computer’s screen appear on the reMarkable after a few seconds.
 
-```console
-$ ssh root@10.11.99.1 "systemctl stop xochitl && ./vnsee; systemctl start xochitl"
-```
-
-**Note:** If you get a message saying that the `Server uses an unsupported resolution`, you did not set the right size for the headless output.
+Otherwise, you can also start VNSee manually through SSH. Don’t forget to stop the main UI app first (`systemctl stop xochitl`) and start it again afterwards (`systemctl start xochitl`).

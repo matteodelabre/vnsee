@@ -190,7 +190,8 @@ auto client::event_loop() -> bool
             handle_status(this->pen_handler->process_events());
         }
 
-        bool inhibit = this->pen_handler->is_inhibiting();
+        bool inhibit = this->pen_handler.has_value()
+            && this->pen_handler->is_inhibiting();
 
         if (this->buttons_handler.has_value()
         // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library

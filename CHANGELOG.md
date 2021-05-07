@@ -3,7 +3,7 @@
 ## v0.4.0
 
 - Add reMarkable 2 support (depends on [remarkable2-framebuffer](https://github.com/ddvk/remarkable2-framebuffer)).
-- Tolerate server resolutions differing from 1404x1872 or 1404x1872.
+- Tolerate server resolutions differing from 1404x1872 or 1408x1872.
     - The server image is cropped to fit in the screen.
 - Add `vnsee-gui` script to start VNSee from a GUI.
     - This is a [simple](https://rmkit.dev/apps/sas) script.

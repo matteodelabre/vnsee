@@ -50,8 +50,8 @@ The details are specific to the operating system you’re using:
 
 * [Linux with X11](docs/second-screen/linux-x11.md)
 * [Linux with Sway](docs/second-screen/linux-sway.md)
-* macOS (Help wanted!)
-* Windows (Help wanted!)
+* macOS (not officially supported yet, see [workarounds from users](https://github.com/matteodelabre/vnsee/issues/21))
+* Windows (not officially supported yet, see [workarounds from users](https://github.com/matteodelabre/vnsee/issues/13))
 
 ## Using the Client
 

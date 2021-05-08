@@ -38,7 +38,7 @@ If you’re using a reMarkable 2, you’ll need to setup the [remarkable2-frame
 To run `vnsee-gui`, you’ll also need to install [simple](https://rmkit.dev/apps/sas) and, optionally, [nmap](https://nmap.org/book/install.html).
 
 This VNC client is compatible with all VNC servers that are capable of sending pixels in the RGB565 format.
-It has been successfully tested with [x11vnc](https://github.com/LibVNC/x11vnc) and [TigerVNC](https://github.com/TigerVNC/tigervnc).
+It has been successfully tested with [x11vnc](https://github.com/LibVNC/x11vnc), [TigerVNC](https://github.com/TigerVNC/tigervnc), and [wayvnc](https://github.com/any1/wayvnc).
 If your server’s resolution is higher than the one on the reMarkable (1404x1872 pixels), the screen will be cropped to fit, so make sure to adjust the server size beforehand.
 
 ## Setup as a Second Screen

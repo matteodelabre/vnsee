@@ -107,4 +107,8 @@ Flag         | Description
 
 ## Start VNSee
 
-You can now start VNSee by running `./vnsee` in a SSH session on your tablet. Don’t forget to stop the main UI app first (`systemctl stop xochitl`) and start it again afterwards (`systemctl start xochitl`).
+If you installed VNSee through [Toltec](https://toltec-dev.org) and you’re using a launcher such as [Oxide](https://github.com/Eeems/oxide) or [remux](https://github.com/rmkit-dev/rmkit/tree/master/src/remux) (which is the recommended setup), VNSee should show up in the list of available apps on the tablet.
+Starting the VNSee app will bring up a screen listing the available VNC servers, in which you should see a server listening on `10.11.99.2:5900`.
+Tap on that server and you should see your computer’s screen appear on the reMarkable after a few seconds.
+
+Otherwise, you can also start VNSee manually through SSH. Don’t forget to stop the main UI app first (`systemctl stop xochitl`) and start it again afterwards (`systemctl start xochitl`).

@@ -46,6 +46,7 @@ constexpr int default_server_port = 5900;
 constexpr int min_port = 1;
 constexpr int max_port = (1U << 16U) - 1;
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 auto main(int argc, const char* argv[]) -> int
 {
     // Read options from the command line

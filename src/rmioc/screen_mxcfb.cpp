@@ -63,7 +63,7 @@ screen_mxcfb::screen_mxcfb(const char* device_path)
         /* __offset = */ 0
     );
 
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast): Use of C library
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
     if (mmap_res == MAP_FAILED)
     {
         throw std::system_error(
@@ -204,22 +204,22 @@ auto screen_mxcfb::get_data() -> std::uint8_t*
 
 auto screen_mxcfb::get_xres() const -> int
 {
-    return this->framebuf_varinfo.xres;
+    return static_cast<int>(this->framebuf_varinfo.xres);
 }
 
 auto screen_mxcfb::get_xres_memory() const -> int
 {
-    return this->framebuf_varinfo.xres_virtual;
+    return static_cast<int>(this->framebuf_varinfo.xres_virtual);
 }
 
 auto screen_mxcfb::get_yres() const -> int
 {
-    return this->framebuf_varinfo.yres;
+    return static_cast<int>(this->framebuf_varinfo.yres);
 }
 
 auto screen_mxcfb::get_yres_memory() const -> int
 {
-    return this->framebuf_varinfo.yres_virtual;
+    return static_cast<int>(this->framebuf_varinfo.yres_virtual);
 }
 
 auto screen_mxcfb::get_bits_per_pixel() const -> unsigned short

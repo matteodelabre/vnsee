@@ -54,7 +54,7 @@ auto touch::process_events(bool inhibit) -> event_loop_status
                 // Compute the mean touch position
                 int summed_x = 0;
                 int summed_y = 0;
-                int total_points = device_state.size();
+                int total_points = static_cast<int>(device_state.size());
 
                 for (const auto& [id, slot] : device_state)
                 {

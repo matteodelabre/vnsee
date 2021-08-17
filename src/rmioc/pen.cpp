@@ -1,5 +1,6 @@
 #include "pen.hpp"
 #include <vector>
+#include <fcntl.h>
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
 
@@ -22,6 +23,30 @@ pen::pen(const char* device_path, bool flip_x, bool flip_y)
 , tilt_x_limits(this->get_axis_limits(ABS_TILT_Y))
 , tilt_y_limits(this->get_axis_limits(ABS_TILT_X))
 {}
+
+auto pen::is(const char* device_path) -> bool
+{
+    file_descriptor input_fd{device_path, O_RDONLY};
+    auto supp_events = supported_input_events(input_fd);
+
+    if (!supp_events.has_key() || !supp_events.has_abs())
+    {
+        return false;
+    }
+
+    auto supp_keys = supported_key_types(input_fd);
+    auto supp_axes = supported_abs_types(input_fd);
+
+    return (
+        supp_keys.has_tool_pen()
+        && supp_axes.has_x()
+        && supp_axes.has_y()
+        && supp_axes.has_pressure()
+        && supp_axes.has_distance()
+        && supp_axes.has_tilt_x()
+        && supp_axes.has_tilt_y()
+    );
+}
 
 auto pen::process_events() -> bool
 {

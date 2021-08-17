@@ -125,10 +125,11 @@ client::~client()
     rfbClientCleanup(this->vnc_client);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 auto client::event_loop() -> bool
 {
     // Maximum time to wait before timeout in the next poll
-    int timeout = -1;
+    long timeout = -1;
 
     // Flag used for quitting the event loop
     bool quit = false;
@@ -158,7 +159,7 @@ auto client::event_loop() -> bool
         while (poll(
                     this->polled_fds.data(),
                     this->polled_fds.size(),
-                    timeout) == -1)
+                    static_cast<int>(timeout)) == -1)
         {
             if (errno != EAGAIN)
             {

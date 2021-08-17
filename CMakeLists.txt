@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(VNSee VERSION 0.3.1)
+project(VNSee VERSION 0.4.1)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LibVNCClient libvncclient)
@@ -57,6 +57,7 @@ add_executable(vnsee
     src/main.cpp
     src/rmioc/buttons.cpp
     src/rmioc/device.cpp
+    src/rmioc/file.cpp
     src/rmioc/input.cpp
     src/rmioc/mxcfb.cpp
     src/rmioc/pen.cpp

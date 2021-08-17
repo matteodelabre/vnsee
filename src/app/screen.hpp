@@ -132,7 +132,7 @@ private:
     std::chrono::steady_clock::time_point last_repaint;
 
     /** Tag used for accessing the instance from C callbacks. */
-    static constexpr std::size_t instance_tag = 6803;
+    static void* instance_tag;
 
     /** Current repaint mode. */
     repaint_modes repaint_mode;

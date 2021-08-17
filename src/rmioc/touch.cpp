@@ -1,5 +1,6 @@
 #include "touch.hpp"
 #include <vector>
+#include <fcntl.h>
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
 
@@ -15,6 +16,28 @@ touch::touch(const char* device_path, bool flip_x, bool flip_y)
 , pressure_limits(this->get_axis_limits(ABS_MT_PRESSURE))
 , orientation_limits(this->get_axis_limits(ABS_MT_ORIENTATION))
 {}
+
+auto touch::is(const char* device_path) -> bool
+{
+    file_descriptor input_fd{device_path, O_RDONLY};
+    auto supp_events = supported_input_events(input_fd);
+
+    if (!supp_events.has_abs())
+    {
+        return false;
+    }
+
+    auto supp_axes = supported_abs_types(input_fd);
+
+    return (
+        supp_axes.has_mt_slot()
+        && supp_axes.has_mt_tracking_id()
+        && supp_axes.has_mt_position_x()
+        && supp_axes.has_mt_position_y()
+        && supp_axes.has_mt_pressure()
+        && supp_axes.has_mt_orientation()
+    );
+}
 
 auto touch::process_events() -> bool
 {

@@ -15,43 +15,112 @@
 namespace rmioc
 {
 
-input::input(const char* device_path)
-// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-signed-bitwise)
-: input_fd(open(device_path, O_RDONLY | O_NONBLOCK))
+constexpr auto bits_per_byte = 8U;
+
+template<size_t Size>
+inline auto get_bit(const std::array<uint8_t, Size>& bitset, size_t index)
+-> bool
 {
-    if (this->input_fd == -1)
+    return bitset.at(index / bits_per_byte) & (1U << (index % bits_per_byte));
+}
+
+auto supported_input_events(int input_fd) -> input_events
+{
+    std::array<uint8_t, EV_MAX / bits_per_byte + 1> evbitset{};
+
+    if (
+        ioctl(
+            input_fd,
+            // NOLINTNEXTLINE(hicpp-signed-bitwise)
+            EVIOCGBIT(0, sizeof(evbitset.size())),
+            evbitset.data()
+        ) == -1
+    )
     {
         throw std::system_error(
             errno,
             std::generic_category(),
-            "(rmioc::input) Open input device " + std::string(device_path)
+            "(rmioc::supported_input_events) Get supported events"
         );
     }
+
+    input_events result;
+    result.set_syn(get_bit(evbitset, EV_SYN));
+    result.set_key(get_bit(evbitset, EV_KEY));
+    result.set_rel(get_bit(evbitset, EV_REL));
+    result.set_abs(get_bit(evbitset, EV_ABS));
+    return result;
 }
 
-input::~input()
+auto supported_key_types(int input_fd) -> key_types
 {
-    if (this->input_fd != -1)
+    std::array<uint8_t, KEY_MAX / bits_per_byte + 1> keybitset{};
+
+    // Get the bit fields of available keys.
+    if (
+        ioctl(
+            input_fd,
+            // NOLINTNEXTLINE(hicpp-signed-bitwise)
+            EVIOCGBIT(EV_KEY, keybitset.size()),
+            keybitset.data()
+        ) == -1
+    )
     {
-        close(this->input_fd);
+        throw std::system_error(
+            errno,
+            std::generic_category(),
+            "(rmioc::supported_key_types) Get supported keys"
+        );
     }
+
+    key_types result;
+    result.set_power(get_bit(keybitset, KEY_POWER));
+    result.set_tool_pen(get_bit(keybitset, BTN_TOOL_PEN));
+    result.set_tool_rubber(get_bit(keybitset, BTN_TOOL_RUBBER));
+    return result;
 }
 
-input::input(input&& other) noexcept
-: input_fd(std::exchange(other.input_fd, -1))
-, queued_events(std::move(other.queued_events))
-{}
-
-auto input::operator=(input&& other) noexcept -> input&
+auto supported_abs_types(int input_fd) -> abs_types
 {
-    if (this->input_fd != -1)
+    std::array<uint8_t, ABS_MAX / bits_per_byte + 1> absbitset{};
+
+    // Get the bit fields of available keys.
+    if (
+        ioctl(
+            input_fd,
+            // NOLINTNEXTLINE(hicpp-signed-bitwise)
+            EVIOCGBIT(EV_ABS, absbitset.size()),
+            absbitset.data()
+        ) == -1
+    )
     {
-        close(this->input_fd);
+        throw std::system_error(
+            errno,
+            std::generic_category(),
+            "(rmioc::supported_abs_types) Get supported axes"
+        );
     }
 
-    this->input_fd = std::exchange(other.input_fd, -1);
-    this->queued_events = std::move(other.queued_events);
-    return *this;
+    abs_types result;
+    result.set_x(get_bit(absbitset, ABS_X));
+    result.set_y(get_bit(absbitset, ABS_Y));
+    result.set_pressure(get_bit(absbitset, ABS_PRESSURE));
+    result.set_distance(get_bit(absbitset, ABS_DISTANCE));
+    result.set_tilt_x(get_bit(absbitset, ABS_TILT_X));
+    result.set_tilt_y(get_bit(absbitset, ABS_TILT_Y));
+    result.set_mt_slot(get_bit(absbitset, ABS_MT_SLOT));
+    result.set_mt_tracking_id(get_bit(absbitset, ABS_MT_TRACKING_ID));
+    result.set_mt_position_x(get_bit(absbitset, ABS_MT_POSITION_X));
+    result.set_mt_position_y(get_bit(absbitset, ABS_MT_POSITION_Y));
+    result.set_mt_pressure(get_bit(absbitset, ABS_MT_PRESSURE));
+    result.set_mt_orientation(get_bit(absbitset, ABS_MT_ORIENTATION));
+    return result;
+}
+
+input::input(const char* device_path)
+// NOLINTNEXTLINE(hicpp-signed-bitwise)
+: input_fd(device_path, O_RDONLY | O_NONBLOCK)
+{
 }
 
 void input::setup_poll(pollfd& in_pollfd) const
@@ -119,7 +188,7 @@ auto input::get_axis_limits(unsigned int type) const -> std::pair<int, int>
 {
     input_absinfo result{};
 
-    // NOLINTNEXTLINE(hicpp-signed-bitwise): Use of C library
+    // NOLINTNEXTLINE(hicpp-signed-bitwise)
     if (ioctl(this->input_fd, EVIOCGABS(type), &result) == -1)
     {
         throw std::system_error(

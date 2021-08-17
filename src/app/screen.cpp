@@ -33,6 +33,9 @@ constexpr chrono::milliseconds fast_repaint_delay{50};
 namespace app
 {
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-avoid-magic-numbers)
+void* screen::instance_tag = reinterpret_cast<void*>(6803);
+
 screen::screen(rmioc::screen& device, rfbClient* vnc_client)
 : device(device)
 , vnc_client(vnc_client)
@@ -40,9 +43,7 @@ screen::screen(rmioc::screen& device, rfbClient* vnc_client)
 {
     rfbClientSetClientData(
         this->vnc_client,
-        // ↓ Use of C library
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<void*>(screen::instance_tag),
+        screen::instance_tag,
         this
     );
 
@@ -117,7 +118,7 @@ auto screen::event_loop() -> event_loop_status
         );
 
         auto now = chrono::steady_clock::now();
-        int wait_time = chrono::duration_cast<chrono::milliseconds>(
+        long wait_time = chrono::duration_cast<chrono::milliseconds>(
             next_update_time - now
         ).count();
 
@@ -144,8 +145,7 @@ auto screen::create_framebuf(rfbClient* vnc_client) -> rfbBool
     auto* that = reinterpret_cast<screen*>(
         rfbClientGetClientData(
             vnc_client,
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<void*>(screen::instance_tag)
+            screen::instance_tag
         ));
 
     int xres = static_cast<int>(that->device.get_xres());
@@ -179,8 +179,7 @@ void screen::recv_update(
     auto* that = reinterpret_cast<screen*>(
         rfbClientGetClientData(
             vnc_client,
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<void*>(screen::instance_tag)
+            screen::instance_tag
         ));
 
     if (x < 0 || y < 0
@@ -226,8 +225,7 @@ void screen::commit_updates(rfbClient* vnc_client, int x, int y, int w, int h)
     auto* that = reinterpret_cast<screen*>(
         rfbClientGetClientData(
             vnc_client,
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<void*>(screen::instance_tag)
+            screen::instance_tag
         ));
 
     // Register the region as pending update, potentially extending

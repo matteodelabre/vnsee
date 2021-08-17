@@ -19,7 +19,7 @@ struct event_loop_status
      * The minimum timeout among all the event loop subroutines will be used.
      * Can be -1 if no more work is needed (wait indefinitely).
      */
-    int timeout;
+    long timeout;
 };
 
 /** List of mouse button flags used by the VNC protocol. */

@@ -69,7 +69,7 @@ screen_rm2fb::screen_rm2fb(const char* shm_path, int msgqueue_key)
         /* __offset = */ 0
     );
 
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast): Use of C library
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
     if (mmap_res == MAP_FAILED)
     {
         throw std::system_error(

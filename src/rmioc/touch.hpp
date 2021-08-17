@@ -26,6 +26,9 @@ public:
      */
     touch(const char* device_path, bool flip_x = false, bool flip_y = false);
 
+    /** Check if an input device is a touchscreen device. */
+    static bool is(const char* device_path);
+
     /**
      * Check for new events.
      *

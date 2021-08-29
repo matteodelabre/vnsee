@@ -1,56 +1,44 @@
 # Build guide
 
-**This build guide assumes you’re using a Linux system.**
+_This build guide uses the [Toltec Docker toolchain](https://github.com/toltec-dev/toolchain), which requires a working Docker install._
 
-Download the [reMarkable toolchain](https://web.archive.org/web/20201129102245/https://remarkable.engineering/oecore-x86_64-cortexa9hf-neon-toolchain-zero-gravitas-1.8-23.9.2019.sh), install it and source it.
-
-```sh
-curl https://web.archive.org/web/20201129102245/https://remarkable.engineering/oecore-x86_64-cortexa9hf-neon-toolchain-zero-gravitas-1.8-23.9.2019.sh -o install-toolchain.sh
-chmod u+x install-toolchain.sh
-./install-toolchain.sh
-source /usr/local/oecore-x86_64/environment-setup-cortexa9hf-neon-oe-linux-gnueabi
-```
-
-Download the `OEToolchainConfig.cmake` file that is missing from the toolchain and install it in `/sysroots/x86_64-oesdk-linux/usr/share/cmake` directory of the toolchain.
-
-```sh
-curl https://raw.githubusercontent.com/openembedded/openembedded-core/master/meta/recipes-devtools/cmake/cmake/OEToolchainConfig.cmake -o OEToolchainConfig.cmake
-sudo mkdir -p /usr/local/oecore-x86_64/sysroots/x86_64-oesdk-linux/usr/share/cmake
-sudo mv OEToolchainConfig.cmake /usr/local/oecore-x86_64/sysroots/x86_64-oesdk-linux/usr/share/cmake
-```
-
-Clone this repository with its dependencies and change directory into it.
+Start by cloning this repository with its dependencies, then change directory into it.
 
 ```sh
 git clone --recursive https://github.com/matteodelabre/vnsee
 cd vnsee
 ```
 
-Create a directory for build artifacts.
+Use the following command to spin up a container and run a build in the `build/Release` subdirectory.
 
 ```sh
-mkdir -p build/Release
-cd build/Release
+docker container run -it --rm \
+    --mount type=bind,src="$(realpath .)",dst=/src \
+    ghcr.io/toltec-dev/base:v2.1 \
+    bash -c "cmake \
+        -DCMAKE_TOOLCHAIN_FILE=/usr/share/cmake/arm-linux-gnueabihf.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -S /src -B /src/build/Release \
+    && cmake --build /src/build/Release"
 ```
 
-Run CMake configuration.
+This command will first run the CMake configuration command, which will automatically locate the appropriate compiler and determine flags.
+This step should end with the following lines:
 
-```sh
-cmake ../.. -DCMAKE_BUILD_TYPE=Release
 ```
-
-The output should not contain any error and should end with those lines:
-
-```txt
+...
 -- Configuring done
 -- Generating done
--- Build files have been written to: …/vnsee/build/Release
+-- Build files have been written to: /src/build/Release
 ```
 
-Run build.
+Right after the configuration step has finished, the command will start the actual build.
+You should see CMake’s colorful output logging the files it compiles, with lines similar to this one:
 
-```sh
-make
+```
+...
+[ 16%] Building CXX object CMakeFiles/vnsee.dir/src/main.cpp.o
+...
 ```
 
-You now have a `vnsee` executable ready to be executed on your reMarkable!
+When this step completes, you should have a working `vnsee` executable in the `build/Release` subdirectory, ready to be executed on your reMarkable!

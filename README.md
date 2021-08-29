@@ -7,7 +7,7 @@
 [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) client for the [reMarkable tablet](https://remarkable.com) allowing you to use the device as a second screen.\
 (Previously called _rmvncclient_.)
 
-<img alt="Illustration of a reMarkable table connected to a computer, showing half of a terminal window through its E-Ink screen" src="media/setup.gif" width="700">
+<img alt="Illustration of a reMarkable tablet connected to a computer, showing half of a terminal window through its E-Ink screen" src="media/setup.gif" width="700">
 
 ## Disclaimer
 
@@ -33,7 +33,7 @@ After installing Toltec, simply run `opkg install vnsee` and you should be all s
 To remove VNSee, run `opkg remove vnsee`.
 
 You can also install this program manually.
-Download the latest build from the [releases page](https://github.com/matteodelabre/vnsee/releases) (or build the software yourself by following the [build guide](docs/build.md)), then copy the `vnsee` and `vnsee-gui` executables to the tablet [using SSH](https://remarkablewiki.com/tech/ssh).
+Download the latest build from the [releases page](https://github.com/matteodelabre/vnsee/releases) (or build the binary yourself by following the [build guide](docs/build.md)), then copy the `vnsee` and `vnsee-gui` executables to the tablet [using SSH](https://remarkablewiki.com/tech/ssh).
 If you’re using a reMarkable 2, you’ll need to setup the [remarkable2-framebuffer](https://github.com/ddvk/remarkable2-framebuffer) before proceeding.
 To run `vnsee-gui`, you’ll also need to install [simple](https://rmkit.dev/apps/sas) and, optionally, [nmap](https://nmap.org/book/install.html).
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1
+
+- Fix support for release 2.9.1 on reMarkable 1.
+
 ## v0.4.0
 
 - Add reMarkable 2 support (depends on [remarkable2-framebuffer](https://github.com/ddvk/remarkable2-framebuffer)).
